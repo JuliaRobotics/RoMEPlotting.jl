@@ -2,6 +2,7 @@ using Base: Test
 using KernelDensityEstimatePlotting
 using IncrementalInference
 using RoME
+using RoMEPlotting
 
 
 println("[TEST] with local Graphs.jl dictionary and arrays only (multicore)...")
@@ -15,11 +16,8 @@ using Gadfly
 DOYTICKS = false
 xx,ll = ls(fg)
 msgPlots = drawHorBeliefsList(fg, xx, gt=gt,nhor=2);
-evalstr = ""
-for i in 1:length(msgPlots)
-    evalstr = string(evalstr, ",msgPlots[$(i)]")
-end
-pl = eval(parse(string("vstack(",evalstr[2:end],")")));
+pl = vstack(msgPlots...);
+# Gadfly.draw(PDF("/tmp/test.pdf",15cm,30cm),pl)
 println("Success")
 
 

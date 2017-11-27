@@ -1,10 +1,15 @@
 module RoMEPlotting
 
+using Graphs
+using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
 using Gadfly
 
-export
+import KernelDensityEstimatePlotting: drawHorDens
+import IncrementalInference: CliqGibbsMC, DebugCliqMCMC
 
+
+export
   # Associated with IncrementalInference
   investigateMultidimKDE,
   drawHorDens,
@@ -26,8 +31,6 @@ export
   # drawDwnMCMCPose2D!,
   drawLbl,
   predCurrFactorBeliefs,
-  drawHorDens,
-  drawHorBeliefsList,
   drawFactorBeliefs,
   localProduct,
   plotLocalProduct,

@@ -1,5 +1,8 @@
 julia 0.6
+KernelDensityEstimate
 KernelDensityEstimatePlotting
 IncrementalInference
 RoME
-Gadfly
+Graphs 0.8.0
+Gadfly 0.6.2
+Colors

@@ -569,9 +569,9 @@ function drawHorBeliefsList(fgl::FactorGraph, lbls::Array{Symbol,1};
     end
     vidx+=1
     if gt !=nothing
-      vv[vidx] = KernelDensityEstimate.drawHorDens(pH, N=N, gt=gtvals, lbls=labels, extend=extend)
+      vv[vidx] = KernelDensityEstimatePlotting.drawHorDens(pH, N=N, gt=gtvals, lbls=labels, extend=extend)
     else
-      vv[vidx] = KernelDensityEstimate.drawHorDens(pH, N=N, lbls=labels, extend=extend)
+      vv[vidx] = KernelDensityEstimatePlotting.drawHorDens(pH, N=N, lbls=labels, extend=extend)
     end
   end
   vv
