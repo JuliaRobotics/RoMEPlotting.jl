@@ -26,3 +26,8 @@ println("Success")
 # warn("plotMCMC needs ImageMagick on osx, not running test yet.")
 # plotMCMC(tree, :x1, show=false)
 # println("Success")
+
+
+# Tests from RoME
+
+# drawPosesLandms(fg);
