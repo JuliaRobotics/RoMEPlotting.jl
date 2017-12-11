@@ -4,8 +4,10 @@
 [![codecov.io](https://codecov.io/github/dehann/RoMEPlotting.jl/coverage.svg?branch=master)](https://codecov.io/github/dehann/RoMEPlotting.jl?branch=master)
 
 [![RoMEPlotting](http://pkg.julialang.org/badges/RoMEPlotting_0.6.svg)](http://pkg.julialang.org/?pkg=RoMEPlotting&ver=0.6)
+[![RoMEPlotting](http://pkg.julialang.org/badges/RoMEPlotting_0.7.svg)](http://pkg.julialang.org/?pkg=RoMEPlotting&ver=0.7)
 
-2D plotting functionality for the RoME.jl package (presently limited to using Gadfly).
+
+2D plotting functionality for the RoME.jl package (presently only using Gadfly).
 
 # Introduction
 
@@ -20,4 +22,4 @@ Pkg.clone("https://github.com/dehann/RoMEPlotting.jl.git")
 
 # Usage Example
 
-Work in progress.
+Documentation for this package will be covered in [Caesar.jl Docs](http://dehann.github.io/Caesar.jl/latest/)
