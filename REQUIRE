@@ -1,5 +1,5 @@
 julia 0.6
-KernelDensityEstimate
+KernelDensityEstimate 0.3.0
 KernelDensityEstimatePlotting
 IncrementalInference
 RoME
