@@ -17,7 +17,7 @@ This package contains all the plotting functions relating to the [IncrementalInf
 
 This package will be registered in the near future, but in the mean time can be installed with:
 ```
-Pkg.clone("https://github.com/dehann/RoMEPlotting.jl.git")
+Pkg.add("RoMEPlotting")
 ```
 
 # Usage Example
