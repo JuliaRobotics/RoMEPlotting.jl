@@ -156,12 +156,12 @@ function drawLandms(fg::FactorGraph;
 
     if lbls
       psplt = Gadfly.plot(
-      Gadfly.layer(x=Xpp,y=Ypp, label=lbltags, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt), Geom.label)
-      # ,Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)#(xbincount=100, ybincount=100)
+        Gadfly.layer(x=Xpp,y=Ypp, label=lbltags, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt), Geom.label)
+        # ,Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)#(xbincount=100, ybincount=100)
       )
     else
       psplt = Gadfly.plot(
-      Gadfly.layer(x=Xpp,y=Ypp, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt))
+        Gadfly.layer(x=Xpp,y=Ypp, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt))
       )
     end
 
@@ -172,15 +172,20 @@ function drawLandms(fg::FactorGraph;
     psplt
 end
 
-function drawPosesLandms(fg::FactorGraph;
+function drawPosesLandms(fgl::FactorGraph;
                     from::Int64=0, to::Int64=99999999, minnei::Int64=0,
                     meanmax=:max,lbls=true,drawhist=true, MM=Union{}, showmm=true,
-                    spscale::Float64=5.0,
+                    spscale::Float64=5.0,window::Union{Void, Tuple{Symbol, Real}}=nothing,
                     api::DataLayerAPI=IncrementalInference.localapi  )
-  p = drawPoses(fg, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, api=api)
-  pl = drawLandms(fg, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, api=api)
+  p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, api=api)
+  pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, api=api)
   for l in pl.layers
     push!(p.layers, l)
+  end
+  if window != nothing
+    focusX = getKDEMax(getVertKDE(fgl,window[1]))
+    pwind = window[2]
+    p.coord = Coord.cartesian(xmin=focusX[1]-pwind,xmax=focusX[1]+pwind,ymin=focusX[2]-pwind,ymax=focusX[2]+pwind)
   end
   return p
 end
