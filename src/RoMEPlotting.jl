@@ -4,6 +4,7 @@ using Graphs
 using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
 using Gadfly
+using Colors
 
 import KernelDensityEstimatePlotting: drawHorDens
 import IncrementalInference: CliqGibbsMC, DebugCliqMCMC
