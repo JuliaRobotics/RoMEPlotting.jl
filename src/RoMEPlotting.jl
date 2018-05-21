@@ -4,10 +4,12 @@ using Graphs
 using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
 using Gadfly
+using Colors
 
-import KernelDensityEstimatePlotting: drawHorDens
+import KernelDensityEstimatePlotting: plot, drawHorDens, plotKDE
 import IncrementalInference: CliqGibbsMC, DebugCliqMCMC
-
+import Graphs: plot
+import Gadfly: plot
 
 export
   # Associated with IncrementalInference
@@ -15,6 +17,7 @@ export
   drawHorDens,
   drawHorBeliefsList,
   spyCliqMat,
+  plotKDE,
   plotKDEofnc,
   plotKDEresiduals,
   plotMCMC,
@@ -22,6 +25,7 @@ export
   plotPriorsAtCliq,
   investigateMultidimKDE,
   draw,
+  plot,
   whosWith,
   drawUpMsgAtCliq,
   dwnMsgsAtCliq,
