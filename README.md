@@ -11,7 +11,7 @@
 
 # Introduction
 
-This package contains all the plotting functions relating to the [IncrementalInference.jl](http://www.github.com/dehann/IncrementalInference.jl) and [RoME.jl](http://www.github.com/JuliaRobotics/RoME.jl) packages.
+This package contains all the plotting functions relating to the [IncrementalInference.jl](http://www.github.com/JuliaRobotics/IncrementalInference.jl) and [RoME.jl](http://www.github.com/JuliaRobotics/RoME.jl) packages.
 
 # Installation
 
