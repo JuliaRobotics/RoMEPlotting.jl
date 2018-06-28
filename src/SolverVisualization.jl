@@ -20,7 +20,7 @@ function plotKDE(fgl::FactorGraph, syms::Vector{Symbol};
       levels=3,
       api::DataLayerAPI=dlapi  )
   #
-  # TODO -- consider automated rotisary of color 
+  # TODO -- consider automated rotisary of color
   COLORS = ["black";"red";"green";"blue";"cyan";"deepskyblue"; "yellow"]
   MP = BallTreeDensity[]
   LEG = String[]
