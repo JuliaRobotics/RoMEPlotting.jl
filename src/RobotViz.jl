@@ -143,8 +143,8 @@ function drawLandms(fg::FactorGraph;
               meanmax=:max,
               lbls=true,showmm=false,drawhist=true,
               c="red",
-              MM=Union{},
-              api::DataLayerAPI=IncrementalInference.localapi  )
+              MM::Dict{Int,T}=Dict{Int,Int}(),
+              api::DataLayerAPI=IncrementalInference.localapi  ) where {T}
     #Gadfly.set_default_plot_size(20cm, 30cm)
     Xp,Yp = get2DLandmSamples(fg, from=from, to=to)
     Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; lblstags=String[];
