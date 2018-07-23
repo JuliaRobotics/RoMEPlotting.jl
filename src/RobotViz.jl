@@ -143,8 +143,8 @@ function drawLandms(fg::FactorGraph;
               meanmax=:max,
               lbls=true,showmm=false,drawhist=true,
               c="red",
-              MM=Union{},
-              api::DataLayerAPI=IncrementalInference.localapi  )
+              MM::Dict{Int,T}=Dict{Int,Int}(),
+              api::DataLayerAPI=IncrementalInference.localapi  ) where {T}
     #Gadfly.set_default_plot_size(20cm, 30cm)
     Xp,Yp = get2DLandmSamples(fg, from=from, to=to)
     Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; lblstags=String[];
@@ -174,9 +174,9 @@ end
 
 function drawPosesLandms(fgl::FactorGraph;
                     from::Int64=0, to::Int64=99999999, minnei::Int64=0,
-                    meanmax=:max,lbls=true,drawhist=true, MM=Union{}, showmm=true,
+                    meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(), showmm=true,
                     spscale::Float64=5.0,window::Union{Void, Tuple{Symbol, Real}}=nothing,
-                    api::DataLayerAPI=IncrementalInference.localapi  )
+                    api::DataLayerAPI=IncrementalInference.localapi  ) where T
   p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, api=api)
   pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, api=api)
   for l in pl.layers
@@ -191,8 +191,8 @@ function drawPosesLandms(fgl::FactorGraph;
 end
 
 function drawSubmaps(fgl::FactorGraph, fromto::Array{Int,2};
-                    m1hist=false,m2hist=false,m3hist=false, showmm=false, MM=Union{},
-                    api::DataLayerAPI=IncrementalInference.localapi )
+                    m1hist=false,m2hist=false,m3hist=false, showmm=false, MM::Dict{Int,T} = Dict{Int,Any}(),
+                    api::DataLayerAPI=IncrementalInference.localapi ) where {T}
   p = drawLandms(fgl, from=fromto[1,1], to=fromto[1,2], drawhist=m1hist, showmm=showmm, MM=MM, api=api)
   if size(fromto,1) >1
     p2 = drawLandms(fgl, from=fromto[2,1], to=fromto[2,2], drawhist=m2hist,c="blue", showmm=showmm, MM=MM, api=api)
@@ -210,7 +210,8 @@ function drawSubmaps(fgl::FactorGraph, fromto::Array{Int,2};
 end
 
 function drawSubmaps(fgl::FactorGraph, fromto::Array{Int,1}; spread::Int=25,
-                    m1hist=false,m2hist=false,m3hist=false, showmm=false, MM=Union{})
+                    m1hist=false,m2hist=false,m3hist=false, showmm=false, MM::Dict{Int,T}=Dict{Int,Any}()) where {T}
+  #
   ft = zeros(Int,length(fromto),2)
   for i in 1:length(fromto)
     ft[i,1] = fromto[i]-spread; ft[i,2] = fromto[i]+spread;
