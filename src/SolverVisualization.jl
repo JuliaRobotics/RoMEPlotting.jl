@@ -666,7 +666,7 @@ end
 function animateVertexBelief(FGL::Array{FactorGraph,1}, lbl; nw=false)
   len = length(FGL)
   [saveplot(plotLocalProduct(FG[i],lbl),h=15cm,w=30cm,name="gifs/pl$(i)",nw=true) for i=1:len];
-  run(`convert -delay 100 gifs/pl*.png result.gif`)
+  run(`convert -delay 100 gifs/pl'*'.png result.gif`)
   if !nw run(`eog result.gif`) end
   nothing
 end

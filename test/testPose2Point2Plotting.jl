@@ -23,8 +23,9 @@ initPosePrior = PriorPose2(zeros(3,1), initCov, [1.0])
 f1  = addFactor!(fg,[v1], initPosePrior)
 
 # and a second pose
-v2 = addNode!(fg, :x1, vectoarr2([50.0;0.0;pi/2]), diagm([1.0;1.0;0.05]), N=N)
-ppc = Pose2Pose2(vectoarr2([50.0;0.0;pi/2]), odoCov, [1.0])
+v2 = addNode!(fg, :x1, Pose2, N=N)
+# v2 = addNode!(fg, :x1, vectoarr2([50.0;0.0;pi/2]), diagm([1.0;1.0;0.05]), N=N)
+ppc = Pose2Pose2(([50.0;0.0;pi/2]), odoCov, [1.0])
 f2 = addFactor!(fg, [v1;v2], ppc)
 
 # test evaluation of pose pose constraint
@@ -38,7 +39,7 @@ inferOverTreeR!(fg, tree,N=N)
 
 # check that yaw is working
 v3 = addNode!(fg, :x2, zeros(3,1), diagm([1.0;1.0;0.05]), N=N)
-ppc = Pose2Pose2(vectoarr2([50.0;0.0;0.0]), odoCov, [1.0])
+ppc = Pose2Pose2(([50.0;0.0;0.0]), odoCov, [1.0])
 f3 = addFactor!(fg, [v2;v3], ppc)
 
 
@@ -46,7 +47,7 @@ f3 = addFactor!(fg, [v2;v3], ppc)
 l1 = addNode!(fg, :l1, zeros(2,1), diagm([1.0;1.0]), N=N)
 # and pose to landmark constraint
 rhoZ1 = norm([10.0;0.0])
-ppr = Pose2DPoint2DBearingRange{Uniform, Normal}(Uniform(-pi,pi),Normal(rhoZ1,1.0))
+ppr = Pose2Point2BearingRange{Uniform, Normal}(Uniform(-pi,pi),Normal(rhoZ1,1.0))
 f4 = addFactor!(fg, [v1;l1], ppr)
 
 
@@ -67,6 +68,7 @@ drawPosesLandms(fg);
 pts = getVal(fg, :l1)
 
 p1= kde!(pts)
+p1c = getVertKDE(getVert(fg, :x0))
 plotKDE( p1 , dimLbls=["x";"y";"z"])
 
 plotKDE( [marginal(p1c,[1;2]);marginal(p1,[1;2])] , dimLbls=["x";"y";"z"],c=["red";"black"],levels=3)
@@ -75,10 +77,11 @@ p1c = deepcopy(p1)
 plotKDE( marginal(getVertKDE(fg, :x2),[1;2]) , dimLbls=["x";"y";"z"])
 
 axis = [[1.5;3.5]';[-1.25;1.25]';[-1.0;1.0]']
-draw( PDF("test.pdf",30cm,20cm),
-      plotKDE( p1, dimLbls=["x";"y";"z"], axis=axis)  )
-#
-Base.rm("test.pdf")
+warn("Reinsert draw test.pdf")
+# Gadfly.draw( PDF("test.pdf",30cm,20cm),
+#       plotKDE( p1, dimLbls=["x";"y";"z"], axis=axis)  )
+# #
+# Base.rm("test.pdf")
 
 end
 
