@@ -176,7 +176,7 @@ function drawPosesLandms(fgl::FactorGraph;
                     from::Int64=0, to::Int64=99999999, minnei::Int64=0,
                     meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(), showmm=true,
                     spscale::Float64=5.0,window::Union{Void, Tuple{Symbol, Real}}=nothing,
-                    api::DataLayerAPI=IncrementalInference.localapi  ) where T
+                    api::DataLayerAPI=IncrementalInference.localapi, xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing  ) where T
   p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, api=api)
   pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, api=api)
   for l in pl.layers
@@ -187,12 +187,14 @@ function drawPosesLandms(fgl::FactorGraph;
     pwind = window[2]
     p.coord = Coord.cartesian(xmin=focusX[1]-pwind,xmax=focusX[1]+pwind,ymin=focusX[2]-pwind,ymax=focusX[2]+pwind)
   end
+  co = Coord.Cartesian(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
+  p.coord = co
   return p
 end
 
 function drawSubmaps(fgl::FactorGraph, fromto::Array{Int,2};
                     m1hist=false,m2hist=false,m3hist=false, showmm=false, MM::Dict{Int,T} = Dict{Int,Any}(),
-                    api::DataLayerAPI=IncrementalInference.localapi ) where {T}
+                    api::DataLayerAPI=IncrementalInference.localapi, xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {T}
   p = drawLandms(fgl, from=fromto[1,1], to=fromto[1,2], drawhist=m1hist, showmm=showmm, MM=MM, api=api)
   if size(fromto,1) >1
     p2 = drawLandms(fgl, from=fromto[2,1], to=fromto[2,2], drawhist=m2hist,c="blue", showmm=showmm, MM=MM, api=api)
@@ -206,17 +208,19 @@ function drawSubmaps(fgl::FactorGraph, fromto::Array{Int,2};
       push!(p.layers, l)
     end
   end
+  co = Coord.Cartesian(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
+  p.coord = co
   return p
 end
 
 function drawSubmaps(fgl::FactorGraph, fromto::Array{Int,1}; spread::Int=25,
-                    m1hist=false,m2hist=false,m3hist=false, showmm=false, MM::Dict{Int,T}=Dict{Int,Any}()) where {T}
+                    m1hist=false,m2hist=false,m3hist=false, showmm=false, MM::Dict{Int,T}=Dict{Int,Any}(), xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {T}
   #
   ft = zeros(Int,length(fromto),2)
   for i in 1:length(fromto)
     ft[i,1] = fromto[i]-spread; ft[i,2] = fromto[i]+spread;
   end
-  drawSubmaps(fgl, ft, m1hist=m1hist, m2hist=m2hist, m3hist=m3hist, showmm=showmm, MM=MM)
+  drawSubmaps(fgl, ft, m1hist=m1hist, m2hist=m2hist, m3hist=m3hist, showmm=showmm, MM=MM, xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
 end
 
 # function getKDEMax(p::BallTreeDensity;N=200)

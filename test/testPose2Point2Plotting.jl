@@ -3,7 +3,7 @@
 using RoME, IncrementalInference, Distributions
 using KernelDensityEstimate
 using RoMEPlotting, Gadfly
-using Base.Test
+using Base: Test
 
 begin
 
@@ -25,7 +25,7 @@ f1  = addFactor!(fg,[v1], initPosePrior)
 # and a second pose
 v2 = addNode!(fg, :x1, Pose2, N=N)
 # v2 = addNode!(fg, :x1, vectoarr2([50.0;0.0;pi/2]), diagm([1.0;1.0;0.05]), N=N)
-ppc = Pose2Pose2(([50.0;0.0;pi/2]), odoCov, [1.0])
+ppc = Pose2Pose2(MvNormal([50.0;0.0;pi/2], odoCov))
 f2 = addFactor!(fg, [v1;v2], ppc)
 
 # test evaluation of pose pose constraint
@@ -39,7 +39,7 @@ inferOverTreeR!(fg, tree,N=N)
 
 # check that yaw is working
 v3 = addNode!(fg, :x2, zeros(3,1), diagm([1.0;1.0;0.05]), N=N)
-ppc = Pose2Pose2(([50.0;0.0;0.0]), odoCov, [1.0])
+ppc = Pose2Pose2(MvNormal([50.0;0.0;0.0], odoCov))
 f3 = addFactor!(fg, [v2;v3], ppc)
 
 
