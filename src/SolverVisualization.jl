@@ -5,22 +5,22 @@ function plotKDE(fgl::FactorGraph, sym::Symbol;
       dims=nothing,
       title="",
       levels::Int=5,
-      fill::Bool=false,
+      fill::Bool=false, layers::Bool=false,
       api::DataLayerAPI=dlapi  )
   #
   p = getVertKDE(fgl,sym, api=api)
   # mmarg = length(marg) > 0 ? marg : collect(1:Ndim(p))
   # mp = marginal(p,mmarg)
-  plotKDE(p, levels=levels, dims=dims, title=string(sym, "  ", title), fill=fill )
+  plotKDE(p, levels=levels, dims=dims, title=string(sym, "  ", title), fill=fill, layers=layers )
 end
 function plotKDE(fgl::FactorGraph, syms::Vector{Symbol};
       addt::Vector{BallTreeDensity}=BallTreeDensity[],
       dims=nothing,
       title=nothing,
-      levels=3,
+      levels=3, layers::Bool=false,
       api::DataLayerAPI=dlapi  )
   #
-  # TODO -- consider automated rotisary of color 
+  # TODO -- consider automated rotisary of color
   COLORS = ["black";"red";"green";"blue";"cyan";"deepskyblue"; "yellow"]
   MP = BallTreeDensity[]
   LEG = String[]
@@ -37,8 +37,9 @@ function plotKDE(fgl::FactorGraph, syms::Vector{Symbol};
     push!(MP, p)
     push!(LEG, "add")
   end
-  plotKDE(MP,c=COLORS[1:length(MP)], levels=levels, dims=dims, legend=LEG, title=title)
+  plotKDE(MP,c=COLORS[1:length(MP)], levels=levels, dims=dims, legend=LEG, title=title, layers=layers)
 end
+import RoMEPlotting: plotKDE
 # function plotKDE(fgl::FactorGraph, sym::Symbol;
 #       marg=nothing,
 #       levels::Int=5  )
