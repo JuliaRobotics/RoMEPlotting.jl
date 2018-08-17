@@ -174,9 +174,9 @@ end
 
 function drawPosesLandms(fgl::FactorGraph;
                     from::Int64=0, to::Int64=99999999, minnei::Int64=0,
-                    meanmax=:max,lbls=true,drawhist=true, MM=Union{}, showmm=true,
+                    meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(), showmm=true,
                     spscale::Float64=5.0,window::Union{Void, Tuple{Symbol, Real}}=nothing,
-                    api::DataLayerAPI=IncrementalInference.localapi  )
+                    api::DataLayerAPI=IncrementalInference.localapi  ) where {T}
   p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, api=api)
   pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, api=api)
   for l in pl.layers
