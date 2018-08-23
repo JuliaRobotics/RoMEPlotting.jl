@@ -124,11 +124,13 @@ function drawPoses(fg::FactorGraph; from::Int64=0,to::Int64=99999999,
     psplt = Union{}
     if lbls
       psplt = Gadfly.plot(
-      Gadfly.layer(x=Xpp,y=Ypp,label=LBLS,Geom.path(), Theme(line_width=1pt), Geom.label)
+      Gadfly.layer(x=Xpp,y=Ypp,label=LBLS,Geom.path(), Theme(line_width=1pt), Geom.label),
+      Coord.cartesian(fixed=true)
       )
     else
       psplt = Gadfly.plot(
-      Gadfly.layer(x=Xpp,y=Ypp,Geom.path(), Theme(line_width=1pt))
+      Gadfly.layer(x=Xpp,y=Ypp,Geom.path(), Theme(line_width=1pt)),Coord.cartesian(fixed=true),
+      Coord.cartesian(fixed=true)
       )
     end
     stbPrtLineLayers!(psplt, Xpp, Ypp, Thpp, l=spscale)
@@ -156,12 +158,14 @@ function drawLandms(fg::FactorGraph;
 
     if lbls
       psplt = Gadfly.plot(
-        Gadfly.layer(x=Xpp,y=Ypp, label=lbltags, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt), Geom.label)
+        Gadfly.layer(x=Xpp,y=Ypp, label=lbltags, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt), Geom.label),
+        Coord.cartesian(fixed=true)
         # ,Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)#(xbincount=100, ybincount=100)
       )
     else
       psplt = Gadfly.plot(
-        Gadfly.layer(x=Xpp,y=Ypp, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt))
+        Gadfly.layer(x=Xpp,y=Ypp, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt)),
+        Coord.cartesian(fixed=true)
       )
     end
 
