@@ -101,6 +101,30 @@ function stbPrtLineLayers!(pl, Xpp, Ypp, Thpp; l::Float64=5.0)
     nothing
 end
 
+# draw the reference frame as a red-green dyad
+function addXYLineLayers!(pl, Xpp, Ypp, Thpp; l::Float64=1.0)
+    lnstpr = [l;0.0;0.0]
+    lnstpg = [0.0;l;0.0]
+
+    Rd  =SE2(lnstpr)
+    Gr = SE2(lnstpg)
+
+    for i in 1:length(Xpp)
+      lnstt = [Xpp[i];Ypp[i];Thpp[i]]
+      Ps = SE2(lnstt)
+      lnr = se2vee(Ps*Rd)
+      lng = se2vee(Ps*Gr)
+      xsr = [Xpp[i];lnr[1]]
+      ysr = [Ypp[i];lnr[2]]
+      xsg = [Xpp[i];lng[1]]
+      ysg = [Ypp[i];lng[2]]
+
+      push!(pl.layers, layer(x=xsr, y=ysr, Geom.path(), Gadfly.Theme(default_color=colorant"red", line_width=1.5pt))[1] )
+      push!(pl.layers, layer(x=xsg, y=ysg, Geom.path(), Gadfly.Theme(default_color=colorant"green", line_width=1.5pt))[1] )
+    end
+    nothing
+end
+
 # function lblsFromTo(from,to)
 #   lbls=String[]
 #   [push!(lbls, "$(i)") for i in from:to]
@@ -124,14 +148,16 @@ function drawPoses(fg::FactorGraph; from::Int64=0,to::Int64=99999999,
     psplt = Union{}
     if lbls
       psplt = Gadfly.plot(
-      Gadfly.layer(x=Xpp,y=Ypp,label=LBLS,Geom.path(), Theme(line_width=1pt), Geom.label)
+      Gadfly.layer(x=Xpp,y=Ypp,label=LBLS,Geom.path(), Theme(line_width=1pt), Geom.label),
+      Coord.cartesian(fixed=true)
       )
     else
       psplt = Gadfly.plot(
-      Gadfly.layer(x=Xpp,y=Ypp,Geom.path(), Theme(line_width=1pt))
+      Gadfly.layer(x=Xpp,y=Ypp,Geom.path(), Theme(line_width=1pt)),Coord.cartesian(fixed=true),
+      Coord.cartesian(fixed=true)
       )
     end
-    stbPrtLineLayers!(psplt, Xpp, Ypp, Thpp, l=spscale)
+    addXYLineLayers!(psplt, Xpp, Ypp, Thpp, l=spscale)
     if drawhist
       push!(psplt.layers,  Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)[1] )#(xbincount=100, ybincount=100))
     end
@@ -156,12 +182,14 @@ function drawLandms(fg::FactorGraph;
 
     if lbls
       psplt = Gadfly.plot(
-        Gadfly.layer(x=Xpp,y=Ypp, label=lbltags, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt), Geom.label)
+        Gadfly.layer(x=Xpp,y=Ypp, label=lbltags, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt), Geom.label),
+        Coord.cartesian(fixed=true)
         # ,Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)#(xbincount=100, ybincount=100)
       )
     else
       psplt = Gadfly.plot(
-        Gadfly.layer(x=Xpp,y=Ypp, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt))
+        Gadfly.layer(x=Xpp,y=Ypp, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt)),
+        Coord.cartesian(fixed=true)
       )
     end
 
@@ -177,6 +205,7 @@ function drawPosesLandms(fgl::FactorGraph;
                     meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(), showmm=true,
                     spscale::Float64=5.0,window::Union{Void, Tuple{Symbol, Real}}=nothing,
                     api::DataLayerAPI=IncrementalInference.localapi, xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing  ) where T
+  #
   p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, api=api)
   pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, api=api)
   for l in pl.layers
