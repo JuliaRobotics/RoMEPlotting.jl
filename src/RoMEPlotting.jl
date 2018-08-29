@@ -57,7 +57,8 @@ export
   accumulateMarginalContours,
   plotPose3Pairs,
   progressExamplePlot,
-  plotTrckStep
+  plotTrckStep,
+  plotPose2Vels
 
 
 include("SolverVisualization.jl")

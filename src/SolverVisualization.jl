@@ -20,7 +20,7 @@ function plotKDE(fgl::FactorGraph, syms::Vector{Symbol};
       levels=3,
       api::DataLayerAPI=dlapi  )
   #
-  # TODO -- consider automated rotisary of color 
+  # TODO -- consider automated rotisary of color
   COLORS = ["black";"red";"green";"blue";"cyan";"deepskyblue"; "yellow"]
   MP = BallTreeDensity[]
   LEG = String[]
@@ -666,7 +666,7 @@ end
 function animateVertexBelief(FGL::Array{FactorGraph,1}, lbl; nw=false)
   len = length(FGL)
   [saveplot(plotLocalProduct(FG[i],lbl),h=15cm,w=30cm,name="gifs/pl$(i)",nw=true) for i=1:len];
-  run(`convert -delay 100 gifs/pl*.png result.gif`)
+  run(`convert -delay 100 gifs/pl'*'.png result.gif`)
   if !nw run(`eog result.gif`) end
   nothing
 end
@@ -933,4 +933,17 @@ function spyCliqMat(cliq::Graphs.ExVertex; showmsg=true)
 end
 function spyCliqMat(bt::BayesTree, lbl::Symbol; showmsg=true)
   spyCliqMat(whichCliq(bt,lbl), showmsg=showmsg)
+end
+
+
+
+
+
+function plotPose2Vels(fgl::FactorGraph, sym::Symbol; coord=nothing)
+  X = getVertKDE(fgl, sym)
+  px = plotKDE(X, dims=[4], title="Velx")
+  coord != nothing ? (px.coord = coord) : nothing
+  py = plotKDE(X, dims=[5], title="Vely")
+  coord != nothing ? (py.coord = coord) : nothing
+  hstack(px, py)
 end
