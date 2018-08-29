@@ -617,18 +617,18 @@ function getColorsByLength(len::Int)
 end
 
 """
-    plotLocalProduct(fgl::FactorGraph, lbl::Symbol; N::Int=100, dims::Vector{Int}=Int[])
+    $(SIGNATURES)
 
 Plot the proposal belief from neighboring factors to `lbl` in the factor graph (ignoring Bayes tree representation),
 and show with new product approximation for reference.
 """
-function plotLocalProduct(fgl::FactorGraph, lbl::Symbol; N::Int=100, dims::Vector{Int}=Int[], api::DataLayerAPI=dlapi, levels::Int=1)
+function plotLocalProduct(fgl::FactorGraph, lbl::Symbol; N::Int=100, dims::Vector{Int}=Int[], api::DataLayerAPI=dlapi, levels::Int=1, show=true, dirpath="/tmp/", mimetype::AbstractString="svg")
   warn("not showing partial constraints, but included in the product")
   arr = Array{BallTreeDensity,1}()
   lbls = String[]
   push!(arr, getVertKDE(fgl, lbl, api=api))
   push!(lbls, "curr")
-  pp, parr, partials, lb = localProduct(fgl, lbl, N=N, api=api)
+  pp, parr, partials, lb = IIF.localProduct(fgl, lbl, N=N, api=api)
   if pp != parr[1]
     push!(arr,pp)
     push!(lbls, "prod")
@@ -639,8 +639,32 @@ function plotLocalProduct(fgl::FactorGraph, lbl::Symbol; N::Int=100, dims::Vecto
   end
   dims = length(dims) > 0 ? dims : collect(1:Ndim(pp))
   colors = getColorsByLength(length(arr))
-  return plotKDE(arr, dims=dims, levels=levels, c=colors, legend=lbls, title=string("Local product, ",lbl))
+  pl = plotKDE(arr, dims=dims, levels=levels, c=colors, legend=lbls, title=string("Local product, ",lbl))
+
+  # now let's export:
+  backend = getfield(Gadfly, Symbol(uppercase(mimetype)))
+  Gadfly.draw(backend(dirpath*"test_$(lbl).$(mimetype)",20cm,20cm), pl)
+  driver = mimetype in ["pdf"] ? "evince" : "eog"
+  show ? (@async run(`$driver $(dirpath)test_$(lbl).$(mimetype)`)) : nothing
+
+  return pl
 end
+
+# new idea -- merge with plotLocalProduct
+# function proposalsKDE(fg, sym; dirpath="/tmp/", levels=1, show=true, mimetype::AS="svg") where {AS <: AbstractString}
+#   # TODO make legend of connected factors in plot
+#   # TODO Pose2, Pose3, Point2, Point3, etc
+#   stuff = IIF.localProduct(fg, sym)
+#   # TODO Theme(background_color=color("white"))
+#   pl = plotKDE([getVertKDE(fg, sym);stuff[2]], levels=levels, c=["red";["cyan" for j in   1:length(stuff[2])]], title=string(stuff[4]))
+#   # export
+#   backend = getfield(Gadfly, Symbol(uppercase(mimetype)))
+#   Gadfly.draw(backend(dirpath*"test_$(sym).$(mimetype)",20cm,20cm), pl)
+#   driver = mimetype in ["pdf"] ? "evince" : "eog"
+#   show ? (@async run(`$driver $(dirpath)test_$(sym).$(mimetype)`)) : nothing
+#   pl
+# end
+
 
 """
     plotLocalProduct{T <: AbstractString}(fgl::FactorGraph, lbl::T; N::Int=100, dims::Vector{Int}=Int[])

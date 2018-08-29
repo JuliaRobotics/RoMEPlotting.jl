@@ -5,6 +5,7 @@ using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
 using Gadfly
 using Colors
+using DocStringExtensions
 
 import KernelDensityEstimatePlotting: plot, drawHorDens, plotKDE
 import IncrementalInference: CliqGibbsMC, DebugCliqMCMC
@@ -21,6 +22,7 @@ export
   plotKDEofnc,
   plotKDEresiduals,
   plotMCMC,
+  plotKDE,
   plotUpMsgsAtCliq,
   plotPriorsAtCliq,
   investigateMultidimKDE,
