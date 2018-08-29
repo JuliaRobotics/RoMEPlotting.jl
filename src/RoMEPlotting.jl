@@ -21,6 +21,7 @@ export
   plotKDEofnc,
   plotKDEresiduals,
   plotMCMC,
+  plotKDE,
   plotUpMsgsAtCliq,
   plotPriorsAtCliq,
   investigateMultidimKDE,

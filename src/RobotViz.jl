@@ -439,7 +439,13 @@ end
 
 
 
-
+function plotKDE(fgl::FactorGraph, vsym::Vector{Symbol}; axis=nothing, dims=nothing, c=nothing, levels=nothing)
+  verts = getVertKDE.(fgl, vsym)
+  plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels)
+end
+function plotKDE(fgl::FactorGraph, vsym::Symbol; axis=nothing, dims=nothing, c=nothing, levels=nothing)
+  plotKDE(fgl, Symbol[vsym;], dims=dims, c=c, axis=axis, levels=levels)
+end
 
 
 #
