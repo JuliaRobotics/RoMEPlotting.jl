@@ -628,7 +628,7 @@ function plotLocalProduct(fgl::FactorGraph, lbl::Symbol; N::Int=100, dims::Vecto
   lbls = String[]
   push!(arr, getVertKDE(fgl, lbl, api=api))
   push!(lbls, "curr")
-  pp, parr, partials, lb = localProduct(fgl, lbl, N=N, api=api)
+  pp, parr, partials, lb = IIF.localProduct(fgl, lbl, N=N, api=api)
   if pp != parr[1]
     push!(arr,pp)
     push!(lbls, "prod")
