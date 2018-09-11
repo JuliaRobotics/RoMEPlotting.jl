@@ -264,6 +264,37 @@ end
 #   return m
 # end
 
+
+function plotPose(::DP, bels::Vector{BallTreeDensity}; levels::Int=5) where{DP <: Union{Pose2, DynPose2}}
+  p1 = plotKDE(bels, dims=[1;2], levels=levels)
+  p2 = plotKDE(bels, dims=[3])
+  Gadfly.vstack(p1,p2)
+end
+
+
+"""
+    $(SIGNATURES)
+
+Example: pl = plotPose(fg, [:x1; :x2; :x3])
+"""
+function plotPose(fgl::FactorGraph,
+                  syms::Vector{Symbol};
+                  levels::Int=5,
+                  show::Bool=true,
+                  filepath::AS="/tmp/tempposeplot.svg",
+                  app::AS="eog" ) where {AS <: AbstractString}
+  #
+  typ = getData(fgl, syms[1]).softtype
+  pl = plotPose(typ, getVertKDE.(fgl, syms), levels=levels)
+  ext = split(filepath, '.')[end]
+  cmd = getfield(Gadfly,Symbol(uppercase(ext)))
+  Gadfly.draw(cmd(filepath,15Gadfly.cm,14Gadfly.cm),pl)
+  @async !show ? nothing : run(`$app $filepath`)
+  return pl
+end
+
+
+
 function investigatePoseKDE(p::BallTreeDensity, p0::BallTreeDensity)
     # co = ["black"; "blue"]
     # h = Union{}
