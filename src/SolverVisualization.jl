@@ -1,4 +1,15 @@
 
+"""
+    $(SIGNATURES)
+
+Standardize the length colors used by RoMEPlotting.
+"""
+function getColorsByLength(len::Int=10)
+  COLORS = ["red";"green";"blue";"black";"deepskyblue";"yellow";"magenta"]
+  morecyan = ["cyan" for i in (length(COLORS)+1):len]
+  retc = [COLORS; morecyan]
+  return retc[1:len]
+end
 
 
 function plotKDE(fgl::FactorGraph, sym::Symbol;
@@ -13,15 +24,18 @@ function plotKDE(fgl::FactorGraph, sym::Symbol;
   # mp = marginal(p,mmarg)
   plotKDE(p, levels=levels, dims=dims, title=string(sym, "  ", title), fill=fill )
 end
-function plotKDE(fgl::FactorGraph, syms::Vector{Symbol};
-      addt::Vector{BallTreeDensity}=BallTreeDensity[],
-      dims=nothing,
-      title=nothing,
-      levels=3,
-      api::DataLayerAPI=dlapi  )
+function plotKDE(fgl::FactorGraph,
+                 syms::Vector{Symbol};
+                 addt::Vector{BallTreeDensity}=BallTreeDensity[],
+                 dims=nothing,
+                 title=nothing,
+                 levels=3,
+                 api::DataLayerAPI=dlapi  )
   #
   # TODO -- consider automated rotisary of color
-  COLORS = ["black";"red";"green";"blue";"cyan";"deepskyblue"; "yellow"]
+  # colors = ["black";"red";"green";"blue";"cyan";"deepskyblue"; "yellow"]
+  # COLORS = repmat(colors, 10)
+  COLORS = getColorsByLength(length(syms))
   MP = BallTreeDensity[]
   LEG = String[]
   # mmarg = Int[]
@@ -56,7 +70,7 @@ end
 # end
 
 """
-    plotKDEofnc(fg,fsym)
+    $(SIGNATURES)
 
 plot absolute values of variables and measurement surrounding fsym factor.
 """
@@ -76,19 +90,19 @@ function plotKDEofnc(fgl::FactorGraph, fsym::Symbol;
 end
 
 """
-    plotKDEresiduals(fg,fsym)
+    $(SIGNATURES)
 
 Trye plot relative values of variables and measurement surrounding fsym factor.
 """
 function plotKDEresiduals(fgl::FactorGraph,
-      fsym::Symbol;
-      N::Int=100,
-      levels::Int=3,
-      dims=nothing,
-      fill=false,
-      api::DataLayerAPI=localapi  )
+                          fsym::Symbol;
+                          N::Int=100,
+                          levels::Int=3,
+                          dims=nothing,
+                          fill=false,
+                          api::DataLayerAPI=localapi  )
   #
-  COLORS = ["black";"red";"green";"blue";"cyan";"deepskyblue"]
+  # COLORS = ["black";"red";"green";"blue";"cyan";"deepskyblue"]
   fnc = getfnctype( fgl, fgl.fIDs[fsym] )
   # @show sxi = lsf(fgl, fsym)[1]
   # @show sxj = lsf(fgl, fsym)[2]
@@ -115,6 +129,8 @@ function plotKDEresiduals(fgl::FactorGraph,
   pR = kde!(RES)
   pM = kde!(measM[1])
   fncvar = getfnctype(fct)
+
+  COLORS = getColorsByLength()
   plotKDE([pR;pM], c=COLORS[1:2], dims=dims,levels=3, legend=["residual";"model"], fill=fill, title=string(fsym, ", ", fncvar))
 end
 
@@ -125,12 +141,14 @@ Plot the product of priors and incoming upward messages for variable in clique.
 
 plotPriorsAtCliq(tree, :x2, :x1[, marg=[1;2]])
 """
-function plotPriorsAtCliq(tree::BayesTree, lb::Symbol, cllb::Symbol;
-        dims::Vector{Int}=Int[],
-        levels::Int=1,
-        fill::Bool=false  )
+function plotPriorsAtCliq(tree::BayesTree,
+                          lb::Symbol,
+                          cllb::Symbol;
+                          dims::Vector{Int}=Int[],
+                          levels::Int=1,
+                          fill::Bool=false  )
   #
-  COLORS = ["black";"red";"green";"blue";"cyan";"deepskyblue"]
+  # COLORS = ["black";"red";"green";"blue";"cyan";"deepskyblue"]
 
   cliq = whichCliq(tree, cllb)
   cliqprs = cliq.attributes["debug"].priorprods[1]
@@ -156,9 +174,10 @@ function plotPriorsAtCliq(tree::BayesTree, lb::Symbol, cllb::Symbol;
     i+=1
     push!(lg, cliqprs.prods[vidx].potentialfac[i])
   end
-  cc = COLORS[1:(len+2)]
-  # @show length(arr), length(cc), length(lg)
-  plotKDE(arr, c=cc, legend=lg, levels=levels, fill=fill );
+
+  COLORS = getColorsByLength(len+2)
+  # cc = COLORS[1:(len+2)]
+  plotKDE(arr, c=COLORS, legend=lg, levels=levels, fill=fill );
 end
 
 
@@ -185,12 +204,13 @@ function plotUpMsgsAtCliq(treel::BayesTree, lb::Symbol, cllb::Symbol;
   plotKDE(bel)
 end
 
-function plotMCMC(treel::BayesTree, lbll::Symbol;
-      delay::Int=200,
-      show::Bool=true,
-      w=20cm, h=15cm,
-      levels::Int=1,
-      dims=nothing  )
+function plotMCMC(treel::BayesTree,
+                  lbll::Symbol;
+                  delay::Int=200,
+                  show::Bool=true,
+                  w=20cm, h=15cm,
+                  levels::Int=1,
+                  dims=nothing  )
   #
   cliq = whichCliq(treel, string(lbll))
   cliqdbg = cliq.attributes["debug"]
@@ -206,7 +226,8 @@ function plotMCMC(treel::BayesTree, lbll::Symbol;
 
   tmpfilepath = joinpath(dirname(@__FILE__),"tmpimgs")
   ARR = BallTreeDensity[]
-  COLORS = ["black";"red";"green";"blue";"cyan";"deepskyblue";"magenta"]
+  COLORS = getColorsByLength()
+  # COLORS = ["black";"red";"green";"blue";"cyan";"deepskyblue";"magenta"]
   for i in 1:length(cliqdbg.mcmc)
     ppr = kde!(cliqdbg.mcmc[i].prods[vidx].prev)
     ppp = kde!(cliqdbg.mcmc[i].prods[vidx].product)
@@ -220,7 +241,8 @@ function plotMCMC(treel::BayesTree, lbll::Symbol;
     arr = [ppr;ppp;cliqdbg.mcmc[i].prods[vidx].potentials]
     len = length(cliqdbg.mcmc[i].prods[vidx].potentials)
     lg = String["p";"n";cliqdbg.mcmc[i].prods[vidx].potentialfac] #map(string, 1:len)]
-    cc = plotKDE(arr, c=COLORS[1:(len+2)], legend=lg, levels=levels, fill=true, axis=rangeV, dims=dims );
+    COLORS_l = getColorsByLength(len+2)
+    cc = plotKDE(arr, c=COLORS_l, legend=lg, levels=levels, fill=true, axis=rangeV, dims=dims );
     Gadfly.draw(PNG(joinpath(tmpfilepath,"$(string(lbll))mcmc$(i).png"),w,h),cc)
   end
   # draw initial and final result
@@ -609,12 +631,7 @@ function drawFactorBeliefs(fgl::FactorGraph, flbl::Symbol)
 end
 drawFactorBeliefs{T <: AbstractString}(fgl::FactorGraph, flbl::T) = drawFactorBeliefs(fgl, Symbol(flbl))
 
-function getColorsByLength(len::Int)
-  COLORS = ["black";"red";"green";"blue";"deepskyblue";"yellow";"magenta"]
-  morecyan = ["cyan" for i in (length(COLORS)+1):len]
-  retc = [COLORS; morecyan]
-  return retc[1:len]
-end
+
 
 """
     $(SIGNATURES)
@@ -628,18 +645,36 @@ function plotLocalProduct(fgl::FactorGraph, lbl::Symbol; N::Int=100, dims::Vecto
   lbls = String[]
   push!(arr, getVertKDE(fgl, lbl, api=api))
   push!(lbls, "curr")
-  pp, parr, partials, lb = IIF.localProduct(fgl, lbl, N=N, api=api)
-  if pp != parr[1]
-    push!(arr,pp)
-    push!(lbls, "prod")
-    for a in parr
-      push!(arr, a)
+  pl = nothing
+  pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N, api=api)
+  if length(parr) > 0 && length(partials) == 0
+    if pp != parr[1]
+      push!(arr,pp)
+      push!(lbls, "prod")
+      for a in parr
+        push!(arr, a)
+      end
+      lbls = union(lbls, lb)
     end
-    lbls = union(lbls, lb)
+    dims = length(dims) > 0 ? dims : collect(1:Ndim(pp))
+    colors = getColorsByLength(length(arr))
+    pl = plotKDE(arr, dims=dims, levels=levels, c=colors, legend=lbls, title=string("Local product, ",lbl))
+  elseif length(parr) == 0 && length(partials) > 0
+    # stack 1d plots to accomodate all the partials
+    PL = []
+    lbls = ["prod";"curr";lb]
+    pdims = sort(collect(keys(partials)))
+    for dimn in pdims
+      vals = partials[dimn]
+      proddim = marginal(pp, [dimn])
+      colors = getColorsByLength(length(vals)+2)
+      pl = plotKDE([proddim;getVertKDE(fgl, lbl, api=api);vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
+      push!(PL, pl)
+    end
+    pl = Gadfly.vstack(PL...)
+  else
+    return error("plotLocalProduct not built for lengths parr, partials = $(length(parr)), $(length(partials)) yet.")
   end
-  dims = length(dims) > 0 ? dims : collect(1:Ndim(pp))
-  colors = getColorsByLength(length(arr))
-  pl = plotKDE(arr, dims=dims, levels=levels, c=colors, legend=lbls, title=string("Local product, ",lbl))
 
   # now let's export:
   backend = getfield(Gadfly, Symbol(uppercase(mimetype)))
@@ -745,7 +780,7 @@ end
 
 function asyncAnalyzeSolution(fgl::FactorGraph, sym::Symbol)
   lbl = string(sym)
-  pp, arr, partials = localProduct(fgl, lbl)
+  pp, arr, partials = IncrementalInference.localProduct(fgl, lbl)
   lpm = getKDEMax(pp)
   em = getKDEMax(getVertKDE(fgl,lbl))
   err1 = norm(lpm[1:2]-em[1:2])
