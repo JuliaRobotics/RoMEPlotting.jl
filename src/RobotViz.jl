@@ -265,12 +265,18 @@ end
 # end
 
 
-function plotPose(::DP, bels::Vector{BallTreeDensity}; levels::Int=5) where{DP <: Union{Pose2, DynPose2}}
+function plotPose(::Pose2, bels::Vector{BallTreeDensity}; levels::Int=5)
   p1 = plotKDE(bels, dims=[1;2], levels=levels)
   p2 = plotKDE(bels, dims=[3])
   Gadfly.vstack(p1,p2)
 end
 
+function plotPose(::DynPose2, bels::Vector{BallTreeDensity}; levels::Int=5)
+  p1 = plotKDE(bels, dims=[1;2], levels=levels)
+  p2 = plotKDE(bels, dims=[3])
+  p3 = plotKDE(bels, dims=[4;5])
+  Gadfly.vstack(p1,p2,p3)
+end
 
 """
     $(SIGNATURES)
@@ -286,10 +292,18 @@ function plotPose(fgl::FactorGraph,
   #
   typ = getData(fgl, syms[1]).softtype
   pl = plotPose(typ, getVertKDE.(fgl, syms), levels=levels)
-  ext = split(filepath, '.')[end]
-  cmd = getfield(Gadfly,Symbol(uppercase(ext)))
-  Gadfly.draw(cmd(filepath,15Gadfly.cm,14Gadfly.cm),pl)
-  @async !show ? nothing : run(`$app $filepath`)
+  if length(filepath) > 0
+    ext = split(filepath, '.')[end]
+    cmd = getfield(Gadfly,Symbol(uppercase(ext)))
+
+    h = 2*7Gadfly.cm
+    if typ == DynPose2
+        h *= 1.5
+    end
+    Gadfly.draw(cmd(filepath,15Gadfly.cm,h),pl)
+
+    @async !show ? nothing : run(`$app $filepath`)
+  end
   return pl
 end
 
