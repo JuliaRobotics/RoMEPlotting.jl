@@ -54,7 +54,8 @@ export
   drawLandms,
   drawPosesLandms,
   drawSubmaps,
-  investigatePoseKDE,
+  investigatePoseKDE, # not sure, likely obsolete -- use plotPose instead
+  plotPose,
   drawMarginalContour,
   accumulateMarginalContours,
   plotPose3Pairs,
