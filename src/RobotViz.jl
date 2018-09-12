@@ -265,16 +265,16 @@ end
 # end
 
 
-function plotPose(::Pose2, bels::Vector{BallTreeDensity}; levels::Int=5)
-  p1 = plotKDE(bels, dims=[1;2], levels=levels)
-  p2 = plotKDE(bels, dims=[3])
+function plotPose(::Pose2, bels::Vector{BallTreeDensity}; levels::Int=5, c=nothing)
+  p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c)
+  p2 = plotKDE(bels, dims=[3], c=c)
   Gadfly.vstack(p1,p2)
 end
 
-function plotPose(::DynPose2, bels::Vector{BallTreeDensity}; levels::Int=5)
-  p1 = plotKDE(bels, dims=[1;2], levels=levels)
-  p2 = plotKDE(bels, dims=[3])
-  p3 = plotKDE(bels, dims=[4;5])
+function plotPose(::DynPose2, bels::Vector{BallTreeDensity}; levels::Int=5, c=nothing)
+  p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c)
+  p2 = plotKDE(bels, dims=[3], c=c)
+  p3 = plotKDE(bels, dims=[4;5], levels=levels, c=c)
   Gadfly.vstack(p1,p2,p3)
 end
 
