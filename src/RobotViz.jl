@@ -265,17 +265,28 @@ end
 # end
 
 
-function plotPose(::Pose2, bels::Vector{BallTreeDensity}; levels::Int=5, c=nothing)
-  p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c)
+function plotPose(::Pose2, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing)
+  p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
   p2 = plotKDE(bels, dims=[3], c=c)
   Gadfly.vstack(p1,p2)
 end
 
-function plotPose(::DynPose2, bels::Vector{BallTreeDensity}; levels::Int=5, c=nothing)
-  p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c)
+function plotPose(::DynPose2, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing)
+  p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
   p2 = plotKDE(bels, dims=[3], c=c)
   p3 = plotKDE(bels, dims=[4;5], levels=levels, c=c)
   Gadfly.vstack(p1,p2,p3)
+end
+
+# import RoMEPlotting: plotPose
+
+function plotPose(::Pose3, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing)
+  @show title
+  p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
+  p2 = plotKDE(bels, dims=[3], c=c)
+  p3 = plotKDE(bels, dims=[4;5], levels=levels, c=c)
+  p4 = plotKDE(bels, dims=[6], c=c)
+  Gadfly.vstack(p1,p2,p3,p4)
 end
 
 """
@@ -286,29 +297,43 @@ Example: pl = plotPose(fg, [:x1; :x2; :x3])
 function plotPose(fgl::FactorGraph,
                   syms::Vector{Symbol};
                   levels::Int=5,
+                  c=nothing,
                   show::Bool=true,
                   filepath::AS="/tmp/tempposeplot.svg",
                   app::AS="eog" ) where {AS <: AbstractString}
   #
   typ = getData(fgl, syms[1]).softtype
-  pl = plotPose(typ, getVertKDE.(fgl, syms), levels=levels)
+  pt = string(string.(syms)...)
+  pl = plotPose(typ, getVertKDE.(fgl, syms), pt, levels=levels, c=c)
+
   if length(filepath) > 0
     ext = split(filepath, '.')[end]
     cmd = getfield(Gadfly,Symbol(uppercase(ext)))
 
-    h = 2*7Gadfly.cm
+    h = 3*7Gadfly.cm
     if typ == DynPose2
         h *= 1.5
     end
     Gadfly.draw(cmd(filepath,15Gadfly.cm,h),pl)
+
 
     @async !show ? nothing : run(`$app $filepath`)
   end
   return pl
 end
 
+function plotPose(fgl::FactorGraph,
+                  sym::Symbol;
+                  levels::Int=5,
+                  c=nothing,
+                  show::Bool=true,
+                  filepath::AS="/tmp/tempposeplot.svg",
+                  app::AS="eog" ) where {AS <: AbstractString}
+  #
+  plotPose(fgl, [sym;], levels=levels, show=show, filepath=filepath, app=app)
+end
 
-
+# deprecated
 function investigatePoseKDE(p::BallTreeDensity, p0::BallTreeDensity)
     # co = ["black"; "blue"]
     # h = Union{}
@@ -498,14 +523,12 @@ function plotPose3Pairs(fgl::FactorGraph, sym::Symbol; fill::Bool=true)
 end
 
 
-
-
-function plotKDE(fgl::FactorGraph, vsym::Vector{Symbol}; axis=nothing, dims=nothing, c=nothing, levels=nothing)
+function plotKDE(fgl::FactorGraph, vsym::Vector{Symbol}; axis=nothing, dims=nothing, c=nothing, levels=nothing, title::Union{Void, T}=nothing) where {T <: AbstractString}
   verts = getVertKDE.(fgl, vsym)
-  plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels)
+  plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels, title=title)
 end
-function plotKDE(fgl::FactorGraph, vsym::Symbol; axis=nothing, dims=nothing, c=nothing, levels=nothing)
-  plotKDE(fgl, Symbol[vsym;], dims=dims, c=c, axis=axis, levels=levels)
+function plotKDE(fgl::FactorGraph, vsym::Symbol; axis=nothing, dims=nothing, c=nothing, levels=nothing, title::Union{Void, T}=nothing) where {T <: AbstractString}
+  plotKDE(fgl, Symbol[vsym;], dims=dims, c=c, axis=axis, levels=levels, title=title)
 end
 
 
