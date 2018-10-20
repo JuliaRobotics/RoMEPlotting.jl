@@ -3,6 +3,7 @@ module RoMEPlotting
 using Reexport
 @reexport using Gadfly
 @reexport using Colors
+using Statistics, LinearAlgebra
 using Compose
 using Graphs
 using KernelDensityEstimate, KernelDensityEstimatePlotting

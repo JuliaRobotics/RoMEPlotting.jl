@@ -27,9 +27,9 @@ function drawFeatTrackers(trkrs::Dict{Int64,Feature}, bfts::Array{Float64,2})
     allPtsX = [allPtsX; vec(pts[1,:])]
     allPtsY = [allPtsY; vec(pts[2,:])]
 
-    push!(musX, Base.mean(vec(pts[1,:])))
+    push!(musX, mean(vec(pts[1,:])))
     push!(varX, Base.std(vec(pts[1,:])))
-    push!(musY, Base.mean(vec(pts[2,:])))
+    push!(musY, mean(vec(pts[2,:])))
     push!(varY, Base.std(vec(pts[2,:])))
   end
 

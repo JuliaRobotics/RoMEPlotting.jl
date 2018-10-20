@@ -53,21 +53,7 @@ function plotKDE(fgl::FactorGraph,
   end
   plotKDE(MP,c=COLORS[1:length(MP)], levels=levels, dims=dims, legend=LEG, title=title)
 end
-# function plotKDE(fgl::FactorGraph, sym::Symbol;
-#       marg=nothing,
-#       levels::Int=5  )
-#   #
-#   warn("Depricated call, use dims=Int[..] as keyword instead.")
-#   plotKDE(fgl, sym, dims=marg, levels=levels  )
-# end
-# function plotKDE(fgl::FactorGraph, syms::Vector{Symbol};
-#       addt::Vector{BallTreeDensity}=BallTreeDensity[],
-#       marg=nothing,
-#       levels=3  )
-#   #
-#   warn("Depricated call, use dims=Int[..] as keyword instead.")
-#   plotKDE(fgl, syms, dims=marg, addt=addt, levels=levels  )
-# end
+
 
 """
     $(SIGNATURES)
@@ -639,7 +625,7 @@ Plot the proposal belief from neighboring factors to `lbl` in the factor graph (
 and show with new product approximation for reference.
 """
 function plotLocalProduct(fgl::FactorGraph, lbl::Symbol; N::Int=100, dims::Vector{Int}=Int[], api::DataLayerAPI=dlapi, levels::Int=1, show=true, dirpath="/tmp/", mimetype::AbstractString="svg",sidelength=30cm)
-  warn("not showing partial constraints, but included in the product")
+  @warn "not showing partial constraints, but included in the product"
   arr = Array{BallTreeDensity,1}()
   lbls = String[]
   push!(arr, getVertKDE(fgl, lbl, api=api))
@@ -742,7 +728,7 @@ end
 function asyncUniComp(fgl::FactorGraph, isamdict::Dict{Int,Array{Float64,1}})
   r,rt,lb = computeGraphResiduals(fgl,isamdict);
   fixRotWrapErr!(rt)
-  return [sqrt(Base.mean(r.^2));maximum(abs(r));sqrt(Base.mean(rt.^2));maximum(rt)]
+  return [sqrt(mean(r.^2));maximum(abs(r));sqrt(mean(rt.^2));maximum(rt)]
 end
 
 function unimodalCompare(FGL::Array{FactorGraph,1},isamdict::Dict{Int,Array{Float64,1}})
@@ -820,9 +806,9 @@ function analyzeSolution(FGL::Array{FactorGraph,1},fggt=Union{})
       end
       idx += 1
     end
-    push!(RMS, sqrt(Base.mean(ERR.^2)))
+    push!(RMS, sqrt(mean(ERR.^2)))
     push!(MAX, maximum(abs(ERR)))
-    push!(RMSth, sqrt(Base.mean(ERRth.^2)))
+    push!(RMSth, sqrt(mean(ERRth.^2)))
     push!(MAXth, maximum(ERRth))
   end
 

@@ -1,10 +1,10 @@
-julia 0.6
-KernelDensityEstimate 0.3.0
+julia 0.7 1.1
+KernelDensityEstimate 0.4.1
 KernelDensityEstimatePlotting
-IncrementalInference 0.3.0
-RoME 0.1.0
-Graphs 0.9.0
-Gadfly 0.6.2
-Colors
-DocStringExtensions 0.4.1
+IncrementalInference 0.4.1
+RoME 0.2.0
+Graphs 0.10.1
+Gadfly 1.0.0
+Colors 0.9.4
+DocStringExtensions 0.5.0
 Reexport

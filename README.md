@@ -5,6 +5,7 @@
 
 [![RoMEPlotting](http://pkg.julialang.org/badges/RoMEPlotting_0.6.svg)](http://pkg.julialang.org/?pkg=RoMEPlotting&ver=0.6)
 [![RoMEPlotting](http://pkg.julialang.org/badges/RoMEPlotting_0.7.svg)](http://pkg.julialang.org/?pkg=RoMEPlotting&ver=0.7)
+[![RoMEPlotting](http://pkg.julialang.org/badges/RoMEPlotting_1.0.svg)](http://pkg.julialang.org/?pkg=RoMEPlotting&ver=1.0)
 
 
 2D plotting functionality for the RoME.jl package (presently only using Gadfly).
@@ -17,7 +18,8 @@ This package contains all the plotting functions relating to the [IncrementalInf
 
 This package will be registered in the near future, but in the mean time can be installed with:
 ```
-Pkg.add("RoMEPlotting")
+julia> ] # switch to package manager
+pkg> add RoMEPlotting
 ```
 
 # Usage Example

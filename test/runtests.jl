@@ -1,4 +1,4 @@
-using Base: Test
+using Test
 using KernelDensityEstimatePlotting
 using IncrementalInference
 using RoME
@@ -22,7 +22,7 @@ using RoMEPlotting
 include("testPose2Point2Plotting.jl")
 
 
-# warn("plotMCMC needs ImageMagick on osx, not running test yet.")
+# @warn "plotMCMC needs ImageMagick on osx, not running test yet."
 # plotMCMC(tree, :x1, show=false)
 # println("Success")
 
