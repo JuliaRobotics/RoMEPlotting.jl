@@ -1,5 +1,6 @@
 module RoMEPlotting
 
+using Statistics, LinearAlgebra
 using Graphs
 using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
