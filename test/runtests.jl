@@ -1,4 +1,4 @@
-using Base: Test
+using Test
 using KernelDensityEstimatePlotting
 using IncrementalInference
 using RoME
