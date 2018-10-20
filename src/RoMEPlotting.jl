@@ -1,10 +1,12 @@
 module RoMEPlotting
 
+using Reexport
+@reexport using Gadfly
+@reexport using Colors
+using Compose
 using Graphs
 using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
-using Gadfly
-using Colors
 using DocStringExtensions
 
 import KernelDensityEstimatePlotting: plot, drawHorDens, plotKDE
