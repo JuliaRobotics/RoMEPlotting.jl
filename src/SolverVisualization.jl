@@ -618,14 +618,13 @@ end
 drawFactorBeliefs{T <: AbstractString}(fgl::FactorGraph, flbl::T) = drawFactorBeliefs(fgl, Symbol(flbl))
 
 
-
 """
     $(SIGNATURES)
 
 Plot the proposal belief from neighboring factors to `lbl` in the factor graph (ignoring Bayes tree representation),
 and show with new product approximation for reference.
 """
-function plotLocalProduct(fgl::FactorGraph, lbl::Symbol; N::Int=100, dims::Vector{Int}=Int[], api::DataLayerAPI=dlapi, levels::Int=1, show=true, dirpath="/tmp/", mimetype::AbstractString="svg")
+function plotLocalProduct(fgl::FactorGraph, lbl::Symbol; N::Int=100, dims::Vector{Int}=Int[], api::DataLayerAPI=dlapi, levels::Int=1, show=true, dirpath="/tmp/", mimetype::AbstractString="svg",sidelength=30cm)
   @warn "not showing partial constraints, but included in the product"
   arr = Array{BallTreeDensity,1}()
   lbls = String[]
@@ -664,7 +663,7 @@ function plotLocalProduct(fgl::FactorGraph, lbl::Symbol; N::Int=100, dims::Vecto
 
   # now let's export:
   backend = getfield(Gadfly, Symbol(uppercase(mimetype)))
-  Gadfly.draw(backend(dirpath*"test_$(lbl).$(mimetype)",20cm,20cm), pl)
+  Gadfly.draw(backend(dirpath*"test_$(lbl).$(mimetype)",sidelength,sidelength), pl)
   driver = mimetype in ["pdf"] ? "evince" : "eog"
   show ? (@async run(`$driver $(dirpath)test_$(lbl).$(mimetype)`)) : nothing
 
