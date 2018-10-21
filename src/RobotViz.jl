@@ -27,10 +27,10 @@ function drawFeatTrackers(trkrs::Dict{Int64,Feature}, bfts::Array{Float64,2})
     allPtsX = [allPtsX; vec(pts[1,:])]
     allPtsY = [allPtsY; vec(pts[2,:])]
 
-    push!(musX, mean(vec(pts[1,:])))
-    push!(varX, Base.std(vec(pts[1,:])))
-    push!(musY, mean(vec(pts[2,:])))
-    push!(varY, Base.std(vec(pts[2,:])))
+    push!(musX, Statistics.mean(vec(pts[1,:])))
+    push!(varX, Statistics.std(vec(pts[1,:])))
+    push!(musY, Statistics.mean(vec(pts[2,:])))
+    push!(varY, Statistics.std(vec(pts[2,:])))
   end
 
   X = Float64[]
@@ -203,7 +203,7 @@ end
 function drawPosesLandms(fgl::FactorGraph;
                     from::Int64=0, to::Int64=99999999, minnei::Int64=0,
                     meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(), showmm=true,
-                    spscale::Float64=5.0,window::Union{Void, Tuple{Symbol, Real}}=nothing,
+                    spscale::Float64=5.0,window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
                     api::DataLayerAPI=IncrementalInference.localapi, xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing  ) where T
   #
   p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, api=api)
@@ -523,11 +523,11 @@ function plotPose3Pairs(fgl::FactorGraph, sym::Symbol; fill::Bool=true)
 end
 
 
-function plotKDE(fgl::FactorGraph, vsym::Vector{Symbol}; axis=nothing, dims=nothing, c=nothing, levels=nothing, title::Union{Void, T}=nothing) where {T <: AbstractString}
+function plotKDE(fgl::FactorGraph, vsym::Vector{Symbol}; axis=nothing, dims=nothing, c=nothing, levels=nothing, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
   verts = getVertKDE.(fgl, vsym)
   plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels, title=title)
 end
-function plotKDE(fgl::FactorGraph, vsym::Symbol; axis=nothing, dims=nothing, c=nothing, levels=nothing, title::Union{Void, T}=nothing) where {T <: AbstractString}
+function plotKDE(fgl::FactorGraph, vsym::Symbol; axis=nothing, dims=nothing, c=nothing, levels=nothing, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
   plotKDE(fgl, Symbol[vsym;], dims=dims, c=c, axis=axis, levels=levels, title=title)
 end
 
