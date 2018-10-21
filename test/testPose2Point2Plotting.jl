@@ -6,9 +6,8 @@ using KernelDensityEstimate
 using RoMEPlotting, Gadfly
 using Test
 
-begin
+@testset "Prepare a 2D factor graph with poses and points..." begin
 
-println("Prepare a 2D factor graph with poses and points...")
 
 N = 75
 fg = initfg()
