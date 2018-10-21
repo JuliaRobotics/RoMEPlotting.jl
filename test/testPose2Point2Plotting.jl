@@ -78,7 +78,7 @@ plotKDE( marginal(getVertKDE(fg, :x2),[1;2]) , dimLbls=["x";"y";"z"])
 
 axis = [[1.5;3.5]';[-1.25;1.25]';[-1.0;1.0]']
 
-@warn "Reinsert draw test.pdf"
+# @warn "Reinsert draw test.pdf"
 Gadfly.draw( PDF("test.pdf",30cm,20cm),
       plotKDE( p1, dimLbls=["x";"y";"z"], axis=axis)  )
 #
