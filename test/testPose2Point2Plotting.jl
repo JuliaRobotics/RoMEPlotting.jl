@@ -1,12 +1,12 @@
 # test Pose2DPoint2D constraint evaluation function
 
 using LinearAlgebra, Statistics
-using RoME, IncrementalInference, Distributions
+using RoME
 using KernelDensityEstimate
 using RoMEPlotting, Gadfly
 using Test
 
-@testset "Prepare a 2D factor graph with poses and points..." begin
+# @testset "Prepare a 2D factor graph with poses and points..." begin
 
 
 N = 75
@@ -17,17 +17,19 @@ initCov = Matrix(Diagonal([0.03;0.03;0.001]))
 odoCov = Matrix(Diagonal([3.0;3.0;0.01]))
 
 # Some starting position
-v1 = addNode!(fg, :x0, Pose2, N=N)
-initPosePrior = PriorPose2(zeros(3,1), initCov, [1.0])
-f1  = addFactor!(fg,[v1], initPosePrior)
+addNode!(fg, :x0, Pose2, N=N)
+initPosePrior = PriorPose2(MvNormal(zeros(3), initCov))
+addFactor!(fg,[v1], initPosePrior)
 
 # and a second pose
-v2 = addNode!(fg, :x1, Pose2, N=N)
+addNode!(fg, :x1, Pose2, N=N)
 ppc = Pose2Pose2(MvNormal([50.0;0.0;pi/2], odoCov))
-f2 = addFactor!(fg, [v1;v2], ppc)
+addFactor!(fg, [:x0; :x1], ppc)
 
 # test evaluation of pose pose constraint
-pts = evalFactor2(fg, f2, v2.index)
+pts = IIF.approxConv(fg, :x0x1f1, :x1)
+# pts = evalFactor2(fg, f2, v2.index)
+
 
 # @show ls(fg)
 
@@ -36,9 +38,9 @@ inferOverTreeR!(fg, tree,N=N)
 # inferOverTree!(fg, tree, N=N)
 
 # check that yaw is working
-v3 = addNode!(fg, :x2, Pose2, N=N)
+addNode!(fg, :x2, Pose2, N=N)
 ppc = Pose2Pose2(MvNormal([50.0;0.0;0.0], odoCov))
-f3 = addFactor!(fg, [v2;v3], ppc)
+addFactor!(fg, [:x1;:x2], ppc)
 
 
 # new landmark
@@ -46,13 +48,13 @@ l1 = addNode!(fg, :l1, Point2, N=N)
 # and pose to landmark constraint
 rhoZ1 = norm([10.0;0.0])
 ppr = Pose2Point2BearingRange{Uniform, Normal}(Uniform(-pi,pi),Normal(rhoZ1,1.0))
-f4 = addFactor!(fg, [v1;l1], ppr)
+addFactor!(fg, [:x0;:l1], ppr)
 
 
 # add a prior to landmark
 pp2 = PriorPoint2D([10.0;0.0], Matrix(Diagonal([1.0;1.0])), [1.0])
 
-f5 = addFactor!(fg,[l1], pp2)
+f5 = addFactor!(fg,[:l1], pp2)
 
 ensureAllInitialized!(fg)
 tree = wipeBuildNewTree!(fg)
@@ -75,13 +77,14 @@ p1c = deepcopy(p1)
 plotKDE( marginal(getVertKDE(fg, :x2),[1;2]) , dimLbls=["x";"y";"z"])
 
 axis = [[1.5;3.5]';[-1.25;1.25]';[-1.0;1.0]']
-@warn "Reinsert draw test.pdf"
-# Gadfly.draw( PDF("test.pdf",30cm,20cm),
-#       plotKDE( p1, dimLbls=["x";"y";"z"], axis=axis)  )
-# #
-# Base.rm("test.pdf")
 
-end
+@warn "Reinsert draw test.pdf"
+Gadfly.draw( PDF("test.pdf",30cm,20cm),
+      plotKDE( p1, dimLbls=["x";"y";"z"], axis=axis)  )
+#
+Base.rm("test.pdf")
+
+# end
 
 
 
