@@ -19,7 +19,7 @@ odoCov = Matrix(Diagonal([3.0;3.0;0.01]))
 # Some starting position
 addNode!(fg, :x0, Pose2, N=N)
 initPosePrior = PriorPose2(MvNormal(zeros(3), initCov))
-addFactor!(fg,[v1], initPosePrior)
+addFactor!(fg,[:x0], initPosePrior)
 
 # and a second pose
 addNode!(fg, :x1, Pose2, N=N)
