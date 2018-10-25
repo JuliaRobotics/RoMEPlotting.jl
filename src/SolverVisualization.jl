@@ -524,7 +524,7 @@ function drawLbl(fgl::FactorGraph, lbl::Symbol)
     # plotKDE(kde!(getVal(v)))
     plotKDE(getVertKDE(fgl,lbl))
 end
-drawLbl{T <: AbstractString}(fgl::FactorGraph, lbl::T) = drawLbl(fgl, Symbol(lbl))
+drawLbl(fgl::FactorGraph, lbl::T) where {T <: AbstractString} = drawLbl(fgl, Symbol(lbl))
 
 function predCurrFactorBeliefs(fgl::FactorGraph, fc::Graphs.ExVertex)
   # TODO update to use ls and lsv functions
@@ -615,7 +615,7 @@ function drawFactorBeliefs(fgl::FactorGraph, flbl::Symbol)
   # end
   nothing
 end
-drawFactorBeliefs{T <: AbstractString}(fgl::FactorGraph, flbl::T) = drawFactorBeliefs(fgl, Symbol(flbl))
+drawFactorBeliefs(fgl::FactorGraph, flbl::T) where {T <: AbstractString} = drawFactorBeliefs(fgl, Symbol(flbl))
 
 
 """
@@ -692,7 +692,7 @@ end
 Plot the proposal belief from neighboring factors to `lbl` in the factor graph (ignoring Bayes tree representation),
 and show with new product approximation for reference. String version is obsolete and will be deprecated.
 """
-plotLocalProduct{T <: AbstractString}(fgl::FactorGraph, lbl::T; N::Int=100, dims::Vector{Int}=Int[]) = plotLocalProduct(fgl, Symbol(lbl), N=N, dims=dims)
+plotLocalProduct(fgl::FactorGraph, lbl::T; N::Int=100, dims::Vector{Int}=Int[]) where {T <: AbstractString} = plotLocalProduct(fgl, Symbol(lbl), N=N, dims=dims)
 
 function saveplot(pl;name="pl",frt=:png,w=25cm,h=25cm,nw=false,fill=true)
   if frt==:png
