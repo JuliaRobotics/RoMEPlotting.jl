@@ -18,9 +18,9 @@ import Gadfly: plot
 
 # TODO temporary fix for Compose based plotting in Julia 0.7 (Oct 2018)
 # see
-@warn "[TEMPORARY WORKAROUND, pangolayout] for plotting with Compose and Gadfly.jl, see https://github.com/GiovineItalia/Gadfly.jl/issues/1206"
-import Compose: pangolayout
-const pangolayout = PangoLayout()
+# @warn "[TEMPORARY WORKAROUND, pangolayout] for plotting with Compose and Gadfly.jl, see https://github.com/GiovineItalia/Gadfly.jl/issues/1206"
+# import Compose: pangolayout
+# const pangolayout = PangoLayout()
 
 export
   # Associated with IncrementalInference
