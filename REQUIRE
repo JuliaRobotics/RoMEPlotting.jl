@@ -1,7 +1,7 @@
 julia 0.7 1.1
 KernelDensityEstimate 0.4.1
 KernelDensityEstimatePlotting 0.1.0
-IncrementalInference 0.4.2
+IncrementalInference 0.4.4
 RoME 0.2.1
 Graphs 0.10.1
 Gadfly 1.0.0

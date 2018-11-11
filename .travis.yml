@@ -18,6 +18,6 @@ addons:
       - hdf5-tools
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --check-bounds=yes -e 'using Pkg; Pkg.clone(pwd()); Pkg.build("RoMEPlotting"); Pkg.test("RoMEPlotting"; coverage=true)'
+  - julia --check-bounds=yes -e 'using Pkg; Pkg.develop("Compose"); Pkg.clone(pwd()); Pkg.build("RoMEPlotting"); Pkg.test("RoMEPlotting"; coverage=true)'
 after_success:
   - julia -e 'using Pkg; cd(Pkg.dir("RoMEPlotting")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
