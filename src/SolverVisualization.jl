@@ -11,18 +11,38 @@ function getColorsByLength(len::Int=10)
   return retc[1:len]
 end
 
+"""
+    $(SIGNATURES)
 
-function plotKDE(fgl::FactorGraph, sym::Symbol;
+A peneric KDE plotting function that allows marginals of higher dimensional beliefs and various keyword options.
+
+Example:
+```julia
+p = kde!(randn(3,100))
+
+plotKDE(p)
+plotKDE(p, dims=[1;2], levels=3)
+plotKDE(p, dims=[1])
+
+q = kde!(5*randn(3,100))
+plotKDE([p;q])
+plotKDE([p;q], dims=[1;2], levels=3)
+plotKDE([p;q], dims=[1])
+```
+"""
+function plotKDE(fgl::FactorGraph, 
+      sym::Symbol;
       dims=nothing,
       title="",
       levels::Int=5,
-      fill::Bool=false,
+      fill::Bool=false, 
+      layers::Bool=false,
       api::DataLayerAPI=dlapi  )
   #
   p = getVertKDE(fgl,sym, api=api)
   # mmarg = length(marg) > 0 ? marg : collect(1:Ndim(p))
   # mp = marginal(p,mmarg)
-  plotKDE(p, levels=levels, dims=dims, title=string(sym, "  ", title), fill=fill )
+  plotKDE(p, levels=levels, dims=dims, title=string(sym, "  ", title), fill=fill, layers=layers )
 end
 function plotKDE(fgl::FactorGraph,
                  syms::Vector{Symbol};
@@ -30,6 +50,7 @@ function plotKDE(fgl::FactorGraph,
                  dims=nothing,
                  title=nothing,
                  levels=3,
+                 layers::Bool=false,
                  api::DataLayerAPI=dlapi  )
   #
   # TODO -- consider automated rotisary of color
@@ -51,8 +72,25 @@ function plotKDE(fgl::FactorGraph,
     push!(MP, p)
     push!(LEG, "add")
   end
-  plotKDE(MP,c=COLORS[1:length(MP)], levels=levels, dims=dims, legend=LEG, title=title)
+  plotKDE(MP,c=COLORS[1:length(MP)], levels=levels, dims=dims, legend=LEG, title=title, layers=layers)
 end
+
+#import RoMEPlotting: plotKDE
+# function plotKDE(fgl::FactorGraph, sym::Symbol;
+#       marg=nothing,
+#       levels::Int=5  )
+#   #
+#   warn("Depricated call, use dims=Int[..] as keyword instead.")
+#   plotKDE(fgl, sym, dims=marg, levels=levels  )
+# end
+# function plotKDE(fgl::FactorGraph, syms::Vector{Symbol};
+#       addt::Vector{BallTreeDensity}=BallTreeDensity[],
+#       marg=nothing,
+#       levels=3  )
+#   #
+#   warn("Depricated call, use dims=Int[..] as keyword instead.")
+#   plotKDE(fgl, syms, dims=marg, addt=addt, levels=levels  )
+# end
 
 
 """
