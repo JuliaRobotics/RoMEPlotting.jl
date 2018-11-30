@@ -27,10 +27,10 @@ function drawFeatTrackers(trkrs::Dict{Int64,Feature}, bfts::Array{Float64,2})
     allPtsX = [allPtsX; vec(pts[1,:])]
     allPtsY = [allPtsY; vec(pts[2,:])]
 
-    push!(musX, Base.mean(vec(pts[1,:])))
-    push!(varX, Base.std(vec(pts[1,:])))
-    push!(musY, Base.mean(vec(pts[2,:])))
-    push!(varY, Base.std(vec(pts[2,:])))
+    push!(musX, Statistics.mean(vec(pts[1,:])))
+    push!(varX, Statistics.std(vec(pts[1,:])))
+    push!(musY, Statistics.mean(vec(pts[2,:])))
+    push!(varY, Statistics.std(vec(pts[2,:])))
   end
 
   X = Float64[]
@@ -101,6 +101,30 @@ function stbPrtLineLayers!(pl, Xpp, Ypp, Thpp; l::Float64=5.0)
     nothing
 end
 
+# draw the reference frame as a red-green dyad
+function addXYLineLayers!(pl, Xpp, Ypp, Thpp; l::Float64=1.0)
+    lnstpr = [l;0.0;0.0]
+    lnstpg = [0.0;l;0.0]
+
+    Rd  =SE2(lnstpr)
+    Gr = SE2(lnstpg)
+
+    for i in 1:length(Xpp)
+      lnstt = [Xpp[i];Ypp[i];Thpp[i]]
+      Ps = SE2(lnstt)
+      lnr = se2vee(Ps*Rd)
+      lng = se2vee(Ps*Gr)
+      xsr = [Xpp[i];lnr[1]]
+      ysr = [Ypp[i];lnr[2]]
+      xsg = [Xpp[i];lng[1]]
+      ysg = [Ypp[i];lng[2]]
+
+      push!(pl.layers, layer(x=xsr, y=ysr, Geom.path(), Gadfly.Theme(default_color=colorant"red", line_width=1.5pt))[1] )
+      push!(pl.layers, layer(x=xsg, y=ysg, Geom.path(), Gadfly.Theme(default_color=colorant"green", line_width=1.5pt))[1] )
+    end
+    nothing
+end
+
 # function lblsFromTo(from,to)
 #   lbls=String[]
 #   [push!(lbls, "$(i)") for i in from:to]
@@ -124,14 +148,16 @@ function drawPoses(fg::FactorGraph; from::Int64=0,to::Int64=99999999,
     psplt = Union{}
     if lbls
       psplt = Gadfly.plot(
-      Gadfly.layer(x=Xpp,y=Ypp,label=LBLS,Geom.path(), Theme(line_width=1pt), Geom.label)
+      Gadfly.layer(x=Xpp,y=Ypp,label=LBLS,Geom.path(), Theme(line_width=1pt), Geom.label),
+      Coord.cartesian(fixed=true)
       )
     else
       psplt = Gadfly.plot(
-      Gadfly.layer(x=Xpp,y=Ypp,Geom.path(), Theme(line_width=1pt))
+      Gadfly.layer(x=Xpp,y=Ypp,Geom.path(), Theme(line_width=1pt)),Coord.cartesian(fixed=true),
+      Coord.cartesian(fixed=true)
       )
     end
-    stbPrtLineLayers!(psplt, Xpp, Ypp, Thpp, l=spscale)
+    addXYLineLayers!(psplt, Xpp, Ypp, Thpp, l=spscale)
     if drawhist
       push!(psplt.layers,  Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)[1] )#(xbincount=100, ybincount=100))
     end
@@ -156,12 +182,14 @@ function drawLandms(fg::FactorGraph;
 
     if lbls
       psplt = Gadfly.plot(
-        Gadfly.layer(x=Xpp,y=Ypp, label=lbltags, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt), Geom.label)
+        Gadfly.layer(x=Xpp,y=Ypp, label=lbltags, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt), Geom.label),
+        Coord.cartesian(fixed=true)
         # ,Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)#(xbincount=100, ybincount=100)
       )
     else
       psplt = Gadfly.plot(
-        Gadfly.layer(x=Xpp,y=Ypp, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt))
+        Gadfly.layer(x=Xpp,y=Ypp, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt)),
+        Coord.cartesian(fixed=true)
       )
     end
 
@@ -174,9 +202,10 @@ end
 
 function drawPosesLandms(fgl::FactorGraph;
                     from::Int64=0, to::Int64=99999999, minnei::Int64=0,
-                    meanmax=:max,lbls=true,drawhist=true, MM=Union{}, showmm=true,
-                    spscale::Float64=5.0,window::Union{Void, Tuple{Symbol, Real}}=nothing,
-                    api::DataLayerAPI=IncrementalInference.localapi  )
+                    meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(), showmm=true,
+                    spscale::Float64=5.0,window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
+                    api::DataLayerAPI=IncrementalInference.localapi, xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing  ) where T
+  #
   p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, api=api)
   pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, api=api)
   for l in pl.layers
@@ -187,12 +216,14 @@ function drawPosesLandms(fgl::FactorGraph;
     pwind = window[2]
     p.coord = Coord.cartesian(xmin=focusX[1]-pwind,xmax=focusX[1]+pwind,ymin=focusX[2]-pwind,ymax=focusX[2]+pwind)
   end
+  co = Coord.Cartesian(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
+  p.coord = co
   return p
 end
 
 function drawSubmaps(fgl::FactorGraph, fromto::Array{Int,2};
-                    m1hist=false,m2hist=false,m3hist=false, showmm=false, MM=Union{},
-                    api::DataLayerAPI=IncrementalInference.localapi )
+                    m1hist=false,m2hist=false,m3hist=false, showmm=false, MM::Dict{Int,T} = Dict{Int,Any}(),
+                    api::DataLayerAPI=IncrementalInference.localapi, xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {T}
   p = drawLandms(fgl, from=fromto[1,1], to=fromto[1,2], drawhist=m1hist, showmm=showmm, MM=MM, api=api)
   if size(fromto,1) >1
     p2 = drawLandms(fgl, from=fromto[2,1], to=fromto[2,2], drawhist=m2hist,c="blue", showmm=showmm, MM=MM, api=api)
@@ -206,16 +237,19 @@ function drawSubmaps(fgl::FactorGraph, fromto::Array{Int,2};
       push!(p.layers, l)
     end
   end
+  co = Coord.Cartesian(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
+  p.coord = co
   return p
 end
 
 function drawSubmaps(fgl::FactorGraph, fromto::Array{Int,1}; spread::Int=25,
-                    m1hist=false,m2hist=false,m3hist=false, showmm=false, MM=Union{})
+                    m1hist=false,m2hist=false,m3hist=false, showmm=false, MM::Dict{Int,T}=Dict{Int,Any}(), xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {T}
+  #
   ft = zeros(Int,length(fromto),2)
   for i in 1:length(fromto)
     ft[i,1] = fromto[i]-spread; ft[i,2] = fromto[i]+spread;
   end
-  drawSubmaps(fgl, ft, m1hist=m1hist, m2hist=m2hist, m3hist=m3hist, showmm=showmm, MM=MM)
+  drawSubmaps(fgl, ft, m1hist=m1hist, m2hist=m2hist, m3hist=m3hist, showmm=showmm, MM=MM, xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
 end
 
 # function getKDEMax(p::BallTreeDensity;N=200)
@@ -230,6 +264,76 @@ end
 #   return m
 # end
 
+
+function plotPose(::Pose2, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing)
+  p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
+  p2 = plotKDE(bels, dims=[3], c=c)
+  Gadfly.vstack(p1,p2)
+end
+
+function plotPose(::DynPose2, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing)
+  p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
+  p2 = plotKDE(bels, dims=[3], c=c)
+  p3 = plotKDE(bels, dims=[4;5], levels=levels, c=c)
+  Gadfly.vstack(p1,p2,p3)
+end
+
+# import RoMEPlotting: plotPose
+
+function plotPose(::Pose3, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing)
+  @show title
+  p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
+  p2 = plotKDE(bels, dims=[3], c=c)
+  p3 = plotKDE(bels, dims=[4;5], levels=levels, c=c)
+  p4 = plotKDE(bels, dims=[6], c=c)
+  Gadfly.vstack(p1,p2,p3,p4)
+end
+
+"""
+    $(SIGNATURES)
+
+Example: pl = plotPose(fg, [:x1; :x2; :x3])
+"""
+function plotPose(fgl::FactorGraph,
+                  syms::Vector{Symbol};
+                  levels::Int=5,
+                  c=nothing,
+                  show::Bool=true,
+                  filepath::AS="/tmp/tempposeplot.svg",
+                  app::AS="eog" ) where {AS <: AbstractString}
+  #
+  typ = getData(fgl, syms[1]).softtype
+  pt = string(string.(syms)...)
+  pl = plotPose(typ, getVertKDE.(fgl, syms), pt, levels=levels, c=c)
+
+  if length(filepath) > 0
+    ext = split(filepath, '.')[end]
+    cmd = getfield(Gadfly,Symbol(uppercase(ext)))
+
+    h = 3*7Gadfly.cm
+    if typ == DynPose2
+        h *= 1.5
+    end
+    Gadfly.draw(cmd(filepath,15Gadfly.cm,h),pl)
+
+
+    @async !show ? nothing : run(`$app $filepath`)
+  end
+  return pl
+end
+
+function plotPose(fgl::FactorGraph,
+                  sym::Symbol;
+                  levels::Int=5,
+                  c=nothing,
+                  show::Bool=true,
+                  filepath::AS="/tmp/tempposeplot.svg",
+                  app::AS="eog" ) where {AS <: AbstractString}
+  #
+  plotPose(fgl, [sym;], levels=levels, show=show, filepath=filepath, app=app)
+end
+
+# deprecated
 function investigatePoseKDE(p::BallTreeDensity, p0::BallTreeDensity)
     # co = ["black"; "blue"]
     # h = Union{}
@@ -409,9 +513,23 @@ end
 
 
 
+function plotPose3Pairs(fgl::FactorGraph, sym::Symbol; fill::Bool=true)
+  p1= plotKDE(fgl, sym, dims=[1;2], fill=fill)
+  p2 = plotKDE(fgl, sym, dims=[6;3], fill=fill)
+  p3 = plotKDE(fgl, sym, dims=[4;5], fill=fill)
+  Gadfly.draw(PDF("/tmp/RoMEvstackPose3.pdf",15cm, 20cm), vstack(p1,p2,p3) )
+  @async run(`evince /tmp/RoMEvstackPose3.pdf`)
+  nothing
+end
 
 
-
+function plotKDE(fgl::FactorGraph, vsym::Vector{Symbol}; axis=nothing, dims=nothing, c=nothing, levels=nothing, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
+  verts = getVertKDE.(fgl, vsym)
+  plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels, title=title)
+end
+function plotKDE(fgl::FactorGraph, vsym::Symbol; axis=nothing, dims=nothing, c=nothing, levels=nothing, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
+  plotKDE(fgl, Symbol[vsym;], dims=dims, c=c, axis=axis, levels=levels, title=title)
+end
 
 
 #

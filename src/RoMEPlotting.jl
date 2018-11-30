@@ -1,15 +1,26 @@
 module RoMEPlotting
 
+using Reexport
+@reexport using Gadfly
+@reexport using Colors
+
+using Statistics, LinearAlgebra
+using Compose
 using Graphs
 using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
-using Gadfly
-using Colors
+using DocStringExtensions
 
 import KernelDensityEstimatePlotting: plot, drawHorDens, plotKDE
 import IncrementalInference: CliqGibbsMC, DebugCliqMCMC
 import Graphs: plot
 import Gadfly: plot
+
+# TODO temporary fix for Compose based plotting in Julia 0.7 (Oct 2018)
+# see
+# @warn "[TEMPORARY WORKAROUND, pangolayout] for plotting with Compose and Gadfly.jl, see https://github.com/GiovineItalia/Gadfly.jl/issues/1206"
+# import Compose: pangolayout
+# const pangolayout = PangoLayout()
 
 export
   # Associated with IncrementalInference
@@ -21,6 +32,7 @@ export
   plotKDEofnc,
   plotKDEresiduals,
   plotMCMC,
+  plotKDE,
   plotUpMsgsAtCliq,
   plotPriorsAtCliq,
   investigateMultidimKDE,
@@ -52,12 +64,14 @@ export
   drawLandms,
   drawPosesLandms,
   drawSubmaps,
-  investigatePoseKDE,
+  investigatePoseKDE, # not sure, likely obsolete -- use plotPose instead
+  plotPose,
   drawMarginalContour,
   accumulateMarginalContours,
   plotPose3Pairs,
   progressExamplePlot,
-  plotTrckStep
+  plotTrckStep,
+  plotPose2Vels
 
 
 include("SolverVisualization.jl")
