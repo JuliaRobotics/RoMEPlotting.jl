@@ -524,7 +524,7 @@ end
 
 
 function plotKDE(fgl::FactorGraph, vsym::Vector{Symbol}; axis=nothing, dims=nothing, c=nothing, levels=nothing, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
-  verts = getVertKDE.(fgl, vsym)
+  verts = map((x)->getVertKDE(fgl, x), vsym)
   plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels, title=title)
 end
 function plotKDE(fgl::FactorGraph, vsym::Symbol; axis=nothing, dims=nothing, c=nothing, levels=nothing, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
