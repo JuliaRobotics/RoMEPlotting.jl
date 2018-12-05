@@ -523,11 +523,11 @@ function plotPose3Pairs(fgl::FactorGraph, sym::Symbol; fill::Bool=true)
 end
 
 
-function plotKDE(fgl::FactorGraph, vsym::Vector{Symbol}; axis=nothing, dims=nothing, c=nothing, levels=nothing, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
-  verts = getVertKDE.(fgl, vsym)
+function plotKDE(fgl::FactorGraph, vsym::Vector{Symbol}; axis=nothing, dims=nothing, c=getColorsByLength(length(vsym)), levels=4, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
+  verts = map((x)->getVertKDE(fgl, x), vsym)
   plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels, title=title)
 end
-function plotKDE(fgl::FactorGraph, vsym::Symbol; axis=nothing, dims=nothing, c=nothing, levels=nothing, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
+function plotKDE(fgl::FactorGraph, vsym::Symbol; axis=nothing, dims=nothing, c=nothing, levels=4, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
   plotKDE(fgl, Symbol[vsym;], dims=dims, c=c, axis=axis, levels=levels, title=title)
 end
 
