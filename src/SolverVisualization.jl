@@ -30,12 +30,12 @@ plotKDE([p;q], dims=[1;2], levels=3)
 plotKDE([p;q], dims=[1])
 ```
 """
-function plotKDE(fgl::FactorGraph, 
+function plotKDE(fgl::FactorGraph,
       sym::Symbol;
       dims=nothing,
       title="",
       levels::Int=5,
-      fill::Bool=false, 
+      fill::Bool=false,
       layers::Bool=false,
       api::DataLayerAPI=dlapi  )
   #
@@ -96,7 +96,7 @@ end
 """
     $(SIGNATURES)
 
-plot absolute values of variables and measurement surrounding fsym factor.
+Plot absolute values of variables and measurement surrounding fsym factor.
 """
 function plotKDEofnc(fgl::FactorGraph, fsym::Symbol;
     marg=nothing,
@@ -116,7 +116,7 @@ end
 """
     $(SIGNATURES)
 
-Trye plot relative values of variables and measurement surrounding fsym factor.
+Try plot relative values of variables and measurement surrounding fsym factor.
 """
 function plotKDEresiduals(fgl::FactorGraph,
                           fsym::Symbol;
@@ -159,7 +159,7 @@ function plotKDEresiduals(fgl::FactorGraph,
 end
 
 """
-    plotPriorsAtCliq(treel, lb, cllb)
+    $(SIGNATURES)
 
 Plot the product of priors and incoming upward messages for variable in clique.
 
@@ -206,7 +206,7 @@ end
 
 
 """
-    plotUpMsgsAtCliq(treel, lb, cllb)
+    $(SIGNATURES)
 
 Draw the up pass belief of lb from clique cllb.
 
@@ -325,14 +325,14 @@ end
 
 function drawTreeUpwardMsgs(fgl::FactorGraph, bt::BayesTree; N=300)
     len = length(bt.cliques)-1
-    vv = Array{Gadfly.Compose.Context,1}(len)
+    vv = Array{Gadfly.Compose.Context,1}(undef, len)
     #r = Array{RemoteRef,1}(len)
     i = 0
     for cliq in bt.cliques
         if cliq[1] == 1 println("No upward msgs from root."); continue; end
         @show cliq[2].attributes["label"]
         i+=1
-        vv[i] = drawHorDens(fgl, cliq[2].attributes["data"].debug.outmsg.p, N)
+        vv[i] = drawHorDens(fgl, cliq[2].attributes["debug"].outmsg.p, N)
     end
     #[r[j] = @spawn drawCliqueMsgs(bt.cliques[j+1]) for j in 1:len]
     #[vv[j] = fetch(r[j]) for j in 1:len]
@@ -584,7 +584,7 @@ function drawHorDens(fgl::FactorGraph, pDens::Dict{Int,EasyMessage}, N=200)
     push!(lbls, dlapi.getvertex(fgl,pd[1]).attributes["label"])
   end
   @show lbls
-  drawHorDens(p,N,lbls=lbls)
+  drawHorDens(p,N=N,lbls=lbls)
 end
 
 function drawHorBeliefsList(fgl::FactorGraph, lbls::Array{Symbol,1};
@@ -995,13 +995,13 @@ end
 function spyCliqMat(cliq::Graphs.ExVertex; showmsg=true)
   mat = deepcopy(getCliqMat(cliq, showmsg=showmsg))
   # TODO -- add improved visualization here, iter vs skip
-  mat = map(Float64, mat)*2.0-1.0
-  numlcl = size(getCliqAssocMat(cliq),1)
+  mat = map(Float64, mat)*2.0.-1.0
+  numlcl = size(IIF.getCliqAssocMat(cliq),1)
   mat[(numlcl+1):end,:] *= 0.9
-  mat[(numlcl+1):end,:] -= 0.1
-  numfrtl1 = floor(Int,length(cliq.attributes["data"].frontalIDs)+1)
+  mat[(numlcl+1):end,:] .-= 0.1
+  numfrtl1 = floor(Int,length(cliq.attributes["data"].frontalIDs) + 1)
   mat[:,numfrtl1:end] *= 0.9
-  mat[:,numfrtl1:end] -= 0.1
+  mat[:,numfrtl1:end] .-= 0.1
   @show cliq.attributes["data"].itervarIDs
   @show cliq.attributes["data"].directvarIDs
   @show cliq.attributes["data"].msgskipIDs
@@ -1028,4 +1028,19 @@ function plotPose2Vels(fgl::FactorGraph, sym::Symbol; coord=nothing)
   py = plotKDE(X, dims=[5], title="Vely")
   coord != nothing ? (py.coord = coord) : nothing
   hstack(px, py)
+end
+
+
+"""
+    $(SIGNATURES)
+
+Analysis function to compare KDE plots between the factor graph centric product of a variable with
+current value stored in the factor graph object.
+"""
+function plotProductVsKDE(fgl::IIF.FactorGraph,
+                          sym::Symbol;
+                          levels::Int=3,
+                          c::Vector{String}=["red";"black"] )
+    #
+    plotKDE([IIF.localProduct(fgl, sym)[1], getVertKDE(fgl, sym)], levels=3, c=c)
 end

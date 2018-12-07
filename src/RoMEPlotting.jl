@@ -71,13 +71,13 @@ export
   plotPose3Pairs,
   progressExamplePlot,
   plotTrckStep,
-  plotPose2Vels
+  plotPose2Vels,
+  plotProductVsKDE
 
 
 include("SolverVisualization.jl")
 
 include("RobotViz.jl")
-
 
 
 end
