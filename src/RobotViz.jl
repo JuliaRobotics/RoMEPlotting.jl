@@ -131,6 +131,14 @@ end
 #   return lbls
 # end
 
+"""
+    $(SIGNATURES)
+
+2D plot of all poses, assuming poses are labeled from ``::Symbol` type `:x0, :x1, ..., :xn`.  Use `to` and `from` to limit the range of numbers `n` to be drawn.  The underlying histogram can be enabled or disabled, and the size of maximum-point belief estimate cursors can be controlled with `spscale`.
+
+Future:
+- Relax to user defined pose labeling scheme, for example `:p1, :p2, ...`
+"""
 function drawPoses(fg::FactorGraph; from::Int64=0,to::Int64=99999999,
                     meanmax=:max, lbls=true, drawhist=true,
                     spscale::Float64=5.0,
@@ -164,6 +172,12 @@ function drawPoses(fg::FactorGraph; from::Int64=0,to::Int64=99999999,
     psplt
 end
 
+
+"""
+    $(SIGNATURES)
+
+2D plot of landmarks, assuming `:l1, :l2, ... :ln`.  Use `from` and `to` to control the range of landmarks `n` to include.
+"""
 function drawLandms(fg::FactorGraph;
               from::Int64=0, to::Int64=99999999, minnei::Int64=0,
               meanmax=:max,
@@ -200,6 +214,11 @@ function drawLandms(fg::FactorGraph;
     psplt
 end
 
+"""
+    $(SIGNATURES)
+
+2D plot of both poses and landmarks contained in factor graph.  Assuming poses and landmarks are labeled `:x1, :x2, ...` and `:l0, :l1, ...`, respectively.  The rnage of numbers to include can be controlled with `from` and `to` along with other keyword functionality for manipulating the plot. 
+"""
 function drawPosesLandms(fgl::FactorGraph;
                     from::Int64=0, to::Int64=99999999, minnei::Int64=0,
                     meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(), showmm=true,
