@@ -217,7 +217,7 @@ end
 """
     $(SIGNATURES)
 
-2D plot of both poses and landmarks contained in factor graph.  Assuming poses and landmarks are labeled `:x1, :x2, ...` and `:l0, :l1, ...`, respectively.  The rnage of numbers to include can be controlled with `from` and `to` along with other keyword functionality for manipulating the plot. 
+2D plot of both poses and landmarks contained in factor graph.  Assuming poses and landmarks are labeled `:x1, :x2, ...` and `:l0, :l1, ...`, respectively.  The rnage of numbers to include can be controlled with `from` and `to` along with other keyword functionality for manipulating the plot.
 """
 function drawPosesLandms(fgl::FactorGraph;
                     from::Int64=0, to::Int64=99999999, minnei::Int64=0,
@@ -284,11 +284,43 @@ end
 # end
 
 
-function plotPose(::Pose2, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing)
-  p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
-  p2 = plotKDE(bels, dims=[3], c=c)
-  Gadfly.vstack(p1,p2)
+# function plotPose(::Pose2, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing)
+#   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
+#   p2 = plotKDE(bels, dims=[3], c=c)
+#
+#
+#   Gadfly.vstack(p1,p2)
+# end
+
+function plotPose(pt::Pose2,
+                  pp::Vector{BallTreeDensity};
+                  levels=3,
+                  title="plotPose2",
+                  c=nothing,
+                  scale::Float64=0.2)
+  #
+  # ops = buildHybridManifoldCallbacks(pt.manifolds)
+  # @show ran = getKDERange(p, addop=ops[1], diffop=ops[2])
+
+  p1 = plotKDE(pp, dims=[1;2], levels=levels, c=c, title=title )
+  # p2 = plotKDE(bels, dims=[3], c=c)
+
+  cc = c == nothing ? ["cyan" for i in 1:length(pp)] : c
+
+  GG = BallTreeDensity[]
+  for ppc in pp
+    gg = marginal(ppc,[3])
+    # gg = (x)->pc(reshape([x], :,1))[1]
+    push!(GG, gg)
+  end
+  # p2 = AMP.plotCircBeliefs(GG, c=cc)
+  p2 = plotKDECircular(GG, scale=scale, c=cc)
+
+  Gadfly.hstack(p1,p2)
 end
+
+
+
 
 function plotPose(::DynPose2, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing)
   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
