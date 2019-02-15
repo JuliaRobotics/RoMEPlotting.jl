@@ -17,12 +17,12 @@ initCov = Matrix(Diagonal([0.03;0.03;0.001]))
 odoCov = Matrix(Diagonal([3.0;3.0;0.01]))
 
 # Some starting position
-addNode!(fg, :x0, Pose2, N=N)
+addVariable!(fg, :x0, Pose2, N=N)
 initPosePrior = PriorPose2(MvNormal(zeros(3), initCov))
 addFactor!(fg,[:x0], initPosePrior)
 
 # and a second pose
-addNode!(fg, :x1, Pose2, N=N)
+addVariable!(fg, :x1, Pose2, N=N)
 ppc = Pose2Pose2(MvNormal([50.0;0.0;pi/2], odoCov))
 addFactor!(fg, [:x0; :x1], ppc)
 
@@ -38,13 +38,13 @@ inferOverTreeR!(fg, tree,N=N)
 # inferOverTree!(fg, tree, N=N)
 
 # check that yaw is working
-addNode!(fg, :x2, Pose2, N=N)
+addVariable!(fg, :x2, Pose2, N=N)
 ppc = Pose2Pose2(MvNormal([50.0;0.0;0.0], odoCov))
 addFactor!(fg, [:x1;:x2], ppc)
 
 
 # new landmark
-l1 = addNode!(fg, :l1, Point2, N=N)
+l1 = addVariable!(fg, :l1, Point2, N=N)
 # and pose to landmark constraint
 rhoZ1 = norm([10.0;0.0])
 ppr = Pose2Point2BearingRange{Uniform, Normal}(Uniform(-pi,pi),Normal(rhoZ1,1.0))
@@ -52,7 +52,7 @@ addFactor!(fg, [:x0;:l1], ppr)
 
 
 # add a prior to landmark
-pp2 = PriorPoint2D([10.0;0.0], Matrix(Diagonal([1.0;1.0])), [1.0])
+pp2 = PriorPoint2(MvNormal([10.0;0.0], Matrix(Diagonal([1.0;1.0]))))
 
 f5 = addFactor!(fg,[:l1], pp2)
 
