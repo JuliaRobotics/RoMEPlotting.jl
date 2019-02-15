@@ -291,18 +291,35 @@ end
 #
 #   Gadfly.vstack(p1,p2)
 # end
+import KernelDensityEstimate: getKDERange
+
+function getKDERange(bds::Vector{BallTreeDensity};extend=0.15)
+
+  dims = Ndim(bds[1])
+  ran = getKDERange(bds[1],extend=extend)
+
+  for bd in bds
+    rr = getKDERange(bd,extend=extend)
+    for i in 2:dims, j in 1:2
+      ran[i,j] = maximum([rr[i,j]; ran[i,j]])
+    end
+  end
+  return ran
+end
 
 function plotPose(pt::Pose2,
-                  pp::Vector{BallTreeDensity};
+                  pp::Vector{BallTreeDensity},
+                  title="plotPose2";
                   levels=3,
-                  title="plotPose2",
                   c=nothing,
+                  axis=nothing,
                   scale::Float64=0.2)
   #
   # ops = buildHybridManifoldCallbacks(pt.manifolds)
   # @show ran = getKDERange(p, addop=ops[1], diffop=ops[2])
+  ran = axis == nothing ? getKDERange(pp) : axis
 
-  p1 = plotKDE(pp, dims=[1;2], levels=levels, c=c, title=title )
+  p1 = plotKDE(pp, dims=[1;2], levels=levels, c=c, title=title, axis=ran )
   # p2 = plotKDE(bels, dims=[3], c=c)
 
   cc = c == nothing ? ["cyan" for i in 1:length(pp)] : c
@@ -322,7 +339,7 @@ end
 
 
 
-function plotPose(::DynPose2, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing)
+function plotPose(::DynPose2, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing, axis=nothing)
   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
   p2 = plotKDE(bels, dims=[3], c=c)
   p3 = plotKDE(bels, dims=[4;5], levels=levels, c=c)
@@ -331,7 +348,7 @@ end
 
 # import RoMEPlotting: plotPose
 
-function plotPose(::Pose3, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing)
+function plotPose(::Pose3, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing, axis=nothing)
   @show title
   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
   p2 = plotKDE(bels, dims=[3], c=c)
@@ -349,19 +366,21 @@ function plotPose(fgl::FactorGraph,
                   syms::Vector{Symbol};
                   levels::Int=5,
                   c=nothing,
+                  axis=nothing,
                   show::Bool=true,
                   filepath::AS="/tmp/tempposeplot.svg",
                   app::AS="eog" ) where {AS <: AbstractString}
   #
   typ = getData(fgl, syms[1]).softtype
   pt = string(string.(syms)...)
-  pl = plotPose(typ, getVertKDE.(fgl, syms), pt, levels=levels, c=c)
+  getvertsgg = (sym) -> getVertKDE(fgl, sym)
+  pl = plotPose(typ, getvertsgg.(syms), pt, levels=levels, c=c, axis=axis)
 
   if length(filepath) > 0
     ext = split(filepath, '.')[end]
     cmd = getfield(Gadfly,Symbol(uppercase(ext)))
 
-    h = 3*7Gadfly.cm
+    h = 1*7Gadfly.cm
     if typ == DynPose2
         h *= 1.5
     end
@@ -377,11 +396,12 @@ function plotPose(fgl::FactorGraph,
                   sym::Symbol;
                   levels::Int=5,
                   c=nothing,
+                  axis=nothing,
                   show::Bool=true,
                   filepath::AS="/tmp/tempposeplot.svg",
                   app::AS="eog" ) where {AS <: AbstractString}
   #
-  plotPose(fgl, [sym;], levels=levels, show=show, filepath=filepath, app=app)
+  plotPose(fgl, [sym;], levels=levels, axis=axis, show=show, filepath=filepath, app=app)
 end
 
 # deprecated
@@ -437,15 +457,16 @@ function investigatePoseKDE(p::BallTreeDensity)
     return investigateMultidimKDE(p)
 end
 
+# import RoMEPlotting: drawMarginalContour
 
 function drawMarginalContour(fgl::FactorGraph, lbl::String;
     xmin=-150,xmax=150,ymin=-150,ymax=150,n=200,
     api::DataLayerAPI=IncrementalInference.localapi )
   #
-  p = getVertKDE(fgl,lbl, api=api)  # p = getKDE(getVert(fgl,lbl))
+  p = getVertKDE(fgl,Symbol(lbl), api=api)  # p = getKDE(getVert(fgl,lbl))
   Gadfly.plot(z=(x,y)->evaluateDualTree(p,vectoarr2([x,y]))[1],
-    x=linspace(xmin,xmax,n),
-    y=linspace(ymin,ymax,n),
+    x=collect(range(xmin,stop=xmax,length=n)),
+    y=collect(range(ymin,stop=ymax,length=n)),
     Geom.contour,
     Coord.Cartesian(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax),
     Guide.title(lbl)

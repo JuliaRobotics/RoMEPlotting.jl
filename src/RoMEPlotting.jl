@@ -11,6 +11,9 @@ using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
 using DocStringExtensions
 
+using ApproxManifoldProducts
+const AMP = ApproxManifoldProducts
+
 import KernelDensityEstimatePlotting: plot, drawHorDens, plotKDE
 import IncrementalInference: CliqGibbsMC, DebugCliqMCMC
 import Graphs: plot
