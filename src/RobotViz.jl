@@ -225,10 +225,13 @@ function drawPosesLandms(fgl::FactorGraph;
                     spscale::Float64=5.0,window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
                     api::DataLayerAPI=IncrementalInference.localapi, xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing  ) where T
   #
+  xx,ll = ls(fgl)
   p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, api=api)
-  pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, api=api)
-  for l in pl.layers
-    push!(p.layers, l)
+  if length(ll) > 0
+    pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, api=api)
+    for l in pl.layers
+      push!(p.layers, l)
+    end
   end
   if window != nothing
     focusX = getKDEMax(getVertKDE(fgl,window[1]))
