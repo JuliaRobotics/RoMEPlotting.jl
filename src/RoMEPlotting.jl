@@ -50,6 +50,7 @@ export
   drawFactorBeliefs,
   localProduct,
   plotLocalProduct,
+  plotLocalProductCylinder,
   saveplot,
   animateVertexBelief,
   getColorsByLength,

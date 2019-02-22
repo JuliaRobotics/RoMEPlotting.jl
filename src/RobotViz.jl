@@ -295,6 +295,8 @@ end
 #   Gadfly.vstack(p1,p2)
 # end
 
+# import RoMEPlotting: plotPose
+
 function plotPose(pt::Pose2,
                   pp::Vector{BallTreeDensity};
                   levels=3,
@@ -317,7 +319,7 @@ function plotPose(pt::Pose2,
     push!(GG, gg)
   end
   # p2 = AMP.plotCircBeliefs(GG, c=cc)
-  p2 = plotKDECircular(GG, scale=scale, c=cc)
+  p2 = AMP.plotKDECircular(GG, scale=scale, c=cc)
 
   Gadfly.hstack(p1,p2)
 end
