@@ -723,7 +723,6 @@ end
 #   pl
 # end
 
-
 """
     $(SIGNATURES)
 
@@ -763,7 +762,7 @@ function plotLocalProductCylinder(fgl::FactorGraph,
     end
     colors = getColorsByLength(length(arr))
     pll = plotKDE(arr, dims=[1;], levels=levels, c=colors, legend=lbls, title=string("Local product, ",lbl))
-    plc = plotKDECircular(carr, c=colors, scale=scale)
+    plc = AMP.plotKDECircular(carr, c=colors, scale=scale)
     # (pll, plc)
   elseif length(parr) == 0 && length(partials) > 0
     # stack 1d plots to accomodate all the partials
@@ -779,7 +778,7 @@ function plotLocalProductCylinder(fgl::FactorGraph,
         pll = plotKDE([proddim;getVertKDE(fgl, lbl, api=api);vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
         push!(PL, pl)
       else
-        plc = plotKDECircular([proddim; marginal(getVertKDE(fgl, lbl, api=api),[2]);vals], c=colors, scale=scale)
+        plc = AMP.plotKDECircular([proddim; marginal(getVertKDE(fgl, lbl, api=api),[2]);vals], c=colors, scale=scale)
         push!(PLC, plc)
       end
     end
