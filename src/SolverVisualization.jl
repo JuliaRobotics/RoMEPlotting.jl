@@ -723,6 +723,82 @@ end
 #   pl
 # end
 
+"""
+    $(SIGNATURES)
+
+Plot---for the cylindrical manifold only---the proposal belief from neighboring factors to `lbl` in the factor graph (ignoring Bayes tree representation),
+and show with new product approximation for reference.  The linear and circular belief products are returned as a tuple.
+"""
+function plotLocalProductCylinder(fgl::FactorGraph,
+                                  lbl::Symbol;
+                                  N::Int=100,
+                                  api::DataLayerAPI=dlapi,
+                                  levels::Int=1,
+                                  show=true,
+                                  dirpath="/tmp/",
+                                  mimetype::AbstractString="svg",
+                                  sidelength=30cm,
+                                  scale::Float64=0.2 )
+  #
+  @warn "not showing partial constraints, but included in the product"
+  arr = Array{BallTreeDensity,1}()
+  carr = Array{BallTreeDensity,1}()
+  lbls = String[]
+  push!(arr, getVertKDE(fgl, lbl, api=api))
+  push!(lbls, "curr")
+  pl = nothing
+  plc = nothing
+  pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N, api=api)
+  if length(parr) > 0 && length(partials) == 0
+    if pp != parr[1]
+      push!(arr, marginal(pp,[1]))
+      push!(lbls, "prod")
+      push!(carr, marginal(pp, [2]))
+      for a in parr
+        push!(arr, marginal(a,[1]))
+        push!(carr, marginal(a,[2]))
+      end
+      lbls = union(lbls, lb)
+    end
+    colors = getColorsByLength(length(arr))
+    pll = plotKDE(arr, dims=[1;], levels=levels, c=colors, legend=lbls, title=string("Local product, ",lbl))
+    plc = AMP.plotKDECircular(carr, c=colors, scale=scale)
+    # (pll, plc)
+  elseif length(parr) == 0 && length(partials) > 0
+    # stack 1d plots to accomodate all the partials
+    PL = []
+    PLC = []
+    lbls = ["prod";"curr";lb]
+    pdims = sort(collect(keys(partials)))
+    for dimn in pdims
+      vals = partials[dimn]
+      proddim = marginal(pp, [dimn])
+      colors = getColorsByLength(length(vals)+2)
+      if dimn == 1
+        pll = plotKDE([proddim;getVertKDE(fgl, lbl, api=api);vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
+        push!(PL, pl)
+      else
+        plc = AMP.plotKDECircular([proddim; marginal(getVertKDE(fgl, lbl, api=api),[2]);vals], c=colors, scale=scale)
+        push!(PLC, plc)
+      end
+    end
+    pl = Gadfly.vstack(PL..., PLC...)
+  else
+    return error("plotLocalProduct not built for lengths parr, partials = $(length(parr)), $(length(partials)) yet.")
+  end
+
+  # now let's export:
+  # backend = getfield(Gadfly, Symbol(uppercase(mimetype)))
+  # Gadfly.draw(backend(dirpath*"test_$(lbl).$(mimetype)",sidelength,sidelength), pl)
+  # driver = mimetype in ["pdf"] ? "evince" : "eog"
+  # show ? (@async run(`$driver $(dirpath)test_$(lbl).$(mimetype)`)) : nothing
+
+  return pll, plc
+end
+
+
+
+
 
 """
     plotLocalProduct{T <: AbstractString}(fgl::FactorGraph, lbl::T; N::Int=100, dims::Vector{Int}=Int[])

@@ -225,10 +225,13 @@ function drawPosesLandms(fgl::FactorGraph;
                     spscale::Float64=5.0,window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
                     api::DataLayerAPI=IncrementalInference.localapi, xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing  ) where T
   #
+  xx,ll = ls(fgl)
   p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, api=api)
-  pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, api=api)
-  for l in pl.layers
-    push!(p.layers, l)
+  if length(ll) > 0
+    pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, api=api)
+    for l in pl.layers
+      push!(p.layers, l)
+    end
   end
   if window != nothing
     focusX = getKDEMax(getVertKDE(fgl,window[1]))
@@ -307,6 +310,8 @@ function getKDERange(bds::Vector{BallTreeDensity};extend=0.15)
   return ran
 end
 
+# import RoMEPlotting: plotPose
+
 function plotPose(pt::Pose2,
                   pp::Vector{BallTreeDensity},
                   title="plotPose2";
@@ -331,7 +336,7 @@ function plotPose(pt::Pose2,
     push!(GG, gg)
   end
   # p2 = AMP.plotCircBeliefs(GG, c=cc)
-  p2 = plotKDECircular(GG, scale=scale, c=cc)
+  p2 = AMP.plotKDECircular(GG, scale=scale, c=cc)
 
   Gadfly.hstack(p1,p2)
 end

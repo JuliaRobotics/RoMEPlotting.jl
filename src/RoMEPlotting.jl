@@ -10,6 +10,7 @@ using Graphs
 using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
 using DocStringExtensions
+using ApproxManifoldProducts
 
 using ApproxManifoldProducts
 const AMP = ApproxManifoldProducts
@@ -53,6 +54,7 @@ export
   drawFactorBeliefs,
   localProduct,
   plotLocalProduct,
+  plotLocalProductCylinder,
   saveplot,
   animateVertexBelief,
   getColorsByLength,
