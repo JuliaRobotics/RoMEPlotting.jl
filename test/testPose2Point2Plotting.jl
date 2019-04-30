@@ -2,7 +2,7 @@
 
 using LinearAlgebra, Statistics
 using RoME
-using KernelDensityEstimate
+# using KernelDensityEstimate
 using RoMEPlotting, Gadfly
 using Test
 
@@ -10,7 +10,7 @@ using Test
 
 
 N = 75
-fg = initfg()
+fg = IIF.initfg()
 
 
 initCov = Matrix(Diagonal([0.03;0.03;0.001]))
