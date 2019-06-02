@@ -13,7 +13,8 @@ using DocStringExtensions
 using ApproxManifoldProducts
 
 using ApproxManifoldProducts
-const AMP = ApproxManifoldProducts
+# const AMP = ApproxManifoldProducts
+import RoME: AMP
 
 import KernelDensityEstimatePlotting: plot, drawHorDens, plotKDE
 import IncrementalInference: CliqGibbsMC, DebugCliqMCMC
