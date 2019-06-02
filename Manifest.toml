@@ -52,10 +52,10 @@ uuid = "00ebfdb7-1f24-5e51-bd34-a7502290713f"
 version = "0.5.2"
 
 [[Cairo]]
-deps = ["BinDeps", "Colors", "Compat", "Graphics", "Homebrew", "Libdl", "Pkg", "WinRPM"]
-git-tree-sha1 = "e577cb41e7e2641f4b97f1b6dbcb9a69c9288330"
+deps = ["BinDeps", "Colors", "Compat", "Graphics", "Homebrew", "Libdl", "WinRPM"]
+git-tree-sha1 = "a427098d5aa2808504d94b8ed9fc5740ceaf71d0"
 uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
-version = "0.6.0"
+version = "0.5.6"
 
 [[Calculus]]
 deps = ["Compat"]
@@ -315,6 +315,12 @@ deps = ["DelimitedFiles", "Distributions", "DocStringExtensions", "LinearAlgebra
 git-tree-sha1 = "574b8ee047879ee249bf9d290c4af83722ce8ea7"
 uuid = "2472808a-b354-52ea-a80e-1658a3c6056d"
 version = "0.5.0"
+
+[[KernelDensityEstimatePlotting]]
+deps = ["Cairo", "Colors", "Compose", "Fontconfig", "Gadfly", "KernelDensityEstimate", "LinearAlgebra", "Statistics", "Test"]
+git-tree-sha1 = "4b66e31c0c35fc0ed696d7732b78915bd22f3b72"
+uuid = "c43967c8-f634-5d24-8eab-2867546b366b"
+version = "0.1.0"
 
 [[LibCURL]]
 deps = ["BinaryProvider", "Libdl"]
