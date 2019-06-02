@@ -609,4 +609,65 @@ function plotKDE(fgl::FactorGraph, vsym::Symbol; axis=nothing, dims=nothing, c=n
 end
 
 
+
+
+
+function plotTrailingPoses(pt::Pose2,
+                           pp::Vector{BallTreeDensity},
+                           title="";
+                           levels=2,
+                           c=nothing,
+                           axis=nothing,
+                           scale::Float64=0.2,
+                           circlen::Int=5)
+
+ran = axis == nothing ? getKDERange(pp) : axis
+
+cc=["red"; ["pink" for i in 1:100]]
+
+p1 = plotKDE(pp, dims=[1;2], levels=levels, c=cc, title=title, axis=ran )
+
+GG = BallTreeDensity[]
+for ppc in pp
+  gg = marginal(ppc,[3])
+  # gg = (x)->pc(reshape([x], :,1))[1]
+  push!(GG, gg)
+end
+p2 = AMP.plotKDECircular(GG[(end-circlen):end], scale=scale, c=cc)
+
+p2,p1
+end
+
+
+
+function plotTrailingPoses(fg::FactorGraph,
+                           pp::Vector{Symbol},
+                           title="";
+                           levels=2,
+                           c=nothing,
+                           axis=nothing,
+                           scale::Float64=0.2,
+                           circlen::Int=5)
+  #
+  plotTrailingPoses(Pose2(), map(x->getKDE(fg,x),pp), scale=scale, title=title, circlen=circlen)
+end
+
+# gg = (x)->plotTrailingPoses(fg, [Symbol("x$i") for i in (x+60):-5:x],circlen=3)
+#
+# for i in 5:5:290
+#  g1,g2 = gg(i)
+#
+#  g1 |> SVG("/tmp/trailingimgs/g1_$(i).svg")
+#  g1 |> SVG("/tmp/trailingimgs/g1_$(i+1).svg")
+#  g1 |> SVG("/tmp/trailingimgs/g1_$(i+2).svg")
+#  g1 |> SVG("/tmp/trailingimgs/g1_$(i+3).svg")
+#  g1 |> SVG("/tmp/trailingimgs/g1_$(i+4).svg")
+#
+#  g2 |> SVG("/tmp/trailingimgs/g2_$(i).svg")
+#  g2 |> SVG("/tmp/trailingimgs/g2_$(i+1).svg")
+#  g2 |> SVG("/tmp/trailingimgs/g2_$(i+2).svg")
+#  g2 |> SVG("/tmp/trailingimgs/g2_$(i+3).svg")
+#  g2 |> SVG("/tmp/trailingimgs/g2_$(i+4).svg")
+# end
+
 #

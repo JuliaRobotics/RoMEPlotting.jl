@@ -646,7 +646,18 @@ drawFactorBeliefs(fgl::FactorGraph, flbl::T) where {T <: AbstractString} = drawF
 Plot the proposal belief from neighboring factors to `lbl` in the factor graph (ignoring Bayes tree representation),
 and show with new product approximation for reference.
 """
-function plotLocalProduct(fgl::FactorGraph, lbl::Symbol; N::Int=100, dims::Vector{Int}=Int[], api::DataLayerAPI=dlapi, levels::Int=1, show=true, dirpath="/tmp/", mimetype::AbstractString="svg",sidelength=30cm)
+function plotLocalProduct(fgl::FactorGraph,
+                          lbl::Symbol;
+                          N::Int=100,
+                          dims::Vector{Int}=Int[],
+                          api::DataLayerAPI=dlapi,
+                          levels::Int=1,
+                          show=true,
+                          dirpath="/tmp/",
+                          mimetype::AbstractString="svg",
+                          sidelength=20cm,
+                          title::String="Local product, "  )
+  #
   @warn "not showing partial constraints, but included in the product"
   arr = Array{BallTreeDensity,1}()
   lbls = String[]
@@ -665,7 +676,7 @@ function plotLocalProduct(fgl::FactorGraph, lbl::Symbol; N::Int=100, dims::Vecto
     end
     dims = length(dims) > 0 ? dims : collect(1:Ndim(pp))
     colors = getColorsByLength(length(arr))
-    pl = plotKDE(arr, dims=dims, levels=levels, c=colors, legend=lbls, title=string("Local product, ",lbl))
+    pl = plotKDE(arr, dims=dims, levels=levels, c=colors, legend=lbls, title=string(title,lbl))
   elseif length(parr) == 0 && length(partials) > 0
     # stack 1d plots to accomodate all the partials
     PL = []
@@ -685,7 +696,7 @@ function plotLocalProduct(fgl::FactorGraph, lbl::Symbol; N::Int=100, dims::Vecto
 
   # now let's export:
   backend = getfield(Gadfly, Symbol(uppercase(mimetype)))
-  Gadfly.draw(backend(dirpath*"test_$(lbl).$(mimetype)",sidelength,sidelength), pl)
+  Gadfly.draw(backend(dirpath*"test_$(lbl).$(mimetype)",sidelength,0.75*sidelength), pl)
   driver = mimetype in ["pdf"] ? "evince" : "eog"
   show ? (@async run(`$driver $(dirpath)test_$(lbl).$(mimetype)`)) : nothing
 
@@ -781,9 +792,6 @@ function plotLocalProductCylinder(fgl::FactorGraph,
 end
 
 
-
-
-
 """
     plotLocalProduct{T <: AbstractString}(fgl::FactorGraph, lbl::T; N::Int=100, dims::Vector{Int}=Int[])
 
@@ -791,6 +799,59 @@ Plot the proposal belief from neighboring factors to `lbl` in the factor graph (
 and show with new product approximation for reference. String version is obsolete and will be deprecated.
 """
 plotLocalProduct(fgl::FactorGraph, lbl::T; N::Int=100, dims::Vector{Int}=Int[]) where {T <: AbstractString} = plotLocalProduct(fgl, Symbol(lbl), N=N, dims=dims)
+
+"""
+    $SIGNATURES
+
+Project (convolve) to and take product of variable in Bayes/Junction tree.
+
+Notes
+- assume cliq and var sym the same, unless both specified.
+- `cliqsym` defines a frontal variable of a clique.
+"""
+function plotTreeProductUp(fgl::FactorGraph,
+                           treel::BayesTree,
+                           cliqsym::Symbol,
+                           varsym::Symbol=cliqsym  )
+  #
+  # build a subgraph copy of clique
+  cliq = whichCliq(treel, cliqsym)
+  syms = getCliqAllVarSyms(fgl, cliq)
+  subfg = buildSubgraphFromLabels(fgl,syms)
+
+  # add upward messages to subgraph
+  msgs = getCliqChildMsgsUp(treel,cliq, BallTreeDensity)
+  addMsgFactors!(subfg, msgs)
+
+  # predictBelief
+  # stuff = treeProductUp(fgl, treel, cliqsym, varsym)
+  # plotKDE(manikde!(stuff[1], getManifolds(fgl, varsym)))
+  cllbl = cliq.attributes["label"]
+  return plotLocalProduct(subfg, varsym, title="Tree Up $(cllbl) | ")
+end
+
+
+function plotTreeProductDown(fgl::FactorGraph,
+                           treel::BayesTree,
+                           cliqsym::Symbol,
+                           varsym::Symbol=cliqsym  )
+  #
+  # build a subgraph copy of clique
+  cliq = whichCliq(treel, cliqsym)
+  syms = getCliqAllVarSyms(fgl, cliq)
+  subfg = buildSubgraphFromLabels(fgl,syms)
+
+  # add upward messages to subgraph
+  msgs = getCliqParentMsgDown(treel,cliq)
+  addMsgFactors!(subfg, msgs)
+
+  # predictBelief
+  # stuff = treeProductUp(fgl, treel, cliqsym, varsym)
+  # plotKDE(manikde!(stuff[1], getManifolds(fgl, varsym)))
+  cllbl = cliq.attributes["label"]
+  return plotLocalProduct(subfg, varsym, title="Tree Dwn $(cllbl) | ")
+end
+
 
 function saveplot(pl;name="pl",frt=:png,w=25cm,h=25cm,nw=false,fill=true)
   if frt==:png
@@ -1049,33 +1110,33 @@ function compositeComic(fnc::Function, fgA::Array{FactorGraph,1})
     v
 end
 
-
-
-
-function spyCliqMat(cliq::Graphs.ExVertex; showmsg=true)
-  mat = deepcopy(getCliqMat(cliq, showmsg=showmsg))
-  # TODO -- add improved visualization here, iter vs skip
-  mat = map(Float64, mat)*2.0.-1.0
-  numlcl = size(IIF.getCliqAssocMat(cliq),1)
-  mat[(numlcl+1):end,:] *= 0.9
-  mat[(numlcl+1):end,:] .-= 0.1
-  numfrtl1 = floor(Int,length(cliq.attributes["data"].frontalIDs) + 1)
-  mat[:,numfrtl1:end] *= 0.9
-  mat[:,numfrtl1:end] .-= 0.1
-  @show cliq.attributes["data"].itervarIDs
-  @show cliq.attributes["data"].directvarIDs
-  @show cliq.attributes["data"].msgskipIDs
-  @show cliq.attributes["data"].directFrtlMsgIDs
-  @show cliq.attributes["data"].directPriorMsgIDs
-  sp = Gadfly.spy(mat)
-  push!(sp.guides, Gadfly.Guide.title("$(cliq.attributes["label"]) || $(cliq.attributes["data"].frontalIDs) :$(cliq.attributes["data"].conditIDs)"))
-  push!(sp.guides, Gadfly.Guide.xlabel("fmcmcs $(cliq.attributes["data"].itervarIDs)"))
-  push!(sp.guides, Gadfly.Guide.ylabel("lcl=$(numlcl) || msg=$(size(getCliqMsgMat(cliq),1))" ))
-  return sp
-end
-function spyCliqMat(bt::BayesTree, lbl::Symbol; showmsg=true)
-  spyCliqMat(whichCliq(bt,lbl), showmsg=showmsg)
-end
+#
+#
+#
+# function spyCliqMat(cliq::Graphs.ExVertex; showmsg=true)
+#   mat = deepcopy(getCliqMat(cliq, showmsg=showmsg))
+#   # TODO -- add improved visualization here, iter vs skip
+#   mat = map(Float64, mat)*2.0.-1.0
+#   numlcl = size(IIF.getCliqAssocMat(cliq),1)
+#   mat[(numlcl+1):end,:] *= 0.9
+#   mat[(numlcl+1):end,:] .-= 0.1
+#   numfrtl1 = floor(Int,length(getData(cliq).frontalIDs) + 1)
+#   mat[:,numfrtl1:end] *= 0.9
+#   mat[:,numfrtl1:end] .-= 0.1
+#   @show getData(cliq).itervarIDs
+#   @show getData(cliq).directvarIDs
+#   @show getData(cliq).msgskipIDs
+#   @show getData(cliq).directFrtlMsgIDs
+#   @show getData(cliq).directPriorMsgIDs
+#   sp = Gadfly.spy(mat)
+#   push!(sp.guides, Gadfly.Guide.title("$(cliq.attributes["label"]) || $(cliq.attributes["data"].frontalIDs) :$(cliq.attributes["data"].conditIDs)"))
+#   push!(sp.guides, Gadfly.Guide.xlabel("fmcmcs $(cliq.attributes["data"].itervarIDs)"))
+#   push!(sp.guides, Gadfly.Guide.ylabel("lcl=$(numlcl) || msg=$(size(getCliqMsgMat(cliq),1))" ))
+#   return sp
+# end
+# function spyCliqMat(bt::BayesTree, lbl::Symbol; showmsg=true)
+#   spyCliqMat(whichCliq(bt,lbl), showmsg=showmsg)
+# end
 
 
 
