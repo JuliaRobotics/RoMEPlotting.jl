@@ -6,7 +6,8 @@ using Reexport
 
 using Statistics, LinearAlgebra
 using Compose
-using Graphs
+# using Graphs
+using DistributedFactorGraphs
 using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
 using DocStringExtensions
@@ -14,7 +15,7 @@ using ApproxManifoldProducts
 
 using ApproxManifoldProducts
 # const AMP = ApproxManifoldProducts
-import RoME: AMP
+# import RoME: AMP
 
 import KernelDensityEstimatePlotting: plot, drawHorDens, plotKDE
 import IncrementalInference: CliqGibbsMC, DebugCliqMCMC
