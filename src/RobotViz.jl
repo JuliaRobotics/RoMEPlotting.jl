@@ -141,15 +141,14 @@ Future:
 """
 function drawPoses(fg::G; from::Int64=0,to::Int64=99999999,
                     meanmax=:max, lbls=true, drawhist=true,
-                    spscale::Float64=5.0,
-                    api::DataLayerAPI=IncrementalInference.localapi  ) where G <: AstractDFG
+                    spscale::Float64=5.0  ) where G <: AbstractDFG
     #Gadfly.set_default_plot_size(20cm, 30cm)
     Xp,Yp = get2DPoseSamples(fg, from=from, to=to)
     Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; LBLS=String[];
     if meanmax == :mean
-      Xpp,Ypp, Thpp, LBLS = get2DPoseMeans(fg, from=from, to=to, api=api)
+      Xpp,Ypp, Thpp, LBLS = get2DPoseMeans(fg, from=from, to=to)
     elseif meanmax == :max
-      Xpp,Ypp, Thpp, LBLS = get2DPoseMax(fg, from=from, to=to, api=api)
+      Xpp,Ypp, Thpp, LBLS = get2DPoseMax(fg, from=from, to=to)
     end
 
     # lbls = lblsFromTo(1,length(Xpp))
@@ -179,12 +178,13 @@ end
 2D plot of landmarks, assuming `:l1, :l2, ... :ln`.  Use `from` and `to` to control the range of landmarks `n` to include.
 """
 function drawLandms(fg::G;
-              from::Int64=0, to::Int64=99999999, minnei::Int64=0,
-              meanmax=:max,
-              lbls=true,showmm=false,drawhist=true,
-              c="red",
-              MM::Dict{Int,T}=Dict{Int,Int}(),
-              api::DataLayerAPI=IncrementalInference.localapi  ) where {G <: AbstractDFG, T}
+                    from::Int64=0, to::Int64=99999999,
+                    minnei::Int64=0,
+                    meanmax=:max,
+                    lbls=true,showmm=false,drawhist=true,
+                    c="red",
+                    MM::Dict{Int,T}=Dict{Int,Int}(),
+                    api::DataLayerAPI=IncrementalInference.localapi  ) where {G <: AbstractDFG, T}
     #Gadfly.set_default_plot_size(20cm, 30cm)
     Xp,Yp = get2DLandmSamples(fg, from=from, to=to)
     Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; lblstags=String[];
@@ -218,16 +218,19 @@ end
     $(SIGNATURES)
 
 2D plot of both poses and landmarks contained in factor graph.  Assuming poses and landmarks are labeled `:x1, :x2, ...` and `:l0, :l1, ...`, respectively.  The rnage of numbers to include can be controlled with `from` and `to` along with other keyword functionality for manipulating the plot.
+
+Notes
+- assumes `:l1`, `:l2`, ... for landmarks -- not using `tags=[:LANDMARK]` here yet (TODO).
 """
 function drawPosesLandms(fgl::G;
                          from::Int64=0, to::Int64=99999999, minnei::Int64=0,
                          meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(), showmm=true,
                          spscale::Float64=5.0,window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
                          api::DataLayerAPI=IncrementalInference.localapi,
-                         xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing  ) where {T <: AbstractDFG}
+                         xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing  ) where {G <: AbstractDFG, T}
   #
-  xx,ll = ls(fgl)
-  p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, api=api)
+  ll = getVariableIds(fgl, r"l")
+  p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale)
   if length(ll) > 0
     pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, api=api)
     for l in pl.layers
@@ -245,10 +248,12 @@ function drawPosesLandms(fgl::G;
 end
 
 function drawSubmaps(fgl::G, fromto::Array{Int,2};
-                     m1hist=false,m2hist=false,m3hist=false, showmm=false, MM::Dict{Int,T} = Dict{Int,Any}(),
-                     api::DataLayerAPI=IncrementalInference.localapi, xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {T}
+                     m1hist=false, m2hist=false, m3hist=false,
+                     showmm=false, MM::Dict{Int,T} = Dict{Int,Any}(),
+                     api::DataLayerAPI=IncrementalInference.localapi,
+                     xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {G <: AbstractDFG, T}
   #
-  p = drawLandms(fgl, from=fromto[1,1], to=fromto[1,2], drawhist=m1hist, showmm=showmm, MM=MM, api=api) where G <: AbstractDFG
+  p = drawLandms(fgl, from=fromto[1,1], to=fromto[1,2], drawhist=m1hist, showmm=showmm, MM=MM, api=api)
   if size(fromto,1) >1
     p2 = drawLandms(fgl, from=fromto[2,1], to=fromto[2,2], drawhist=m2hist,c="blue", showmm=showmm, MM=MM, api=api)
     for l in p2.layers
@@ -267,7 +272,7 @@ function drawSubmaps(fgl::G, fromto::Array{Int,2};
 end
 
 function drawSubmaps(fgl::G, fromto::Array{Int,1}; spread::Int=25,
-                     m1hist=false,m2hist=false,m3hist=false,
+                     m1hist=false, m2hist=false, m3hist=false,
                      showmm=false, MM::Dict{Int,T}=Dict{Int,Any}(),
                      xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {G <: AbstractDFG, T}
   #
@@ -300,7 +305,7 @@ end
 # end
 import KernelDensityEstimate: getKDERange
 
-function getKDERange(bds::Vector{BallTreeDensity};extend=0.15)
+function getKDERange(bds::Vector{BallTreeDensity}; extend=0.15)
 
   dims = Ndim(bds[1])
   ran = getKDERange(bds[1],extend=extend)

@@ -512,7 +512,7 @@ end
 
 function dwnMsgsAtCliq(fg::G,
                        bt::BayesTree,
-                       lbl::String  ) where G <: AbstactDFG
+                       lbl::String  ) where G <: AbstractDFG
   #
   dwnMsgsAtCliq(fg, whichCliq(bt, lbl) )
 end
