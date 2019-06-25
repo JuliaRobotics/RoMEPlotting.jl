@@ -31,7 +31,7 @@ IncrementalInference = "0.5, 0.6, 0.7, 0.8"
 KernelDensityEstimate = "≥ 0.5"
 KernelDensityEstimatePlotting = "≥ 0.1"
 Reexport = "≥ 0.2"
-RoME = "0.3"
+RoME = "0.3, 0.4, 0.5"
 StatsBase = "≥ 0.25"
 julia = "0.7, 1"
 
