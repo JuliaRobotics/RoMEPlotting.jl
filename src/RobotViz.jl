@@ -164,11 +164,12 @@ function drawPoses(fg::G; from::Int64=0,to::Int64=99999999,
       Coord.cartesian(fixed=true)
       )
     end
+	# return psplt
     addXYLineLayers!(psplt, Xpp, Ypp, Thpp, l=spscale)
     if drawhist
       push!(psplt.layers,  Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)[1] )#(xbincount=100, ybincount=100))
     end
-    psplt
+    return psplt
 end
 
 
@@ -183,15 +184,14 @@ function drawLandms(fg::G;
                     meanmax=:max,
                     lbls=true,showmm=false,drawhist=true,
                     c="red",
-                    MM::Dict{Int,T}=Dict{Int,Int}(),
-                    api::DataLayerAPI=IncrementalInference.localapi  ) where {G <: AbstractDFG, T}
+                    MM::Dict{Int,T}=Dict{Int,Int}()  ) where {G <: AbstractDFG, T}
     #Gadfly.set_default_plot_size(20cm, 30cm)
     Xp,Yp = get2DLandmSamples(fg, from=from, to=to)
     Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; lblstags=String[];
     if meanmax==:mean
-      Xpp,Ypp, t, lbltags = get2DLandmMeans(fg, from=from, to=to, api=api)
+      Xpp,Ypp, t, lbltags = get2DLandmMeans(fg, from=from, to=to)
     elseif meanmax==:max
-      Xpp,Ypp, t, lbltags = get2DLandmMax(fg, from=from, to=to,showmm=showmm,MM=MM, api=api)
+      Xpp,Ypp, t, lbltags = get2DLandmMax(fg, from=from, to=to,showmm=showmm,MM=MM)
     end
 
     if lbls
@@ -226,13 +226,12 @@ function drawPosesLandms(fgl::G;
                          from::Int64=0, to::Int64=99999999, minnei::Int64=0,
                          meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(), showmm=true,
                          spscale::Float64=5.0,window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
-                         api::DataLayerAPI=IncrementalInference.localapi,
                          xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing  ) where {G <: AbstractDFG, T}
   #
   ll = getVariableIds(fgl, r"l")
   p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale)
   if length(ll) > 0
-    pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, api=api)
+    pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm)
     for l in pl.layers
       push!(p.layers, l)
     end
@@ -250,18 +249,17 @@ end
 function drawSubmaps(fgl::G, fromto::Array{Int,2};
                      m1hist=false, m2hist=false, m3hist=false,
                      showmm=false, MM::Dict{Int,T} = Dict{Int,Any}(),
-                     api::DataLayerAPI=IncrementalInference.localapi,
                      xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {G <: AbstractDFG, T}
   #
-  p = drawLandms(fgl, from=fromto[1,1], to=fromto[1,2], drawhist=m1hist, showmm=showmm, MM=MM, api=api)
+  p = drawLandms(fgl, from=fromto[1,1], to=fromto[1,2], drawhist=m1hist, showmm=showmm, MM=MM)
   if size(fromto,1) >1
-    p2 = drawLandms(fgl, from=fromto[2,1], to=fromto[2,2], drawhist=m2hist,c="blue", showmm=showmm, MM=MM, api=api)
+    p2 = drawLandms(fgl, from=fromto[2,1], to=fromto[2,2], drawhist=m2hist,c="blue", showmm=showmm, MM=MM)
     for l in p2.layers
       push!(p.layers, l)
     end
   end
   if size(fromto,1) >2
-    p3 = drawLandms(fgl, from=fromto[3,1], to=fromto[3,2], drawhist=m3hist,c="magenta", showmm=showmm, MM=MM, api=api)
+    p3 = drawLandms(fgl, from=fromto[3,1], to=fromto[3,2], drawhist=m3hist,c="magenta", showmm=showmm, MM=MM)
     for l in p3.layers
       push!(p.layers, l)
     end
@@ -474,10 +472,9 @@ end
 # import RoMEPlotting: drawMarginalContour
 
 function drawMarginalContour(fgl::G, lbl::String;
-    xmin=-150,xmax=150,ymin=-150,ymax=150,n=200,
-    api::DataLayerAPI=IncrementalInference.localapi ) where G <: AbstractDFG
+    xmin=-150,xmax=150,ymin=-150,ymax=150,n=200 ) where G <: AbstractDFG
   #
-  p = getVertKDE(fgl,Symbol(lbl), api=api)  # p = getKDE(getVert(fgl,lbl))
+  p = getVertKDE(fgl,Symbol(lbl))  # p = getKDE(getVert(fgl,lbl))
   Gadfly.plot(z=(x,y)->evaluateDualTree(p,vectoarr2([x,y]))[1],
     x=collect(range(xmin,stop=xmax,length=n)),
     y=collect(range(ymin,stop=ymax,length=n)),
@@ -488,14 +485,13 @@ function drawMarginalContour(fgl::G, lbl::String;
 end
 
 function accumulateMarginalContours(fgl, order;
-    xmin=-150,xmax=150,ymin=-150,ymax=150,n=200,
-    api::DataLayerAPI=IncrementalInference.localapi )
+    xmin=-150,xmax=150,ymin=-150,ymax=150,n=200 )
   #
-  pl = drawMarginalContour(fgl, order[1],xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n, api=api)
+  pl = drawMarginalContour(fgl, order[1],xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n)
   pl2 = nothing
   PL = []
   for or in order[1:end]
-    pl2 = drawMarginalContour(fgl, or, xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n, api=api)
+    pl2 = drawMarginalContour(fgl, or, xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n)
     push!(PL, pl2)
     push!(pl.layers, pl2.layers[1])
   end
