@@ -107,14 +107,13 @@ function plotKDEresiduals(fgl::G,
                           N::Int=100,
                           levels::Int=3,
                           dims=nothing,
-                          fill=false,
-                          api::DataLayerAPI=localapi  ) where G <: AbstractDFG
+                          fill=false  ) where G <: AbstractDFG
   #
   # COLORS = ["black";"red";"green";"blue";"cyan";"deepskyblue"]
   fnc = getfnctype( fgl, fgl.fIDs[fsym] )
   # @show sxi = lsf(fgl, fsym)[1]
   # @show sxj = lsf(fgl, fsym)[2]
-  fct = getVert(fgl, fsym, nt=:fnc, api=api)
+  fct = getFactor(fgl, fsym)
   @show sxi = getData(fct).fncargvID[1]
   @show sxj = getData(fct).fncargvID[2]
   xi = getVal(fgl, sxi, api=api)
@@ -346,17 +345,17 @@ function drawFrontalDens(fg::G,
 
         for frid in cliq[2].attributes["data"].frontalIDs
             j+=1
-            p[j] = getVertKDE(fg, frid) # getKDE(fg.v[frid])
+            p[j] = getKDE(getVariable(fg, frid)) # getKDE(fg.v[frid])
             # p[j] = kde!(fg.v[frid].attributes["val"])
 
             #pvals[j] = fg.v[frid].attributes["val"]
 
             if gt!=Union{}
-              gtvals[j] = gt[dlapi.getvertex(fg,frid).attributes["label"]] # fg.v[frid].
+              gtvals[j] = gt[getVariable(fg,frid).label] # fg.v[frid].
               #push!(gtvals, gt[fg.v[frid].attributes["label"]][1])
               #push!(gtvals, gt[fg.v[frid].attributes["label"]][2])
             end
-            push!(lbls, dlapi.getvertex(fg,frid).attributes["label"]) # fg.v[frid].
+            push!(lbls, getVariable(fg,frid).label) # fg.v[frid].
 
         end
 
@@ -495,7 +494,7 @@ function drawUpMsgAtCliq(fg::G,
                          cliq::Graphs.ExVertex  ) where G <: AbstractDFG
   #
   for id in keys(cliq.attributes["data"].debug.outmsg.p)
-      print("$(dlapi.getvertex(fg,id).attributes["label"]), ") #fg.v[id].
+      print("$(getVariable(fg,id).label), ") #fg.v[id].
   end
   println("")
   sleep(0.1)
@@ -515,7 +514,7 @@ function dwnMsgsAtCliq(fg::G,
                        cliq::Graphs.ExVertex  ) where G <: AbstractDFG
   #
   for id in keys(cliq.attributes["data"].debugDwn.outmsg.p)
-      print("$(dlapi.getvertex(fg,id).label), ") # fg.v[id].
+      print("$(getVariable(fg,id).label), ") # fg.v[id].
   end
   println("")
   sleep(0.1)
@@ -587,8 +586,6 @@ function drawDwnMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
 end
 
 function drawLbl(fgl::G, lbl::Symbol) where G <: AbstractDFG
-    # v = dlapi.getvertex(fgl,lbl)
-    # plotKDE(kde!(getVal(v)))
     plotKDE(getKDE(getVariable(fgl,lbl)))
 end
 drawLbl(fgl::G, lbl::T) where {G <: AbstractDFG, T <: AbstractString} = drawLbl(fgl, Symbol(lbl))
@@ -630,7 +627,7 @@ function drawHorBeliefsList(fgl::G,
   len = length(lbls)
   pDens = BallTreeDensity[]
   for lb in lbls
-    ptkde = getVertKDE(fgl,lb)
+    ptkde = getKDE(getVariable(fgl,lb))
     push!(pDens, ptkde )
   end
 
@@ -717,7 +714,7 @@ function plotLocalProduct(fgl::G,
   @warn "not showing partial constraints, but included in the product"
   arr = Array{BallTreeDensity,1}()
   lbls = String[]
-  push!(arr, getVertKDE(fgl, lbl, api=api))
+  push!(arr, getKDE(getVariable(fgl, lbl)))
   push!(lbls, "curr")
   pl = nothing
   pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N, api=api)
@@ -742,7 +739,7 @@ function plotLocalProduct(fgl::G,
       vals = partials[dimn]
       proddim = marginal(pp, [dimn])
       colors = getColorsByLength(length(vals)+2)
-      pl = plotKDE([proddim;getVertKDE(fgl, lbl, api=api);vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
+      pl = plotKDE([proddim;getKDE(getVariable(fgl, lbl));vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
       push!(PL, pl)
     end
     pl = Gadfly.vstack(PL...)
@@ -759,20 +756,6 @@ function plotLocalProduct(fgl::G,
   return pl
 end
 
-# new idea -- merge with plotLocalProduct
-# function proposalsKDE(fg, sym; dirpath="/tmp/", levels=1, show=true, mimetype::AS="svg") where {AS <: AbstractString}
-#   # TODO make legend of connected factors in plot
-#   # TODO Pose2, Pose3, Point2, Point3, etc
-#   stuff = IIF.localProduct(fg, sym)
-#   # TODO Theme(background_color=color("white"))
-#   pl = plotKDE([getVertKDE(fg, sym);stuff[2]], levels=levels, c=["red";["cyan" for j in   1:length(stuff[2])]], title=string(stuff[4]))
-#   # export
-#   backend = getfield(Gadfly, Symbol(uppercase(mimetype)))
-#   Gadfly.draw(backend(dirpath*"test_$(sym).$(mimetype)",20cm,20cm), pl)
-#   driver = mimetype in ["pdf"] ? "evince" : "eog"
-#   show ? (@async run(`$driver $(dirpath)test_$(sym).$(mimetype)`)) : nothing
-#   pl
-# end
 
 """
     $(SIGNATURES)
@@ -795,7 +778,7 @@ function plotLocalProductCylinder(fgl::G,
   arr = Array{BallTreeDensity,1}()
   carr = Array{BallTreeDensity,1}()
   lbls = String[]
-  push!(arr, getVertKDE(fgl, lbl, api=api))
+  push!(arr, getKDE(getVariable(fgl, lbl)))
   push!(lbls, "curr")
   pl = nothing
   plc = nothing
@@ -826,10 +809,10 @@ function plotLocalProductCylinder(fgl::G,
       proddim = marginal(pp, [dimn])
       colors = getColorsByLength(length(vals)+2)
       if dimn == 1
-        pll = plotKDE([proddim;getVertKDE(fgl, lbl, api=api);vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
+        pll = plotKDE([proddim;getKDE(getVariable(fgl, lbl));vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
         push!(PL, pl)
       else
-        plc = AMP.plotKDECircular([proddim; marginal(getVertKDE(fgl, lbl, api=api),[2]);vals], c=colors, scale=scale)
+        plc = AMP.plotKDECircular([proddim; marginal(getKDE(getVariable(fgl, lbl)),[2]);vals], c=colors, scale=scale)
         push!(PLC, plc)
       end
     end
@@ -982,7 +965,7 @@ function asyncAnalyzeSolution(fgl::G, sym::Symbol) where G <: AbstractDFG
   lbl = string(sym)
   pp, arr, partials = IncrementalInference.localProduct(fgl, lbl)
   lpm = getKDEMax(pp)
-  em = getKDEMax(getVertKDE(fgl,lbl))
+  em = getKDEMax(getKDE(getVariable(fgl,lbl)))
   err1 = norm(lpm[1:2]-em[1:2])
   err2 = 0.0
   if lbl[1]=='x'
@@ -1047,10 +1030,10 @@ function drawAnalysis(df,dfth)
         )
 end
 
-function getAllFGsKDEs(fgD::Array{<: AbstractDFG,1}, vertid::Int64)
+function getAllFGsKDEs(fgD::Array{<: AbstractDFG,1}, vertsym::Symbol)
   ret = Array{BallTreeDensity,1}()
   for i in 1:length(fgD)
-    push!(ret, getVertKDE(fgD[i],vertid) )
+    push!(ret, getKDE(getVariable(fgD[i],vertsym)) )
   end
   return ret
 end
@@ -1060,9 +1043,9 @@ function drawAllPose2DBeliefs(plots::Array{Gadfly.Compose.Context,1}, fgD::Array
     co = ["black"; "blue"; "green"; "red"; "magenta"; "cyan"; "cyan1"; "cyan2"]
     println(co[1:length(fgD)])
     for i in ids
-        @show dlapi.getvertex(fgD[1],i).attributes["label"] #fgD[1].v[i].
-            kdes = getAllFGsKDEs(fgD, i)
-            push!(plots, plotKDE(  kdes  )) # [kde!(getVal(V)); kde!(getVal(V0))]
+        getVariable(fgD[1],i).label
+        kdes = getAllFGsKDEs(fgD, i)
+        push!(plots, plotKDE(  kdes  )) # [kde!(getVal(V)); kde!(getVal(V0))]
     end
     vstackedPlots(plots)
 end
@@ -1199,7 +1182,7 @@ end
 
 
 function plotPose2Vels(fgl::G, sym::Symbol; coord=nothing) where G <: AbstractDFG
-  X = getVertKDE(fgl, sym)
+  X = getKDE(getVariable(fgl, sym))
   px = plotKDE(X, dims=[4], title="Velx")
   coord != nothing ? (px.coord = coord) : nothing
   py = plotKDE(X, dims=[5], title="Vely")
@@ -1219,5 +1202,5 @@ function plotProductVsKDE(fgl::G,
                           levels::Int=3,
                           c::Vector{String}=["red";"black"] ) where  G <: AbstractDFG
     #
-    plotKDE([IIF.localProduct(fgl, sym)[1], getVertKDE(fgl, sym)], levels=3, c=c)
+    plotKDE([IIF.localProduct(fgl, sym)[1], getKDE(getVariable(fgl, sym))], levels=3, c=c)
 end
