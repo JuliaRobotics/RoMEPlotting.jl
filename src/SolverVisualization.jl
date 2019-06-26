@@ -384,9 +384,8 @@ function drawFrontalDens(fg::G,
     else
       vv[i] = drawHorDens(p, N,lbls=lbls)
     end
-  end
   #
-  vv
+  return vv
 end
 
 # for some reason we still need msgPlots of right size in the global for these functions to work.
