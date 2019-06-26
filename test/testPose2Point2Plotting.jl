@@ -9,7 +9,7 @@ using Test
 # @testset "Prepare a 2D factor graph with poses and points..." begin
 
 
-N = 75
+N = 100
 fg = IIF.initfg()
 
 

@@ -139,17 +139,16 @@ end
 Future:
 - Relax to user defined pose labeling scheme, for example `:p1, :p2, ...`
 """
-function drawPoses(fg::FactorGraph; from::Int64=0,to::Int64=99999999,
+function drawPoses(fg::G; from::Int64=0,to::Int64=99999999,
                     meanmax=:max, lbls=true, drawhist=true,
-                    spscale::Float64=5.0,
-                    api::DataLayerAPI=IncrementalInference.localapi  )
+                    spscale::Float64=5.0  ) where G <: AbstractDFG
     #Gadfly.set_default_plot_size(20cm, 30cm)
     Xp,Yp = get2DPoseSamples(fg, from=from, to=to)
     Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; LBLS=String[];
     if meanmax == :mean
-      Xpp,Ypp, Thpp, LBLS = get2DPoseMeans(fg, from=from, to=to, api=api)
+      Xpp,Ypp, Thpp, LBLS = get2DPoseMeans(fg, from=from, to=to)
     elseif meanmax == :max
-      Xpp,Ypp, Thpp, LBLS = get2DPoseMax(fg, from=from, to=to, api=api)
+      Xpp,Ypp, Thpp, LBLS = get2DPoseMax(fg, from=from, to=to)
     end
 
     # lbls = lblsFromTo(1,length(Xpp))
@@ -165,11 +164,12 @@ function drawPoses(fg::FactorGraph; from::Int64=0,to::Int64=99999999,
       Coord.cartesian(fixed=true)
       )
     end
+	# return psplt
     addXYLineLayers!(psplt, Xpp, Ypp, Thpp, l=spscale)
     if drawhist
       push!(psplt.layers,  Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)[1] )#(xbincount=100, ybincount=100))
     end
-    psplt
+    return psplt
 end
 
 
@@ -178,20 +178,20 @@ end
 
 2D plot of landmarks, assuming `:l1, :l2, ... :ln`.  Use `from` and `to` to control the range of landmarks `n` to include.
 """
-function drawLandms(fg::FactorGraph;
-              from::Int64=0, to::Int64=99999999, minnei::Int64=0,
-              meanmax=:max,
-              lbls=true,showmm=false,drawhist=true,
-              c="red",
-              MM::Dict{Int,T}=Dict{Int,Int}(),
-              api::DataLayerAPI=IncrementalInference.localapi  ) where {T}
+function drawLandms(fg::G;
+                    from::Int64=0, to::Int64=99999999,
+                    minnei::Int64=0,
+                    meanmax=:max,
+                    lbls=true,showmm=false,drawhist=true,
+                    c="red",
+                    MM::Dict{Int,T}=Dict{Int,Int}()  ) where {G <: AbstractDFG, T}
     #Gadfly.set_default_plot_size(20cm, 30cm)
     Xp,Yp = get2DLandmSamples(fg, from=from, to=to)
     Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; lblstags=String[];
     if meanmax==:mean
-      Xpp,Ypp, t, lbltags = get2DLandmMeans(fg, from=from, to=to, api=api)
+      Xpp,Ypp, t, lbltags = get2DLandmMeans(fg, from=from, to=to)
     elseif meanmax==:max
-      Xpp,Ypp, t, lbltags = get2DLandmMax(fg, from=from, to=to,showmm=showmm,MM=MM, api=api)
+      Xpp,Ypp, t, lbltags = get2DLandmMax(fg, from=from, to=to,showmm=showmm,MM=MM)
     end
 
     if lbls
@@ -218,17 +218,20 @@ end
     $(SIGNATURES)
 
 2D plot of both poses and landmarks contained in factor graph.  Assuming poses and landmarks are labeled `:x1, :x2, ...` and `:l0, :l1, ...`, respectively.  The rnage of numbers to include can be controlled with `from` and `to` along with other keyword functionality for manipulating the plot.
+
+Notes
+- assumes `:l1`, `:l2`, ... for landmarks -- not using `tags=[:LANDMARK]` here yet (TODO).
 """
-function drawPosesLandms(fgl::FactorGraph;
-                    from::Int64=0, to::Int64=99999999, minnei::Int64=0,
-                    meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(), showmm=true,
-                    spscale::Float64=5.0,window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
-                    api::DataLayerAPI=IncrementalInference.localapi, xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing  ) where T
+function drawPosesLandms(fgl::G;
+                         from::Int64=0, to::Int64=99999999, minnei::Int64=0,
+                         meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(), showmm=true,
+                         spscale::Float64=5.0,window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
+                         xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing  ) where {G <: AbstractDFG, T}
   #
-  xx,ll = ls(fgl)
-  p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, api=api)
+  ll = getVariableIds(fgl, r"l")
+  p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale)
   if length(ll) > 0
-    pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, api=api)
+    pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm)
     for l in pl.layers
       push!(p.layers, l)
     end
@@ -243,18 +246,20 @@ function drawPosesLandms(fgl::FactorGraph;
   return p
 end
 
-function drawSubmaps(fgl::FactorGraph, fromto::Array{Int,2};
-                    m1hist=false,m2hist=false,m3hist=false, showmm=false, MM::Dict{Int,T} = Dict{Int,Any}(),
-                    api::DataLayerAPI=IncrementalInference.localapi, xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {T}
-  p = drawLandms(fgl, from=fromto[1,1], to=fromto[1,2], drawhist=m1hist, showmm=showmm, MM=MM, api=api)
+function drawSubmaps(fgl::G, fromto::Array{Int,2};
+                     m1hist=false, m2hist=false, m3hist=false,
+                     showmm=false, MM::Dict{Int,T} = Dict{Int,Any}(),
+                     xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {G <: AbstractDFG, T}
+  #
+  p = drawLandms(fgl, from=fromto[1,1], to=fromto[1,2], drawhist=m1hist, showmm=showmm, MM=MM)
   if size(fromto,1) >1
-    p2 = drawLandms(fgl, from=fromto[2,1], to=fromto[2,2], drawhist=m2hist,c="blue", showmm=showmm, MM=MM, api=api)
+    p2 = drawLandms(fgl, from=fromto[2,1], to=fromto[2,2], drawhist=m2hist,c="blue", showmm=showmm, MM=MM)
     for l in p2.layers
       push!(p.layers, l)
     end
   end
   if size(fromto,1) >2
-    p3 = drawLandms(fgl, from=fromto[3,1], to=fromto[3,2], drawhist=m3hist,c="magenta", showmm=showmm, MM=MM, api=api)
+    p3 = drawLandms(fgl, from=fromto[3,1], to=fromto[3,2], drawhist=m3hist,c="magenta", showmm=showmm, MM=MM)
     for l in p3.layers
       push!(p.layers, l)
     end
@@ -264,8 +269,10 @@ function drawSubmaps(fgl::FactorGraph, fromto::Array{Int,2};
   return p
 end
 
-function drawSubmaps(fgl::FactorGraph, fromto::Array{Int,1}; spread::Int=25,
-                    m1hist=false,m2hist=false,m3hist=false, showmm=false, MM::Dict{Int,T}=Dict{Int,Any}(), xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {T}
+function drawSubmaps(fgl::G, fromto::Array{Int,1}; spread::Int=25,
+                     m1hist=false, m2hist=false, m3hist=false,
+                     showmm=false, MM::Dict{Int,T}=Dict{Int,Any}(),
+                     xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {G <: AbstractDFG, T}
   #
   ft = zeros(Int,length(fromto),2)
   for i in 1:length(fromto)
@@ -296,7 +303,7 @@ end
 # end
 import KernelDensityEstimate: getKDERange
 
-function getKDERange(bds::Vector{BallTreeDensity};extend=0.15)
+function getKDERange(bds::Vector{BallTreeDensity}; extend=0.15)
 
   dims = Ndim(bds[1])
   ran = getKDERange(bds[1],extend=extend)
@@ -367,14 +374,14 @@ end
 
 Example: pl = plotPose(fg, [:x1; :x2; :x3])
 """
-function plotPose(fgl::FactorGraph,
+function plotPose(fgl::G,
                   syms::Vector{Symbol};
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
                   show::Bool=true,
                   filepath::AS="/tmp/tempposeplot.svg",
-                  app::AS="eog" ) where {AS <: AbstractString}
+                  app::AS="eog" ) where {G <: AbstractDFG, AS <: AbstractString}
   #
   typ = getData(fgl, syms[1]).softtype
   pt = string(string.(syms)...)
@@ -397,14 +404,14 @@ function plotPose(fgl::FactorGraph,
   return pl
 end
 
-function plotPose(fgl::FactorGraph,
+function plotPose(fgl::G,
                   sym::Symbol;
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
                   show::Bool=true,
                   filepath::AS="/tmp/tempposeplot.svg",
-                  app::AS="eog" ) where {AS <: AbstractString}
+                  app::AS="eog" ) where {G <: AbstractDFG, AS <: AbstractString}
   #
   plotPose(fgl, [sym;], levels=levels, axis=axis, show=show, filepath=filepath, app=app)
 end
@@ -464,11 +471,10 @@ end
 
 # import RoMEPlotting: drawMarginalContour
 
-function drawMarginalContour(fgl::FactorGraph, lbl::String;
-    xmin=-150,xmax=150,ymin=-150,ymax=150,n=200,
-    api::DataLayerAPI=IncrementalInference.localapi )
+function drawMarginalContour(fgl::G, lbl::String;
+    xmin=-150,xmax=150,ymin=-150,ymax=150,n=200 ) where G <: AbstractDFG
   #
-  p = getVertKDE(fgl,Symbol(lbl), api=api)  # p = getKDE(getVert(fgl,lbl))
+  p = getVertKDE(fgl,Symbol(lbl))  # p = getKDE(getVert(fgl,lbl))
   Gadfly.plot(z=(x,y)->evaluateDualTree(p,vectoarr2([x,y]))[1],
     x=collect(range(xmin,stop=xmax,length=n)),
     y=collect(range(ymin,stop=ymax,length=n)),
@@ -479,14 +485,13 @@ function drawMarginalContour(fgl::FactorGraph, lbl::String;
 end
 
 function accumulateMarginalContours(fgl, order;
-    xmin=-150,xmax=150,ymin=-150,ymax=150,n=200,
-    api::DataLayerAPI=IncrementalInference.localapi )
+    xmin=-150,xmax=150,ymin=-150,ymax=150,n=200 )
   #
-  pl = drawMarginalContour(fgl, order[1],xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n, api=api)
+  pl = drawMarginalContour(fgl, order[1],xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n)
   pl2 = nothing
   PL = []
   for or in order[1:end]
-    pl2 = drawMarginalContour(fgl, or, xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n, api=api)
+    pl2 = drawMarginalContour(fgl, or, xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n)
     push!(PL, pl2)
     push!(pl.layers, pl2.layers[1])
   end
@@ -496,7 +501,7 @@ end
 
 
 
-function plotPose3Pairs(fgl::FactorGraph, sym::Symbol; fill::Bool=true)
+function plotPose3Pairs(fgl::G, sym::Symbol; fill::Bool=true) where {G <: AbstractDFG}
   p1= plotKDE(fgl, :x1, dims=[1;2], fill=fill)
   p2 = plotKDE(fgl, :x1, dims=[6;3], fill=fill)
   p3 = plotKDE(fgl, :x1, dims=[4;5], fill=fill)
@@ -640,14 +645,14 @@ end
 
 
 
-function plotTrailingPoses(fg::FactorGraph,
+function plotTrailingPoses(fg::G,
                            pp::Vector{Symbol},
                            title="";
                            levels=2,
                            c=nothing,
                            axis=nothing,
                            scale::Float64=0.2,
-                           circlen::Int=5)
+                           circlen::Int=5) where G <: AbstractDFG
   #
   plotTrailingPoses(Pose2(), map(x->getKDE(fg,x),pp), scale=scale, title=title, circlen=circlen)
 end
