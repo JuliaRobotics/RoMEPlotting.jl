@@ -31,15 +31,14 @@ plotKDE([p;q], dims=[1])
 ```
 """
 function plotKDE(fgl::G,
-      sym::Symbol;
-      dims=nothing,
-      title="",
-      levels::Int=5,
-      fill::Bool=false,
-      layers::Bool=false,
-      api::DataLayerAPI=dlapi  ) where G <: AbstractDFG
+                 sym::Symbol;
+                 dims=nothing,
+                 title="",
+                 levels::Int=5,
+                 fill::Bool=false,
+                 layers::Bool=false  ) where G <: AbstractDFG
   #
-  p = getVertKDE(fgl,sym, api=api)
+  p = getKDE(getVariable(fgl,sym))
   # mmarg = length(marg) > 0 ? marg : collect(1:Ndim(p))
   # mp = marginal(p,mmarg)
   plotKDE(p, levels=levels, dims=dims, title=string(sym, "  ", title), fill=fill, layers=layers )
@@ -61,7 +60,7 @@ function plotKDE(fgl::G,
   LEG = String[]
   # mmarg = Int[]
   for sym in syms
-    p = getVertKDE(fgl,sym, api=api)
+    p = getKDE(getVariable(fgl,sym))
     # mmarg = length(marg) > 0 ? marg : collect(1:Ndim(p))
     # mp = marginal(p,mmarg)
     push!(MP, p)
@@ -329,34 +328,49 @@ end
 
 function drawFrontalDens(fg::G,
                          bt::BayesTree;
-                         N=300, gt=Union{} ) where G <: AbstractDFG
-  #
-  len = length(bt.cliques)
-  vv = Array{Gadfly.Compose.Context,1}(len)
-  i = 0
-  for cliq in bt.cliques
-    #@show cliq[2].attributes["label"]
-    lenfr = length(cliq[2].attributes["data"].frontalIDs)
+                         N=300,
+                         gt=Union{} ) where G <: AbstractDFG
+    #
+    len = length(bt.cliques)
+    vv = Array{Gadfly.Compose.Context,1}(len)
+    i = 0
+    for cliq in bt.cliques
+        #@show cliq[2].attributes["label"]
+        lenfr = length(cliq[2].attributes["data"].frontalIDs)
 
-    p = Array{BallTreeDensity,1}(lenfr)
-    j=0
-    #pvals = Array{Array{Float64,2},1}(lenfr)
-    gtvals = Dict{Int,Array{Float64,2}}()
-    lbls = String[]
+        p = Array{BallTreeDensity,1}(lenfr)
+        j=0
+        #pvals = Array{Array{Float64,2},1}(lenfr)
+        gtvals = Dict{Int,Array{Float64,2}}()
+        lbls = String[]
 
-    for frid in cliq[2].attributes["data"].frontalIDs
-      j+=1
-      p[j] = getVertKDE(fg, frid) # getKDE(fg.v[frid])
-      # p[j] = kde!(fg.v[frid].attributes["val"])
+        for frid in cliq[2].attributes["data"].frontalIDs
+            j+=1
+            p[j] = getVertKDE(fg, frid) # getKDE(fg.v[frid])
+            # p[j] = kde!(fg.v[frid].attributes["val"])
 
-      #pvals[j] = fg.v[frid].attributes["val"]
+            #pvals[j] = fg.v[frid].attributes["val"]
 
-      if gt!=Union{}
-        gtvals[j] = gt[dlapi.getvertex(fg,frid).attributes["label"]] # fg.v[frid].
-        #push!(gtvals, gt[fg.v[frid].attributes["label"]][1])
-        #push!(gtvals, gt[fg.v[frid].attributes["label"]][2])
-      end
-      push!(lbls, dlapi.getvertex(fg,frid).attributes["label"]) # fg.v[frid].
+            if gt!=Union{}
+              gtvals[j] = gt[dlapi.getvertex(fg,frid).attributes["label"]] # fg.v[frid].
+              #push!(gtvals, gt[fg.v[frid].attributes["label"]][1])
+              #push!(gtvals, gt[fg.v[frid].attributes["label"]][2])
+            end
+            push!(lbls, dlapi.getvertex(fg,frid).attributes["label"]) # fg.v[frid].
+
+        end
+
+        #r = Array{RemoteRef,1}(lenfr)
+        #[r[j] = @spawn kde!(pvals[j]) for j in 1:lenfr]
+        #[p[j] = fetch(r[j]) for j in 1:lenfr]
+
+        i+=1
+        if length(gtvals) > 0
+          #gtvals = reshape(gtvals,2,round(Int,length(gtvals)/2))'
+          vv[i] = drawHorDens(p, N, gt=gtvals, lbls=lbls)
+        else
+          vv[i] = drawHorDens(p, N,lbls=lbls)
+        end
     end
 
     #r = Array{RemoteRef,1}(lenfr)
@@ -486,15 +500,15 @@ function drawUpMsgAtCliq(fg::G,
   end
   println("")
   sleep(0.1)
-  potens = cliq.attributes["data"].debug.outmsg.p
+  potens = getData(cliq).debug.outmsg.p
   vArrPotentials(potens)
 end
 
 function drawUpMsgAtCliq(fg::G,
                          bt::BayesTree,
-                         lbl::String  ) where G <: AbstractDFG
+                         lbl::Union{String,Symbol}  ) where G <: AbstractDFG
   #
-  drawUpMsgAtCliq(fg, whichCliq(bt, lbl) )
+  drawUpMsgAtCliq(fg, whichCliq(bt, Symbol(lbl)) )
 end
 
 # function drawDwnMsgAtCliq(fg::FactorGraph, cliq::Graphs.ExVertex)
@@ -512,9 +526,9 @@ end
 
 function dwnMsgsAtCliq(fg::G,
                        bt::BayesTree,
-                       lbl::String  ) where G <: AbstractDFG
+                       lbl::Union{String,Symbol}  ) where G <: AbstractDFG
   #
-  dwnMsgsAtCliq(fg, whichCliq(bt, lbl) )
+  dwnMsgsAtCliq(fg, whichCliq(bt, Symbol(lbl)) )
 end
 
 function drawPose2DMC!(plots::Array{Gadfly.Compose.Context,1},
@@ -573,14 +587,12 @@ function drawDwnMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
   drawDwnMCMCPose2D!(plots, whichCliq(bt,frt), iter)
 end
 
-function drawLbl(fgl::G,
-                 lbl::Symbol ) where G <: AbstractDFG
-  #
-  # v = dlapi.getvertex(fgl,lbl)
-  # plotKDE(kde!(getVal(v)))
-  plotKDE(getVertKDE(fgl,lbl))
+function drawLbl(fgl::G, lbl::Symbol) where G <: AbstractDFG
+    # v = dlapi.getvertex(fgl,lbl)
+    # plotKDE(kde!(getVal(v)))
+    plotKDE(getKDE(getVariable(fgl,lbl)))
 end
-drawLbl(fgl::FactorGraph, lbl::T) where {T <: AbstractString} = drawLbl(fgl, Symbol(lbl))
+drawLbl(fgl::G, lbl::T) where {G <: AbstractDFG, T <: AbstractString} = drawLbl(fgl, Symbol(lbl))
 
 function predCurrFactorBeliefs(fgl::G,
                                fc::Graphs.ExVertex  ) where G <: AbstractDFG
@@ -604,9 +616,8 @@ function drawHorDens(fgl::G,
   lbls = String[]
   for pd in pDens
     push!(p, kde!(pd[2].pts,pd[2].bws))
-    push!(lbls, dlapi.getvertex(fgl,pd[1]).attributes["label"])
+    push!(lbls, getVariable(fgl,pd[1]).label)
   end
-  @show lbls
   drawHorDens(p,N=N,lbls=lbls)
 end
 
@@ -839,7 +850,7 @@ end
 
 
 """
-    plotLocalProduct{T <: AbstractString}(fgl::FactorGraph, lbl::T; N::Int=100, dims::Vector{Int}=Int[])
+    $SIGNATURES
 
 Plot the proposal belief from neighboring factors to `lbl` in the factor graph (ignoring Bayes tree representation),
 and show with new product approximation for reference. String version is obsolete and will be deprecated.
@@ -930,13 +941,13 @@ function fixRotWrapErr!(RT::Array{Float64,1})
   nothing
 end
 
-function asyncUniComp(fgl::FactorGraph, isamdict::Dict{Int,Array{Float64,1}})
+function asyncUniComp(fgl::G, isamdict::Dict{Int,Array{Float64,1}}) where G <: AbstractDFG
   r,rt,lb = computeGraphResiduals(fgl,isamdict);
   fixRotWrapErr!(rt)
   return [sqrt(mean(r.^2));maximum(abs(r));sqrt(mean(rt.^2));maximum(rt)]
 end
 
-function unimodalCompare(FGL::Array{FactorGraph,1},isamdict::Dict{Int,Array{Float64,1}})
+function unimodalCompare(FGL::Array{<:AbstractDFG,1},isamdict::Dict{Int,Array{Float64,1}})
   len = length(FGL)
   RMS = Float64[]
   MAX = Float64[]
