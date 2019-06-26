@@ -68,13 +68,13 @@ drawPosesLandms(fg);
 pts = getVal(fg, :l1)
 
 p1= kde!(pts)
-p1c = getVertKDE(getVert(fg, :x0))
+p1c = getKDE(getVariable(fg, :x0))
 plotKDE( p1 , dimLbls=["x";"y";"z"])
 
 plotKDE( [marginal(p1c,[1;2]);marginal(p1,[1;2])] , dimLbls=["x";"y";"z"],c=["red";"black"],levels=3)
 p1c = deepcopy(p1)
 
-plotKDE( marginal(getVertKDE(fg, :x2),[1;2]) , dimLbls=["x";"y";"z"])
+plotKDE( marginal(getKDE(getVariable(fg, :x2)),[1;2]) , dimLbls=["x";"y";"z"])
 
 axis = [[1.5;3.5]';[-1.25;1.25]';[-1.0;1.0]']
 

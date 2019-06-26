@@ -237,7 +237,7 @@ function drawPosesLandms(fgl::G;
     end
   end
   if window != nothing
-    focusX = getKDEMax(getVertKDE(fgl,window[1]))
+    focusX = getKDEMax(getKDE(getVariable(fgl,window[1])))
     pwind = window[2]
     p.coord = Coord.cartesian(xmin=focusX[1]-pwind,xmax=focusX[1]+pwind,ymin=focusX[2]-pwind,ymax=focusX[2]+pwind)
   end
@@ -385,7 +385,7 @@ function plotPose(fgl::G,
   #
   typ = getData(fgl, syms[1]).softtype
   pt = string(string.(syms)...)
-  getvertsgg = (sym) -> getVertKDE(fgl, sym)
+  getvertsgg = (sym) -> getKDE(getVariable(fgl, sym))
   pl = plotPose(typ, getvertsgg.(syms), pt, levels=levels, c=c, axis=axis)
 
   if length(filepath) > 0
@@ -474,7 +474,7 @@ end
 function drawMarginalContour(fgl::G, lbl::String;
     xmin=-150,xmax=150,ymin=-150,ymax=150,n=200 ) where G <: AbstractDFG
   #
-  p = getVertKDE(fgl,Symbol(lbl))  # p = getKDE(getVert(fgl,lbl))
+  p = getKDE(getVariable(fgl,Symbol(lbl)))  # p = getKDE(getVert(fgl,lbl))
   Gadfly.plot(z=(x,y)->evaluateDualTree(p,vectoarr2([x,y]))[1],
     x=collect(range(xmin,stop=xmax,length=n)),
     y=collect(range(ymin,stop=ymax,length=n)),
@@ -606,7 +606,7 @@ end
 
 
 function plotKDE(fgl::FactorGraph, vsym::Vector{Symbol}; axis=nothing, dims=nothing, c=getColorsByLength(length(vsym)), levels=4, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
-  verts = map((x)->getVertKDE(fgl, x), vsym)
+  verts = map((x)->getKDE(getVariable(fgl, x)), vsym)
   plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels, title=title)
 end
 function plotKDE(fgl::FactorGraph, vsym::Symbol; axis=nothing, dims=nothing, c=nothing, levels=4, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
