@@ -383,7 +383,7 @@ function plotPose(fgl::G,
                   filepath::AS="/tmp/tempposeplot.svg",
                   app::AS="eog" ) where {G <: AbstractDFG, AS <: AbstractString}
   #
-  typ = getData(fgl, syms[1]).softtype
+  typ = getData(getVariable(fgl, syms[1])).softtype
   pt = string(string.(syms)...)
   getvertsgg = (sym) -> getKDE(getVariable(fgl, sym))
   pl = plotPose(typ, getvertsgg.(syms), pt, levels=levels, c=c, axis=axis)
