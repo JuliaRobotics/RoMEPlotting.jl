@@ -4,8 +4,8 @@
 
 Standardize the length colors used by RoMEPlotting.
 """
-function getColorsByLength(len::Int=10)
-  COLORS = ["red";"green";"blue";"black";"deepskyblue";"yellow";"magenta"]
+function getColorsByLength(len::Int=10)::Vector{String}
+  COLORS = String["red";"green";"blue";"black";"deepskyblue";"yellow";"magenta"]
   morecyan = ["cyan" for i in (length(COLORS)+1):len]
   retc = [COLORS; morecyan]
   return retc[1:len]
@@ -703,7 +703,6 @@ function plotLocalProduct(fgl::G,
                           lbl::Symbol;
                           N::Int=100,
                           dims::Vector{Int}=Int[],
-                          api::DataLayerAPI=dlapi,
                           levels::Int=1,
                           show=true,
                           dirpath="/tmp/",
@@ -717,7 +716,7 @@ function plotLocalProduct(fgl::G,
   push!(arr, getKDE(getVariable(fgl, lbl)))
   push!(lbls, "curr")
   pl = nothing
-  pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N, api=api)
+  pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N)
   if length(parr) > 0 && length(partials) == 0
     if pp != parr[1]
       push!(arr,pp)
@@ -725,15 +724,15 @@ function plotLocalProduct(fgl::G,
       for a in parr
         push!(arr, a)
       end
-      lbls = union(lbls, lb)
+      union!(lbls, lb)
     end
     dims = length(dims) > 0 ? dims : collect(1:Ndim(pp))
     colors = getColorsByLength(length(arr))
-    pl = plotKDE(arr, dims=dims, levels=levels, c=colors, legend=lbls, title=string(title,lbl))
+    pl = plotKDE(arr, dims=dims, levels=levels, c=colors, title=string(title,lbl), legend=string.(lbls)) #
   elseif length(parr) == 0 && length(partials) > 0
     # stack 1d plots to accomodate all the partials
     PL = []
-    lbls = ["prod";"curr";lb]
+    lbls = String["prod";"curr";lb]
     pdims = sort(collect(keys(partials)))
     for dimn in pdims
       vals = partials[dimn]
@@ -860,6 +859,7 @@ function plotTreeProductUp(fgl::G,
 
   # add upward messages to subgraph
   msgs = getCliqChildMsgsUp(treel,cliq, BallTreeDensity)
+  # @show typeof(msgs)
   addMsgFactors!(subfg, msgs)
 
   # predictBelief
