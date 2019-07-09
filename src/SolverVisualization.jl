@@ -49,8 +49,7 @@ function plotKDE(fgl::G,
                  dims=nothing,
                  title=nothing,
                  levels=3,
-                 layers::Bool=false,
-                 api::DataLayerAPI=dlapi  ) where G <: AbstractDFG
+                 layers::Bool=false  ) where G <: AbstractDFG
   #
   # TODO -- consider automated rotisary of color
   # colors = ["black";"red";"green";"blue";"cyan";"deepskyblue"; "yellow"]
@@ -724,7 +723,8 @@ function plotLocalProduct(fgl::G,
       for a in parr
         push!(arr, a)
       end
-      union!(lbls, lb)
+      @show lb, lbls
+      lbls = union(lbls, string(lb))
     end
     dims = length(dims) > 0 ? dims : collect(1:Ndim(pp))
     colors = getColorsByLength(length(arr))
