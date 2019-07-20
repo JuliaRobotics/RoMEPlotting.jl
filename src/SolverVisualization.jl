@@ -115,8 +115,8 @@ function plotKDEresiduals(fgl::G,
   fct = getFactor(fgl, fsym)
   @show sxi = getData(fct).fncargvID[1]
   @show sxj = getData(fct).fncargvID[2]
-  xi = getVal(fgl, sxi, api=api)
-  xj = getVal(fgl, sxj, api=api)
+  xi = getVal(fgl, sxi)
+  xj = getVal(fgl, sxj)
   measM = getSample(fnc, N)
   meas = length(measM) == 1 ? (0*measM[1], ) : (0*measM[1], measM[2])
   @show size(meas[1])
@@ -594,7 +594,7 @@ function predCurrFactorBeliefs(fgl::G,
   #
   # TODO update to use ls and lsv functions
   prjcurvals = Dict{String, Array{BallTreeDensity,1}}()
-  for v in dlapi.outneighbors(fgl, fc)
+  for v in getNeighbors(fgl, fc)
     pred = kde!(evalFactor2(fgl, fc, v.index))
     curr = kde!(getVal(v))
     prjcurvals[v.attributes["label"]] = [curr; pred]
@@ -765,7 +765,6 @@ and show with new product approximation for reference.  The linear and circular 
 function plotLocalProductCylinder(fgl::G,
                                   lbl::Symbol;
                                   N::Int=100,
-                                  api::DataLayerAPI=dlapi,
                                   levels::Int=1,
                                   show=true,
                                   dirpath="/tmp/",
@@ -781,7 +780,7 @@ function plotLocalProductCylinder(fgl::G,
   push!(lbls, "curr")
   pl = nothing
   plc = nothing
-  pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N, api=api)
+  pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N)
   if length(parr) > 0 && length(partials) == 0
     if pp != parr[1]
       push!(arr, marginal(pp,[1]))
