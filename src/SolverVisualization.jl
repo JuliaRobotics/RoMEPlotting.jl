@@ -4,8 +4,8 @@
 
 Standardize the length colors used by RoMEPlotting.
 """
-function getColorsByLength(len::Int=10)
-  COLORS = ["red";"green";"blue";"black";"deepskyblue";"yellow";"magenta"]
+function getColorsByLength(len::Int=10)::Vector{String}
+  COLORS = String["red";"green";"blue";"black";"deepskyblue";"yellow";"magenta"]
   morecyan = ["cyan" for i in (length(COLORS)+1):len]
   retc = [COLORS; morecyan]
   return retc[1:len]
@@ -49,8 +49,7 @@ function plotKDE(fgl::G,
                  dims=nothing,
                  title=nothing,
                  levels=3,
-                 layers::Bool=false,
-                 api::DataLayerAPI=dlapi  ) where G <: AbstractDFG
+                 layers::Bool=false  ) where G <: AbstractDFG
   #
   # TODO -- consider automated rotisary of color
   # colors = ["black";"red";"green";"blue";"cyan";"deepskyblue"; "yellow"]
@@ -116,8 +115,8 @@ function plotKDEresiduals(fgl::G,
   fct = getFactor(fgl, fsym)
   @show sxi = getData(fct).fncargvID[1]
   @show sxj = getData(fct).fncargvID[2]
-  xi = getVal(fgl, sxi, api=api)
-  xj = getVal(fgl, sxj, api=api)
+  xi = getVal(fgl, sxi)
+  xj = getVal(fgl, sxj)
   measM = getSample(fnc, N)
   meas = length(measM) == 1 ? (0*measM[1], ) : (0*measM[1], measM[2])
   @show size(meas[1])
@@ -595,7 +594,7 @@ function predCurrFactorBeliefs(fgl::G,
   #
   # TODO update to use ls and lsv functions
   prjcurvals = Dict{String, Array{BallTreeDensity,1}}()
-  for v in dlapi.outneighbors(fgl, fc)
+  for v in getNeighbors(fgl, fc)
     pred = kde!(evalFactor2(fgl, fc, v.index))
     curr = kde!(getVal(v))
     prjcurvals[v.attributes["label"]] = [curr; pred]
@@ -703,7 +702,6 @@ function plotLocalProduct(fgl::G,
                           lbl::Symbol;
                           N::Int=100,
                           dims::Vector{Int}=Int[],
-                          api::DataLayerAPI=dlapi,
                           levels::Int=1,
                           show=true,
                           dirpath="/tmp/",
@@ -717,7 +715,7 @@ function plotLocalProduct(fgl::G,
   push!(arr, getKDE(getVariable(fgl, lbl)))
   push!(lbls, "curr")
   pl = nothing
-  pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N, api=api)
+  pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N)
   if length(parr) > 0 && length(partials) == 0
     if pp != parr[1]
       push!(arr,pp)
@@ -725,15 +723,16 @@ function plotLocalProduct(fgl::G,
       for a in parr
         push!(arr, a)
       end
-      lbls = union(lbls, lb)
+      @show lb, lbls
+      lbls = union(lbls, string(lb))
     end
     dims = length(dims) > 0 ? dims : collect(1:Ndim(pp))
     colors = getColorsByLength(length(arr))
-    pl = plotKDE(arr, dims=dims, levels=levels, c=colors, legend=lbls, title=string(title,lbl))
+    pl = plotKDE(arr, dims=dims, levels=levels, c=colors, title=string(title,lbl), legend=string.(lbls)) #
   elseif length(parr) == 0 && length(partials) > 0
     # stack 1d plots to accomodate all the partials
     PL = []
-    lbls = ["prod";"curr";lb]
+    lbls = String["prod";"curr";lb]
     pdims = sort(collect(keys(partials)))
     for dimn in pdims
       vals = partials[dimn]
@@ -766,7 +765,6 @@ and show with new product approximation for reference.  The linear and circular 
 function plotLocalProductCylinder(fgl::G,
                                   lbl::Symbol;
                                   N::Int=100,
-                                  api::DataLayerAPI=dlapi,
                                   levels::Int=1,
                                   show=true,
                                   dirpath="/tmp/",
@@ -782,7 +780,7 @@ function plotLocalProductCylinder(fgl::G,
   push!(lbls, "curr")
   pl = nothing
   plc = nothing
-  pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N, api=api)
+  pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N)
   if length(parr) > 0 && length(partials) == 0
     if pp != parr[1]
       push!(arr, marginal(pp,[1]))
@@ -860,6 +858,7 @@ function plotTreeProductUp(fgl::G,
 
   # add upward messages to subgraph
   msgs = getCliqChildMsgsUp(treel,cliq, BallTreeDensity)
+  # @show typeof(msgs)
   addMsgFactors!(subfg, msgs)
 
   # predictBelief
