@@ -59,6 +59,7 @@ export
   plotLocalProductCylinder,
   plotTreeProductUp,
   plotTreeProductDown,
+  plotTreeUpMsgs,
   saveplot,
   animateVertexBelief,
   getColorsByLength,

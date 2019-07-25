@@ -1203,3 +1203,46 @@ function plotProductVsKDE(fgl::G,
     #
     plotKDE([IIF.localProduct(fgl, sym)[1], getKDE(getVariable(fgl, sym))], levels=3, c=c)
 end
+
+
+
+"""
+    $SIGNATURES
+
+Overlay plot all upward messages from cliques.
+"""
+function plotTreeUpMsgs(fg::G,
+                        tree::BayesTree,
+                        sym::Symbol;
+                        show::Bool=true,
+                        dims::Vector{Int}=Int[],
+                        levels::Int=1,
+                        c=nothing,
+                        title="up msgs on $(sym)"    ) where G <: AbstractDFG
+  #
+  # get all msgs
+  allmsgs = getTreeCliqUpMsgsAll(tree)
+  # stack messages by variable
+  sckmsgs = stackCliqUpMsgsByVariable(tree, allmsgs)
+
+  if !haskey(sckmsgs, sym)
+    @warn "plotTreeUpMsgs -- tree does not have up messages for $sym."
+    return nothing
+  end
+
+  # prepend current estimate too
+  Xs = getKDE(fg, sym)
+  # vectorize beliefs
+  beliefs = BallTreeDensity[Xs;]
+  lbls = String["curr,-1";]
+  for (frt,dep,bel,infd) in sckmsgs[sym]
+    push!(beliefs, bel)
+    push!(lbls, "$frt,$dep")
+  end
+
+  # ignoring legend and color information
+  cc = c == nothing ? getColorsByLength(length(beliefs)) : c
+
+  # plot and return
+  plotKDE(beliefs, levels=levels, c=cc, title=title, legend=lbls)
+end
