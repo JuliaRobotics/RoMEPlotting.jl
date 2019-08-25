@@ -319,6 +319,11 @@ end
 
 # import RoMEPlotting: plotPose
 
+"""
+    $SIGNATURES
+
+Plot pose belief as contour information on visually sensible manifolds.
+"""
 function plotPose(pt::Pose2,
                   pp::Vector{BallTreeDensity},
                   title="plotPose2";
@@ -349,6 +354,16 @@ function plotPose(pt::Pose2,
 end
 
 
+function plotPose(pt::Pose2,
+                  pp::BallTreeDensity,
+                  title="plotPose2";
+                  levels=3,
+                  c=nothing,
+                  axis=nothing,
+                  scale::Float64=0.2)
+  #
+  plotPose(pt, [pp;],title,levels=levels,c=c,axis=axis,scale=scale)
+end
 
 
 function plotPose(::DynPose2, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing, axis=nothing)
@@ -379,7 +394,7 @@ function plotPose(fgl::G,
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
-                  show::Bool=true,
+                  show::Bool=false,
                   filepath::AS="/tmp/tempposeplot.svg",
                   app::AS="eog" ) where {G <: AbstractDFG, AS <: AbstractString}
   #
@@ -409,7 +424,7 @@ function plotPose(fgl::G,
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
-                  show::Bool=true,
+                  show::Bool=false,
                   filepath::AS="/tmp/tempposeplot.svg",
                   app::AS="eog" ) where {G <: AbstractDFG, AS <: AbstractString}
   #

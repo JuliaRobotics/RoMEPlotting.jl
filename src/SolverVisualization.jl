@@ -1,15 +1,20 @@
 
-"""
-    $(SIGNATURES)
+import KernelDensityEstimatePlotting: getColorsByLength
 
-Standardize the length colors used by RoMEPlotting.
-"""
-function getColorsByLength(len::Int=10)::Vector{String}
-  COLORS = String["red";"green";"blue";"black";"deepskyblue";"yellow";"magenta"]
-  morecyan = ["cyan" for i in (length(COLORS)+1):len]
-  retc = [COLORS; morecyan]
-  return retc[1:len]
-end
+# """
+#     $(SIGNATURES)
+#
+# Standardize the length colors used by RoMEPlotting.
+#
+# Notes
+# - Duplicated in KernelDensityEstimatePlotting
+# """
+# function getColorsByLength(len::Int=10)::Vector{String}
+#   COLORS = String["red";"green";"blue";"black";"deepskyblue";"yellow";"magenta"]
+#   morecyan = ["cyan" for i in (length(COLORS)+1):len]
+#   retc = [COLORS; morecyan]
+#   return retc[1:len]
+# end
 
 """
     $(SIGNATURES)
@@ -54,7 +59,7 @@ function plotKDE(fgl::G,
   # TODO -- consider automated rotisary of color
   # colors = ["black";"red";"green";"blue";"cyan";"deepskyblue"; "yellow"]
   # COLORS = repmat(colors, 10)
-  COLORS = getColorsByLength(length(syms))
+  # COLORS = getColorsByLength(length(syms))
   MP = BallTreeDensity[]
   LEG = String[]
   # mmarg = Int[]
@@ -70,7 +75,7 @@ function plotKDE(fgl::G,
     push!(MP, p)
     push!(LEG, "add")
   end
-  plotKDE(MP,c=COLORS[1:length(MP)], levels=levels, dims=dims, legend=LEG, title=title, layers=layers)
+  plotKDE(MP,c=getColorsByLength(length(MP)), levels=levels, dims=dims, legend=LEG, title=title, layers=layers)
 end
 
 
@@ -703,7 +708,7 @@ function plotLocalProduct(fgl::G,
                           N::Int=100,
                           dims::Vector{Int}=Int[],
                           levels::Int=1,
-                          show=true,
+                          show::Bool=false,
                           dirpath="/tmp/",
                           mimetype::AbstractString="svg",
                           sidelength=20cm,
@@ -724,7 +729,7 @@ function plotLocalProduct(fgl::G,
         push!(arr, a)
       end
       @show lb, lbls
-      lbls = union(lbls, string(lb))
+      lbls = union(lbls, string.(lb))
     end
     dims = length(dims) > 0 ? dims : collect(1:Ndim(pp))
     colors = getColorsByLength(length(arr))
@@ -732,7 +737,7 @@ function plotLocalProduct(fgl::G,
   elseif length(parr) == 0 && length(partials) > 0
     # stack 1d plots to accomodate all the partials
     PL = []
-    lbls = String["prod";"curr";lb]
+    lbls = String["prod";"curr";string.(lb)]
     pdims = sort(collect(keys(partials)))
     for dimn in pdims
       vals = partials[dimn]
@@ -766,7 +771,7 @@ function plotLocalProductCylinder(fgl::G,
                                   lbl::Symbol;
                                   N::Int=100,
                                   levels::Int=1,
-                                  show=true,
+                                  show=false,
                                   dirpath="/tmp/",
                                   mimetype::AbstractString="svg",
                                   sidelength=30cm,
