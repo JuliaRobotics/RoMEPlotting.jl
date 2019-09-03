@@ -1251,3 +1251,34 @@ function plotTreeUpMsgs(fg::G,
   # plot and return
   plotKDE(beliefs, levels=levels, c=cc, title=title, legend=lbls)
 end
+
+
+"""
+    $SIGNATURES
+
+Plot new proposal (convolution) for factor x of variable y given all other -- i.e. y|X
+
+Notes
+- plot new result on `towards` as first color.
+- Plot other variables in factor on 2nd to m colors.
+"""
+function plotVariableGivenFactor(dfg::G,
+                                 fct::Symbol,
+                                 towards::Symbol;
+                                 levels::Int=2,
+                                 dims=nothing  ) where G <: AbstractDFG
+  #
+  pts = approxConv(dfg,fct,towards)
+  mani = getManifolds(dfg, towards)
+  res = manikde!(pts,mani)
+
+  lie = ls(dfg, fct)
+  setdiff!(lie, [towards])
+
+  otr = map(x->getKDE(dfg,x),lie)
+  lbls = string.([towards;lie])
+
+  pl = plotKDE([res;otr],dims=dims,levels=levels,legend=lbls)
+
+  return pl
+end

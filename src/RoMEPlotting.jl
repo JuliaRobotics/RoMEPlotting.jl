@@ -82,7 +82,8 @@ export
   progressExamplePlot,
   plotTrckStep,
   plotPose2Vels,
-  plotProductVsKDE
+  plotProductVsKDE,
+  plotVariableGivenFactor
 
 
 include("SolverVisualization.jl")
