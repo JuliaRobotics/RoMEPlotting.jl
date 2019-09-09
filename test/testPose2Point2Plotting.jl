@@ -33,9 +33,10 @@ pts = IIF.approxConv(fg, :x0x1f1, :x1)
 
 # @show ls(fg)
 
-tree = wipeBuildNewTree!(fg)
-inferOverTreeR!(fg, tree,N=N)
-# inferOverTree!(fg, tree, N=N)
+tree, smt, hist = solveTree!(fg)
+# tree = wipeBuildNewTree!(fg)
+# inferOverTreeR!(fg, tree,N=N)
+# # inferOverTree!(fg, tree, N=N)
 
 # check that yaw is working
 addVariable!(fg, :x2, Pose2, N=N)
