@@ -86,9 +86,10 @@ export
   plotVariableGivenFactor
 
 
-include("SolverVisualization.jl")
 
+include("SolverVisualization.jl")
 include("RobotViz.jl")
+include("PlotHexUtils.jl")
 
 
 end
