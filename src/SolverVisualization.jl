@@ -1,15 +1,20 @@
 
-"""
-    $(SIGNATURES)
+import KernelDensityEstimatePlotting: getColorsByLength
 
-Standardize the length colors used by RoMEPlotting.
-"""
-function getColorsByLength(len::Int=10)::Vector{String}
-  COLORS = String["red";"green";"blue";"black";"deepskyblue";"yellow";"magenta"]
-  morecyan = ["cyan" for i in (length(COLORS)+1):len]
-  retc = [COLORS; morecyan]
-  return retc[1:len]
-end
+# """
+#     $(SIGNATURES)
+#
+# Standardize the length colors used by RoMEPlotting.
+#
+# Notes
+# - Duplicated in KernelDensityEstimatePlotting
+# """
+# function getColorsByLength(len::Int=10)::Vector{String}
+#   COLORS = String["red";"green";"blue";"black";"deepskyblue";"yellow";"magenta"]
+#   morecyan = ["cyan" for i in (length(COLORS)+1):len]
+#   retc = [COLORS; morecyan]
+#   return retc[1:len]
+# end
 
 """
     $(SIGNATURES)
@@ -54,7 +59,7 @@ function plotKDE(fgl::G,
   # TODO -- consider automated rotisary of color
   # colors = ["black";"red";"green";"blue";"cyan";"deepskyblue"; "yellow"]
   # COLORS = repmat(colors, 10)
-  COLORS = getColorsByLength(length(syms))
+  # COLORS = getColorsByLength(length(syms))
   MP = BallTreeDensity[]
   LEG = String[]
   # mmarg = Int[]
@@ -70,7 +75,7 @@ function plotKDE(fgl::G,
     push!(MP, p)
     push!(LEG, "add")
   end
-  plotKDE(MP,c=COLORS[1:length(MP)], levels=levels, dims=dims, legend=LEG, title=title, layers=layers)
+  plotKDE(MP,c=getColorsByLength(length(MP)), levels=levels, dims=dims, legend=LEG, title=title, layers=layers)
 end
 
 
@@ -703,7 +708,7 @@ function plotLocalProduct(fgl::G,
                           N::Int=100,
                           dims::Vector{Int}=Int[],
                           levels::Int=1,
-                          show=true,
+                          show::Bool=false,
                           dirpath="/tmp/",
                           mimetype::AbstractString="svg",
                           sidelength=20cm,
@@ -724,7 +729,7 @@ function plotLocalProduct(fgl::G,
         push!(arr, a)
       end
       @show lb, lbls
-      lbls = union(lbls, string(lb))
+      lbls = union(lbls, string.(lb))
     end
     dims = length(dims) > 0 ? dims : collect(1:Ndim(pp))
     colors = getColorsByLength(length(arr))
@@ -732,7 +737,7 @@ function plotLocalProduct(fgl::G,
   elseif length(parr) == 0 && length(partials) > 0
     # stack 1d plots to accomodate all the partials
     PL = []
-    lbls = String["prod";"curr";lb]
+    lbls = String["prod";"curr";string.(lb)]
     pdims = sort(collect(keys(partials)))
     for dimn in pdims
       vals = partials[dimn]
@@ -766,7 +771,7 @@ function plotLocalProductCylinder(fgl::G,
                                   lbl::Symbol;
                                   N::Int=100,
                                   levels::Int=1,
-                                  show=true,
+                                  show=false,
                                   dirpath="/tmp/",
                                   mimetype::AbstractString="svg",
                                   sidelength=30cm,
@@ -1202,4 +1207,78 @@ function plotProductVsKDE(fgl::G,
                           c::Vector{String}=["red";"black"] ) where  G <: AbstractDFG
     #
     plotKDE([IIF.localProduct(fgl, sym)[1], getKDE(getVariable(fgl, sym))], levels=3, c=c)
+end
+
+
+
+"""
+    $SIGNATURES
+
+Overlay plot all upward messages from cliques.
+"""
+function plotTreeUpMsgs(fg::G,
+                        tree::BayesTree,
+                        sym::Symbol;
+                        show::Bool=true,
+                        dims::Vector{Int}=Int[],
+                        levels::Int=1,
+                        c=nothing,
+                        title="up msgs on $(sym)"    ) where G <: AbstractDFG
+  #
+  # get all msgs
+  allmsgs = getTreeCliqUpMsgsAll(tree)
+  # stack messages by variable
+  sckmsgs = stackCliqUpMsgsByVariable(tree, allmsgs)
+
+  if !haskey(sckmsgs, sym)
+    @warn "plotTreeUpMsgs -- tree does not have up messages for $sym."
+    return nothing
+  end
+
+  # prepend current estimate too
+  Xs = getKDE(fg, sym)
+  # vectorize beliefs
+  beliefs = BallTreeDensity[Xs;]
+  lbls = String["curr,-1";]
+  for (frt,dep,bel,infd) in sckmsgs[sym]
+    push!(beliefs, bel)
+    push!(lbls, "$frt,$dep")
+  end
+
+  # ignoring legend and color information
+  cc = c == nothing ? getColorsByLength(length(beliefs)) : c
+
+  # plot and return
+  plotKDE(beliefs, levels=levels, c=cc, title=title, legend=lbls)
+end
+
+
+"""
+    $SIGNATURES
+
+Plot new proposal (convolution) for factor x of variable y given all other -- i.e. y|X
+
+Notes
+- plot new result on `towards` as first color.
+- Plot other variables in factor on 2nd to m colors.
+"""
+function plotVariableGivenFactor(dfg::G,
+                                 fct::Symbol,
+                                 towards::Symbol;
+                                 levels::Int=2,
+                                 dims=nothing  ) where G <: AbstractDFG
+  #
+  pts = approxConv(dfg,fct,towards)
+  mani = getManifolds(dfg, towards)
+  res = manikde!(pts,mani)
+
+  lie = ls(dfg, fct)
+  setdiff!(lie, [towards])
+
+  otr = map(x->getKDE(dfg,x),lie)
+  lbls = string.([towards;lie])
+
+  pl = plotKDE([res;otr],dims=dims,levels=levels,legend=lbls)
+
+  return pl
 end
