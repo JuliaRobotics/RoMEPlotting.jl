@@ -858,7 +858,7 @@ function plotTreeProductUp(fgl::G,
   #
   # build a subgraph copy of clique
   cliq = whichCliq(treel, cliqsym)
-  syms = getCliqAllVarSyms(fgl, cliq)
+  syms = getCliqAllVarIds(cliq)
   subfg = buildSubgraphFromLabels(fgl,syms)
 
   # add upward messages to subgraph
@@ -877,11 +877,12 @@ end
 function plotTreeProductDown(fgl::G,
                              treel::BayesTree,
                              cliqsym::Symbol,
-                             varsym::Symbol=cliqsym  ) where G <: AbstractDFG
+                             varsym::Symbol=cliqsym;
+                             levels::Int=1  ) where G <: AbstractDFG
   #
   # build a subgraph copy of clique
   cliq = whichCliq(treel, cliqsym)
-  syms = getCliqAllVarSyms(fgl, cliq)
+  syms = getCliqAllVarIds(cliq)
   subfg = buildSubgraphFromLabels(fgl,syms)
 
   # add upward messages to subgraph
@@ -892,7 +893,7 @@ function plotTreeProductDown(fgl::G,
   # stuff = treeProductUp(fgl, treel, cliqsym, varsym)
   # plotKDE(manikde!(stuff[1], getManifolds(fgl, varsym)))
   cllbl = cliq.attributes["label"]
-  return plotLocalProduct(subfg, varsym, title="Tree Dwn $(cllbl) | ")
+  return plotLocalProduct(subfg, varsym, title="Tree Dwn $(cllbl) | ", levels=levels)
 end
 
 
@@ -1216,7 +1217,7 @@ end
 
 Overlay plot all upward messages from cliques.
 """
-function plotTreeUpMsgs(fg::G,
+function plotCliqUpMsgs(fg::G,
                         tree::BayesTree,
                         sym::Symbol;
                         show::Bool=true,
@@ -1231,7 +1232,7 @@ function plotTreeUpMsgs(fg::G,
   sckmsgs = stackCliqUpMsgsByVariable(tree, allmsgs)
 
   if !haskey(sckmsgs, sym)
-    @warn "plotTreeUpMsgs -- tree does not have up messages for $sym."
+    @warn "plotCliqUpMsgs -- tree does not have up messages for $sym."
     return nothing
   end
 
@@ -1281,4 +1282,39 @@ function plotVariableGivenFactor(dfg::G,
   pl = plotKDE([res;otr],dims=dims,levels=levels,legend=lbls)
 
   return pl
+end
+
+
+"""
+    $SIGNATURES
+
+Plot the downward messages currently stored in a clique.
+"""
+function plotCliqDownMsgs(tree::BayesTree,
+                          frnt::Symbol;
+                          show::Bool=true,
+                          levels::Int=2,
+                          dims=nothing,
+                          existing=nothing  )
+  #
+  cliq = getCliq(tree,frnt)
+  msgs = getCliqMsgsDown(cliq)
+
+  PL = []
+
+  for (key, beldim) in msgs
+    npl = plotKDE(beldim[1], levels=levels, title="dwn msg $key", dims=dims)
+    existing == nothing ? nothing : union!(npl.layers, existing.layers)
+    push!(PL, npl)
+  end
+
+  existing == nothing ? nothing : push!(PL, existing)
+  pl = vstack(PL...)
+
+  folderpath = "/tmp/caesar/random/"
+  filepath = folderpath*"downmsgs_cliq$(cliq.index).pdf"
+  Base.mkpath(folderpath)
+  pl |> PDF(filepath, 20cm, length(PL)*12cm)
+  @async run(`evince $filepath`)
+  pl
 end
