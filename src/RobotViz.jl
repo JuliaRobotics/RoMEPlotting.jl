@@ -139,9 +139,14 @@ end
 Future:
 - Relax to user defined pose labeling scheme, for example `:p1, :p2, ...`
 """
-function drawPoses(fg::G; from::Int64=0,to::Int64=99999999,
-                    meanmax=:max, lbls=true, drawhist=true,
-                    spscale::Float64=5.0  ) where G <: AbstractDFG
+function drawPoses(fg::G;
+                   from::Int64=0,
+                   to::Int64=99999999,
+                   meanmax=:max,
+                   lbls=true,
+                   drawhist=true,
+                   spscale::Float64=5.0  ) where G <: AbstractDFG
+    #
     #Gadfly.set_default_plot_size(20cm, 30cm)
     Xp,Yp = get2DPoseSamples(fg, from=from, to=to)
     Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; LBLS=String[];
@@ -228,6 +233,8 @@ function drawPosesLandms(fgl::G;
                          spscale::Float64=5.0,window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
                          xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing  ) where {G <: AbstractDFG, T}
   #
+  xmin != nothing && xmax != nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
+  ymin != nothing && ymax != nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
   ll = getVariableIds(fgl, r"l")
   p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale)
   if length(ll) > 0
