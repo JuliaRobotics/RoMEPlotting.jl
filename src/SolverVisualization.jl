@@ -858,7 +858,7 @@ function plotTreeProductUp(fgl::G,
   #
   # build a subgraph copy of clique
   cliq = whichCliq(treel, cliqsym)
-  syms = getCliqAllVarSyms(fgl, cliq)
+  syms = getCliqAllVarIds(cliq)
   subfg = buildSubgraphFromLabels(fgl,syms)
 
   # add upward messages to subgraph
@@ -882,7 +882,7 @@ function plotTreeProductDown(fgl::G,
   #
   # build a subgraph copy of clique
   cliq = whichCliq(treel, cliqsym)
-  syms = getCliqAllVarSyms(fgl, cliq)
+  syms = getCliqAllVarIds(cliq)
   subfg = buildSubgraphFromLabels(fgl,syms)
 
   # add upward messages to subgraph
