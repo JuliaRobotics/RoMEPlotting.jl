@@ -139,9 +139,14 @@ end
 Future:
 - Relax to user defined pose labeling scheme, for example `:p1, :p2, ...`
 """
-function drawPoses(fg::G; from::Int64=0,to::Int64=99999999,
-                    meanmax=:max, lbls=true, drawhist=true,
-                    spscale::Float64=5.0  ) where G <: AbstractDFG
+function drawPoses(fg::G;
+                   from::Int64=0,
+                   to::Int64=99999999,
+                   meanmax=:max,
+                   lbls=true,
+                   drawhist=true,
+                   spscale::Float64=5.0  ) where G <: AbstractDFG
+    #
     #Gadfly.set_default_plot_size(20cm, 30cm)
     Xp,Yp = get2DPoseSamples(fg, from=from, to=to)
     Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; LBLS=String[];
@@ -184,7 +189,8 @@ function drawLandms(fg::G;
                     meanmax=:max,
                     lbls=true,showmm=false,drawhist=true,
                     c="red",
-                    MM::Dict{Int,T}=Dict{Int,Int}()  ) where {G <: AbstractDFG, T}
+                    MM::Dict{Int,T}=Dict{Int,Int}(),
+                    point_size=1pt  ) where {G <: AbstractDFG, T}
     #Gadfly.set_default_plot_size(20cm, 30cm)
     Xp,Yp = get2DLandmSamples(fg, from=from, to=to)
     Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; lblstags=String[];
@@ -196,7 +202,7 @@ function drawLandms(fg::G;
 
     if lbls
       psplt = Gadfly.plot(
-        Gadfly.layer(x=Xpp,y=Ypp, label=lbltags, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt), Geom.label),
+        Gadfly.layer(x=Xpp,y=Ypp, label=lbltags, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=point_size), Geom.label),
         Coord.cartesian(fixed=true)
         # ,Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)#(xbincount=100, ybincount=100)
       )
@@ -226,12 +232,15 @@ function drawPosesLandms(fgl::G;
                          from::Int64=0, to::Int64=99999999, minnei::Int64=0,
                          meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(), showmm=true,
                          spscale::Float64=5.0,window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
-                         xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing  ) where {G <: AbstractDFG, T}
+                         xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing,
+                         point_size=1pt  ) where {G <: AbstractDFG, T}
   #
+  xmin != nothing && xmax != nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
+  ymin != nothing && ymax != nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
   ll = getVariableIds(fgl, r"l")
   p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale)
   if length(ll) > 0
-    pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm)
+    pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, point_size=point_size)
     for l in pl.layers
       push!(p.layers, l)
     end
@@ -330,7 +339,8 @@ function plotPose(pt::Pose2,
                   levels=3,
                   c=nothing,
                   axis=nothing,
-                  scale::Float64=0.2)
+                  scale::Float64=0.2,
+                  overlay=nothing  )
   #
   # ops = buildHybridManifoldCallbacks(pt.manifolds)
   # @show ran = getKDERange(p, addop=ops[1], diffop=ops[2])
@@ -339,7 +349,7 @@ function plotPose(pt::Pose2,
   p1 = plotKDE(pp, dims=[1;2], levels=levels, c=c, title=title, axis=ran )
   # p2 = plotKDE(bels, dims=[3], c=c)
 
-  cc = c == nothing ? ["cyan" for i in 1:length(pp)] : c
+  cc = c == nothing ? getColorsByLength(length(pp)) : c
 
   GG = BallTreeDensity[]
   for ppc in pp
@@ -349,6 +359,9 @@ function plotPose(pt::Pose2,
   end
   # p2 = AMP.plotCircBeliefs(GG, c=cc)
   p2 = AMP.plotKDECircular(GG, scale=scale, c=cc)
+
+  # deal with overlay
+
 
   Gadfly.hstack(p1,p2)
 end
@@ -360,9 +373,10 @@ function plotPose(pt::Pose2,
                   levels=3,
                   c=nothing,
                   axis=nothing,
-                  scale::Float64=0.2)
+                  scale::Float64=0.2,
+                  overlay=nothing )
   #
-  plotPose(pt, [pp;],title,levels=levels,c=c,axis=axis,scale=scale)
+  plotPose(pt, [pp;],title,levels=levels,c=c,axis=axis,scale=scale, overlay=overlay)
 end
 
 
@@ -394,6 +408,7 @@ function plotPose(fgl::G,
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
+                  scale::Float64=0.2,
                   show::Bool=false,
                   filepath::AS="/tmp/tempposeplot.svg",
                   app::AS="eog" ) where {G <: AbstractDFG, AS <: AbstractString}
@@ -401,7 +416,7 @@ function plotPose(fgl::G,
   typ = getData(getVariable(fgl, syms[1])).softtype
   pt = string(string.(syms)...)
   getvertsgg = (sym) -> getKDE(getVariable(fgl, sym))
-  pl = plotPose(typ, getvertsgg.(syms), pt, levels=levels, c=c, axis=axis)
+  pl = plotPose(typ, getvertsgg.(syms), pt, levels=levels, c=c, axis=axis, scale=scale)
 
   if length(filepath) > 0
     ext = split(filepath, '.')[end]
@@ -424,6 +439,7 @@ function plotPose(fgl::G,
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
+                  scale::Float64=0.2,
                   show::Bool=false,
                   filepath::AS="/tmp/tempposeplot.svg",
                   app::AS="eog" ) where {G <: AbstractDFG, AS <: AbstractString}
@@ -620,15 +636,23 @@ function plotPose3Pairs(fgl::FactorGraph, sym::Symbol; fill::Bool=true)
 end
 
 
-function plotKDE(fgl::FactorGraph, vsym::Vector{Symbol}; axis=nothing, dims=nothing, c=getColorsByLength(length(vsym)), levels=4, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
+function plotKDE(fgl::FactorGraph,
+                 vsym::Vector{Symbol};
+                 axis=nothing,
+                 dims=nothing,
+                 c=getColorsByLength(length(vsym)),
+                 levels::Int=4,
+                 title::Union{Nothing, T}=nothing,
+                 overlay=nothing  ) where {T <: AbstractString}
+  #
   verts = map((x)->getKDE(getVariable(fgl, x)), vsym)
-  plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels, title=title)
+  plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels, title=title, overlay=overlay )
 end
+
 function plotKDE(fgl::FactorGraph, vsym::Symbol; axis=nothing, dims=nothing, c=nothing, levels=4, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
+  @warn "plotKDE for FactorGraph is deprecated, use DFG objects instead."
   plotKDE(fgl, Symbol[vsym;], dims=dims, c=c, axis=axis, levels=levels, title=title)
 end
-
-
 
 
 

@@ -59,7 +59,7 @@ export
   plotLocalProductCylinder,
   plotTreeProductUp,
   plotTreeProductDown,
-  plotTreeUpMsgs,
+  plotCliqUpMsgs,
   saveplot,
   animateVertexBelief,
   getColorsByLength,
@@ -83,13 +83,16 @@ export
   plotTrckStep,
   plotPose2Vels,
   plotProductVsKDE,
-  plotVariableGivenFactor
+  plotVariableGivenFactor,
+  plotCliqDownMsgs,
+  plotFactor
 
 
 
 include("SolverVisualization.jl")
 include("RobotViz.jl")
 include("PlotHexUtils.jl")
+include("PlotFactors.jl")
 
 
 end
