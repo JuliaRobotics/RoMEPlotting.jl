@@ -41,12 +41,13 @@ function plotKDE(fgl::G,
                  title="",
                  levels::Int=5,
                  fill::Bool=false,
-                 layers::Bool=false  ) where G <: AbstractDFG
+                 layers::Bool=false,
+                 c=nothing  ) where G <: AbstractDFG
   #
   p = getKDE(getVariable(fgl,sym))
   # mmarg = length(marg) > 0 ? marg : collect(1:Ndim(p))
   # mp = marginal(p,mmarg)
-  plotKDE(p, levels=levels, dims=dims, title=string(sym, "  ", title), fill=fill, layers=layers )
+  plotKDE(p, levels=levels, dims=dims, title=string(sym, "  ", title), fill=fill, layers=layers, c=c )
 end
 function plotKDE(fgl::G,
                  syms::Vector{Symbol};
@@ -54,7 +55,8 @@ function plotKDE(fgl::G,
                  dims=nothing,
                  title=nothing,
                  levels=3,
-                 layers::Bool=false  ) where G <: AbstractDFG
+                 layers::Bool=false,
+                 c=getColorsByLength(length(addt))  ) where G <: AbstractDFG
   #
   # TODO -- consider automated rotisary of color
   # colors = ["black";"red";"green";"blue";"cyan";"deepskyblue"; "yellow"]
@@ -75,7 +77,7 @@ function plotKDE(fgl::G,
     push!(MP, p)
     push!(LEG, "add")
   end
-  plotKDE(MP,c=getColorsByLength(length(MP)), levels=levels, dims=dims, legend=LEG, title=title, layers=layers)
+  plotKDE(MP, c=c, levels=levels, dims=dims, legend=LEG, title=title, layers=layers)
 end
 
 
