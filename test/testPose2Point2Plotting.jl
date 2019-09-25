@@ -69,7 +69,7 @@ p1 = getKDE(fg, :l1)
 # p1= kde!(pts)
 p1c = getKDE(fg, :x0)
 
-plotKDE( p1 , dimLbls=["x";"y";"z"])
+plotKDE( p1 , dimLbls=["x";"y";"z"]) # |> PDF("/tmp/test.pdf")
 
 
 plotKDE( [p1c;p1] , dimLbls=["x";"y";"z"],c=["red";"black"],levels=3, dims=[1;2])
