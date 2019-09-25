@@ -6,11 +6,11 @@ using RoME
 using RoMEPlotting, Gadfly
 using Test
 
+
 # @testset "Prepare a 2D factor graph with poses and points..." begin
 
-
 N = 100
-fg = IIF.initfg()
+fg = initfg()
 
 
 initCov = Matrix(Diagonal([0.03;0.03;0.001]))
@@ -27,16 +27,12 @@ ppc = Pose2Pose2(MvNormal([50.0;0.0;pi/2], odoCov))
 addFactor!(fg, [:x0; :x1], ppc)
 
 # test evaluation of pose pose constraint
-pts = IIF.approxConv(fg, :x0x1f1, :x1)
-# pts = evalFactor2(fg, f2, v2.index)
+pts = approxConv(fg, :x0x1f1, :x1)
 
 
-# @show ls(fg)
-
+# perform inference
 tree, smt, hist = solveTree!(fg)
-# tree = wipeBuildNewTree!(fg)
-# inferOverTreeR!(fg, tree,N=N)
-# # inferOverTree!(fg, tree, N=N)
+
 
 # check that yaw is working
 addVariable!(fg, :x2, Pose2, N=N)
@@ -57,22 +53,27 @@ pp2 = PriorPoint2(MvNormal([10.0;0.0], Matrix(Diagonal([1.0;1.0]))))
 
 f5 = addFactor!(fg,[:l1], pp2)
 
-ensureAllInitialized!(fg)
-tree = wipeBuildNewTree!(fg)
-[inferOverTree!(fg, tree, N=N) for i in 1:2]
+# do inference
+tree, smt, hist = solveTree!(fg)
+# ensureAllInitialized!(fg)
+# tree = wipeBuildNewTree!(fg)
+# [inferOverTree!(fg, tree, N=N) for i in 1:2]
 
 println("test Pose2D plotting")
 
 drawPoses(fg);
 drawPosesLandms(fg);
 
-pts = getVal(fg, :l1)
+p1 = getKDE(fg, :l1)
+# pts = getVal(fg, :l1)
+# p1= kde!(pts)
+p1c = getKDE(fg, :x0)
 
-p1= kde!(pts)
-p1c = getKDE(getVariable(fg, :x0))
 plotKDE( p1 , dimLbls=["x";"y";"z"])
 
-plotKDE( [marginal(p1c,[1;2]);marginal(p1,[1;2])] , dimLbls=["x";"y";"z"],c=["red";"black"],levels=3)
+
+plotKDE( [p1c;p1] , dimLbls=["x";"y";"z"],c=["red";"black"],levels=3, dims=[1;2])
+# plotKDE( [marginal(p1c,[1;2]);marginal(p1,[1;2])] , dimLbls=["x";"y";"z"],c=["red";"black"],levels=3, dims=[1;2])
 p1c = deepcopy(p1)
 
 plotKDE( marginal(getKDE(getVariable(fg, :x2)),[1;2]) , dimLbls=["x";"y";"z"])
