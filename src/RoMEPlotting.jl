@@ -84,13 +84,15 @@ export
   plotPose2Vels,
   plotProductVsKDE,
   plotVariableGivenFactor,
-  plotCliqDownMsgs
+  plotCliqDownMsgs,
+  plotFactor
 
 
 
 include("SolverVisualization.jl")
 include("RobotViz.jl")
 include("PlotHexUtils.jl")
+include("PlotFactors.jl")
 
 
 end
