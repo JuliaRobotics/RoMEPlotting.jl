@@ -145,10 +145,11 @@ function drawPoses(fg::G;
                    meanmax=:max,
                    lbls=true,
                    drawhist=true,
-                   spscale::Float64=5.0  ) where G <: AbstractDFG
+                   spscale::Float64=5.0,
+                   contour::Bool=true, levels::Int=1,
+                   regexPoses=r"x"  ) where G <: AbstractDFG
     #
     #Gadfly.set_default_plot_size(20cm, 30cm)
-    Xp,Yp = get2DPoseSamples(fg, from=from, to=to)
     Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; LBLS=String[];
     if meanmax == :mean
       Xpp,Ypp, Thpp, LBLS = get2DPoseMeans(fg, from=from, to=to)
@@ -172,7 +173,16 @@ function drawPoses(fg::G;
 	# return psplt
     addXYLineLayers!(psplt, Xpp, Ypp, Thpp, l=spscale)
     if drawhist
+      Xp,Yp = get2DPoseSamples(fg, from=from, to=to)
       push!(psplt.layers,  Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)[1] )#(xbincount=100, ybincount=100))
+    end
+    # add contours to pose estimates
+    if contour
+      varsyms = Symbol.(LBLS)
+      for vsym in varsyms
+        pln = plotKDE(fg, vsym, dims=[1;2], levels=levels, c=["gray90"])
+        union!(psplt.layers, pln.layers)
+      end
     end
     return psplt
 end
@@ -183,21 +193,23 @@ end
 
 2D plot of landmarks, assuming `:l1, :l2, ... :ln`.  Use `from` and `to` to control the range of landmarks `n` to include.
 """
-function drawLandms(fg::G;
+function drawLandms(fg::AbstractDFG;
                     from::Int64=0, to::Int64=99999999,
                     minnei::Int64=0,
                     meanmax=:max,
                     lbls=true,showmm=false,drawhist=true,
+                    contour::Bool=true, levels::Int=1,
                     c="red",
                     MM::Dict{Int,T}=Dict{Int,Int}(),
-                    point_size=1pt  ) where {G <: AbstractDFG, T}
+                    point_size=1pt,
+                    regexLandmark::Regex=r"l"  ) where T
     #Gadfly.set_default_plot_size(20cm, 30cm)
     Xp,Yp = get2DLandmSamples(fg, from=from, to=to)
     Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; lblstags=String[];
     if meanmax==:mean
-      Xpp,Ypp, t, lbltags = get2DLandmMeans(fg, from=from, to=to)
+      Xpp,Ypp, t, lbltags = get2DLandmMeans(fg, from=from, to=to, regexLandmark=regexLandmark)
     elseif meanmax==:max
-      Xpp,Ypp, t, lbltags = get2DLandmMax(fg, from=from, to=to,showmm=showmm,MM=MM)
+      Xpp,Ypp, t, lbltags = get2DLandmMax(fg, from=from, to=to,showmm=showmm,MM=MM, regexLandmark=regexLandmark)
     end
 
     if lbls
@@ -217,6 +229,14 @@ function drawLandms(fg::G;
       push!(psplt.layers, Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)[1])#(xbincount=100, ybincount=100)
     end
 
+    if contour
+      varsyms = Symbol.(lbltags)
+      for vsym in varsyms
+        pln = plotKDE(fg, vsym, dims=[1;2], levels=levels, c=["gray90"])
+        union!(psplt.layers, pln.layers)
+      end
+    end
+
     psplt
 end
 
@@ -228,16 +248,20 @@ end
 Notes
 - assumes `:l1`, `:l2`, ... for landmarks -- not using `tags=[:LANDMARK]` here yet (TODO).
 """
-function drawPosesLandms(fgl::G;
+function drawPosesLandms(fgl::AbstractDFG;
                          from::Int64=0, to::Int64=99999999, minnei::Int64=0,
-                         meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(), showmm=true,
+                         meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(),
+                         contour::Bool=true, levels::Int=1,
+                         showmm=true,
                          spscale::Float64=5.0,window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
                          xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing,
-                         point_size=1pt  ) where {G <: AbstractDFG, T}
+                         point_size=1pt,
+                         regexLandmark=r"l",
+                         regexPoses=r"x"  ) where {T}
   #
   xmin != nothing && xmax != nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
   ymin != nothing && ymax != nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
-  ll = getVariableIds(fgl, r"l")
+  ll = getVariableIds(fgl, regexLandmark)
   p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale)
   if length(ll) > 0
     pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, point_size=point_size)

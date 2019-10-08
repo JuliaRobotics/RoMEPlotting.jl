@@ -16,7 +16,7 @@ function plotFactor(dfg::G, fctsym::Symbol, fct::Pose2Point2Range; hdl=[]) where
   pose = intersect(vars, ls(dfg, Pose2))[1]
   poin = intersect(vars, ls(dfg, Point2))[1]
 
-  # calculate predicted range
+  # calculate predicted range (inverse solve)
   ptss = map(x->getPoints(getKDE(dfg, x)), vars)
   dpts = (ptss[1][1:2,:] - ptss[2][1:2,:]).^2
   pred = sqrt.(sum(dpts, dims=1))
