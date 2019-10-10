@@ -250,7 +250,7 @@ Notes
 """
 function drawPosesLandms(fgl::AbstractDFG;
                          from::Int64=0, to::Int64=99999999, minnei::Int64=0,
-                         meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(),
+                         meanmax=:max, lbls=true, drawhist=false, MM::Dict{Int,T}=Dict{Int,Int}(),
                          contour::Bool=true, levels::Int=1,
                          showmm=true,
                          spscale::Float64=5.0,window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
