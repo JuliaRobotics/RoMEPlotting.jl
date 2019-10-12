@@ -180,7 +180,7 @@ function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Point2BearingRan
     # plot a prediction of landmark
     predpoints = approxConv(dfg, fctsym, poin)
     PP = manikde!(predpoints, Point2)
-    predLandm = plotKDE([getKDE(fg1, poin); PP], levels=2, c=["red"; "deepskyblue"], legend=["landmark";"predicted"])
+    predLandm = plotKDE([getKDE(dfg, poin); PP], levels=2, c=["red"; "deepskyblue"], legend=["landmark";"predicted"])
 
     push!(hdl, predLandm)
 
