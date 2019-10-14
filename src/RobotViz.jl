@@ -364,7 +364,8 @@ function plotPose(pt::Pose2,
                   c=nothing,
                   axis=nothing,
                   scale::Float64=0.2,
-                  overlay=nothing  )
+                  overlay=nothing,
+                  hdl=[]  )
   #
   # ops = buildHybridManifoldCallbacks(pt.manifolds)
   # @show ran = getKDERange(p, addop=ops[1], diffop=ops[2])
@@ -387,6 +388,9 @@ function plotPose(pt::Pose2,
   # deal with overlay
 
 
+  push!(hdl, p1)
+  push!(hdl, p2)
+
   Gadfly.hstack(p1,p2)
 end
 
@@ -398,27 +402,53 @@ function plotPose(pt::Pose2,
                   c=nothing,
                   axis=nothing,
                   scale::Float64=0.2,
-                  overlay=nothing )
+                  overlay=nothing,
+                  hdl=[]  )
   #
-  plotPose(pt, [pp;],title,levels=levels,c=c,axis=axis,scale=scale, overlay=overlay)
+  plotPose(pt, [pp;],title,levels=levels,c=c,axis=axis,scale=scale, overlay=overlay, hdl=hdl )
 end
 
 
-function plotPose(::DynPose2, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing, axis=nothing)
+function plotPose(::DynPose2,
+                  bels::Vector{BallTreeDensity},
+                  title;
+                  levels::Int=5,
+                  c=nothing,
+                  axis=nothing,
+                  hdl=[] )
+  #
   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
   p2 = plotKDE(bels, dims=[3], c=c)
   p3 = plotKDE(bels, dims=[4;5], levels=levels, c=c)
+
+  push!(hdl, p1)
+  push!(hdl, p2)
+  push!(hdl, p3)
+
   Gadfly.vstack(p1,p2,p3)
 end
 
 # import RoMEPlotting: plotPose
 
-function plotPose(::Pose3, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing, axis=nothing)
+function plotPose(::Pose3,
+                  bels::Vector{BallTreeDensity},
+                  title;
+                  levels::Int=5,
+                  c=nothing,
+                  axis=nothing,
+                  hdl=[]  )
+  #
   @show title
   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
   p2 = plotKDE(bels, dims=[3], c=c)
   p3 = plotKDE(bels, dims=[4;5], levels=levels, c=c)
   p4 = plotKDE(bels, dims=[6], c=c)
+
+  push!(hdl, p1)
+  push!(hdl, p2)
+  push!(hdl, p3)
+  push!(hdl, p4)
+
   Gadfly.vstack(p1,p2,p3,p4)
 end
 
@@ -435,12 +465,13 @@ function plotPose(fgl::G,
                   scale::Float64=0.2,
                   show::Bool=false,
                   filepath::AS="/tmp/tempposeplot.svg",
-                  app::AS="eog" ) where {G <: AbstractDFG, AS <: AbstractString}
+                  app::AS="eog",
+                  hdl=[]  ) where {G <: AbstractDFG, AS <: AbstractString}
   #
   typ = getData(getVariable(fgl, syms[1])).softtype
   pt = string(string.(syms)...)
   getvertsgg = (sym) -> getKDE(getVariable(fgl, sym))
-  pl = plotPose(typ, getvertsgg.(syms), pt, levels=levels, c=c, axis=axis, scale=scale)
+  pl = plotPose(typ, getvertsgg.(syms), pt, levels=levels, c=c, axis=axis, scale=scale, hdl=hdl )
 
   if length(filepath) > 0
     ext = split(filepath, '.')[end]
@@ -466,9 +497,10 @@ function plotPose(fgl::G,
                   scale::Float64=0.2,
                   show::Bool=false,
                   filepath::AS="/tmp/tempposeplot.svg",
-                  app::AS="eog" ) where {G <: AbstractDFG, AS <: AbstractString}
+                  app::AS="eog",
+                  hdl=[]  ) where {G <: AbstractDFG, AS <: AbstractString}
   #
-  plotPose(fgl, [sym;], levels=levels, axis=axis, show=show, filepath=filepath, app=app)
+  plotPose(fgl, [sym;], levels=levels, axis=axis, show=show, filepath=filepath, app=app, hdl=hdl )
 end
 
 # deprecated
