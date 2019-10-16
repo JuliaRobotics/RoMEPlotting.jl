@@ -271,7 +271,7 @@ end
 
 
 function reportFactors(dfg::AbstractDFG,
-                       T::Union{Type{Pose2Pose2}, Type{Pose2Point2BearingRange}},
+                       T::Union{Type{Pose2Pose2}, Type{Pose2Point2BearingRange}, Type{Pose2Point2Range}, Type{Pose2Point2Bearing}},
                        fcts::Vector{Symbol}=ls(dfg, T);
                        filepath="/tmp/caesar/random/report/$T.pdf",
                        show::Bool=true  )
