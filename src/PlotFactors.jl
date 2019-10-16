@@ -273,9 +273,11 @@ end
 function reportFactors(dfg::AbstractDFG,
                        T::Union{Type{Pose2Pose2}, Type{Pose2Point2BearingRange}},
                        fcts::Vector{Symbol}=ls(dfg, T);
-                       path="/tmp/caesar/random/report",
+                       filepath="/tmp/caesar/random/report/$T.pdf",
                        show::Bool=true  )
   #
+  ss = split(filepath, '/')
+  path = joinpath(ss[1:(end-1)]...)
   mkpath(path)
 
   files = String[]
@@ -284,12 +286,11 @@ function reportFactors(dfg::AbstractDFG,
     plotFactor(dfg, fc) |> PDF(file)
     push!(files, file)
   end
-  outpath = joinpath(path,"$T.pdf")
-  push!(files, outpath)
+  push!(files, filepath)
 
-  run(`pdfunite $files`)
-  !show ? nothing : (@async run(`evince $outpath`))
-  return outpath
+  2 < length(files) ? run(`pdfunite $files`) : nothing
+  !show ? nothing : (@async run(`evince $filepath`))
+  return filepath
 end
 
 
