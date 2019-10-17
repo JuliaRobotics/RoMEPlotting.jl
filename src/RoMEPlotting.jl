@@ -85,7 +85,9 @@ export
   plotProductVsKDE,
   plotVariableGivenFactor,
   plotCliqDownMsgs,
-  plotFactor
+  plotFactor,
+  plotFactorMeasurements,
+  reportFactors
 
 
 

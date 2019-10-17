@@ -1,14 +1,55 @@
 
+
+function plotFactorMeasurements(dfg::AbstractDFG, fctsym::Symbol, fct::FunctorInferenceType; hdl=[])
+  @error "plotFactorMeasurements not implemented yet for $(typeof(fct))."
+end
+
+function plotFactorMeasurements(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Pose2; hdl=[])
+  #
+  me, me0 = solveFactorMeasurements(dfg, fctsym)
+
+  pt = plotKDE([manikde!(me[1:2,:], Point2);manikde!(me0[1:2,:], Point2)], c=["red";"blue"], legend=["pred";"meas"], levels=3)
+  pc = plotKDECircular([manikde!(me[3:3,:], Sphere1);manikde!(me0[3:3,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve, Pose2Pose2, $fctsym")
+
+  push!(hdl, pt)
+  push!(hdl, pc)
+
+  hstack(pt, pc)
+end
+
+
+function plotFactorMeasurements(dfg::AbstractDFG,
+                                fctsym::Symbol,
+                                fct::Pose2Point2BearingRange;
+                                hdl=[] )
+  #
+  me, me0 = solveFactorMeasurements(dfg, fctsym)
+
+  pc = plotKDECircular([manikde!(me[1:1,:], Sphere1);manikde!(me0[1:1,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve, Pose2Point2BearingRange, $fctsym")
+  pcl = plotKDE([manikde!(me[1:1,:], ContinuousScalar);manikde!(me0[1:1,:], ContinuousScalar)], c=["red";"blue"], legend=["pred";"meas"], title="unwrapped rotation, should be [-pi,pi)")
+  pl = plotKDE([manikde!(me[2:2,:], ContinuousScalar);manikde!(me0[2:2,:], ContinuousScalar)], c=["red";"blue"], legend=["pred";"meas"])
+
+  push!(hdl, pc)
+  push!(hdl, pcl)
+  push!(hdl, pl)
+
+  hstack(vstack(pc,pcl), pl)
+end
+
+
 """
     $SIGNATURES
 
-Return plot of each specific factor.
+Calculate the "inverse" SLAM solution to compare measured and predicted noise model samples.
 """
-function plotFactor(dfg::G, fctsym::Symbol; hdl=[]) where G <: AbstractDFG
-  plotFactor(dfg, fctsym, getFactorType(dfg, fctsym), hdl=hdl)
+function plotFactorMeasurements(dfg::AbstractDFG, fctsym::Symbol;hdl=[])
+  fct = getFactorType(dfg, fctsym)
+  plotFactorMeasurements(dfg, fctsym, fct, hdl=hdl)
 end
 
-function plotFactor(dfg::G, fctsym::Symbol, fct::Pose2Point2Range; hdl=[]) where G <: AbstractDFG
+
+
+function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Point2Range; hdl=[])
   # variables
   vars = ls(dfg, fctsym)
 
@@ -46,7 +87,16 @@ function plotFactor(dfg::G, fctsym::Symbol, fct::Pose2Point2Range; hdl=[]) where
   addFactor!(tfg, [pose;poin], fct, autoinit=false)
   manualinit!(tfg, pose, getKDE(dfg,pose))
   manualinit!(tfg, poin, getKDE(dfg,poin))
-  apts = approxConv(tfg, ls(tfg,pose)[1], poin)
+  apts=Array{Float64,2}(undef, 2, 0)
+  loop =true
+  while loop
+    try
+      apts = approxConv(tfg, ls(tfg,pose)[1], poin)
+      loop = false
+    catch
+      @warn "plotFactor Pose2Point2BearingRange non-linear solve fail on approxConv, retrying"
+    end
+  end
   plhist2 = Gadfly.plot(x=apts[1,:], y=apts[2,:], Geom.histogram2d)
   spc = mean(smps)
   plt = drawPosesLandms(tfg, point_size=5pt, spscale=0.2*spc)
@@ -138,9 +188,7 @@ function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Point2Bearing; h
 end
 
 
-
-
-function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Point2BearingRange; hdl = [])
+function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Point2BearingRange; hdl=[])
     #
     hdlb = []
 
@@ -184,8 +232,67 @@ function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Point2BearingRan
 
     push!(hdl, predLandm)
 
-    return hstack(vstack(hdl[1],hdl[2],hdl[3]),vstack(hdl[4],hdl[5],hdl[6]),vstack(predLandm, hdlb[5],hdl[7]))
+    # measurement solution
+    plotFactorMeasurements(dfg, fctsym, hdl=hdl)
+
+    return hstack(vstack(hdl[1],hdl[2],hdl[3]),vstack(hdl[4],hdl[5],hdl[6]),vstack(predLandm, hdlb[5],hdl[7]), vstack(hdl[14],hdl[15],hdl[16]))
 end
+
+
+function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Pose2; hdl=[])
+
+  # variables
+  fct = getFactor(dfg, fctsym)
+  vars = fct._variableOrderSymbols
+
+  pv1 = plotPose(dfg, vars[1], hdl=hdl)
+  pv2 = plotPose(dfg, vars[2], hdl=hdl)
+
+  pv12 = plotFactorMeasurements(dfg, fctsym, hdl=hdl)
+
+  vstack(pv1, pv2, pv12)
+end
+
+
+"""
+    $SIGNATURES
+
+Return plot of each specific factor.
+"""
+function plotFactor(dfg::AbstractDFG, fctsym::Symbol; hdl=[])
+  plotFactor(dfg, fctsym, getFactorType(dfg, fctsym), hdl=hdl)
+end
+
+
+
+
+
+## Reports
+
+
+function reportFactors(dfg::AbstractDFG,
+                       T::Union{Type{Pose2Pose2}, Type{Pose2Point2BearingRange}, Type{Pose2Point2Range}, Type{Pose2Point2Bearing}},
+                       fcts::Vector{Symbol}=ls(dfg, T);
+                       filepath="/tmp/caesar/random/report/$T.pdf",
+                       show::Bool=true  )
+  #
+  ss = split(filepath, '/')
+  path = joinpath(ss[1:(end-1)]...)
+  mkpath(path)
+
+  files = String[]
+  for fc in fcts
+    file = joinpath(path,"$fc.pdf")
+    plotFactor(dfg, fc) |> PDF(file)
+    push!(files, file)
+  end
+  push!(files, filepath)
+
+  2 < length(files) ? run(`pdfunite $files`) : nothing
+  !show ? nothing : (@async run(`evince $filepath`))
+  return filepath
+end
+
 
 
 
