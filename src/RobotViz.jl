@@ -149,25 +149,30 @@ function drawPoses(fg::G;
                    contour::Bool=true, levels::Int=1,
                    regexPoses=r"x"  ) where G <: AbstractDFG
     #
+    @info "drawPoses always sets orientation to max, regardless of meanmax setting.  TODO modefit."
     #Gadfly.set_default_plot_size(20cm, 30cm)
-    Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; LBLS=String[];
-    if meanmax == :mean
-      Xpp,Ypp, Thpp, LBLS = get2DPoseMeans(fg, from=from, to=to)
-    elseif meanmax == :max
-      Xpp,Ypp, Thpp, LBLS = get2DPoseMax(fg, from=from, to=to)
-    end
+    # Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; LBLS=String[];
+    uXpp,uYpp, uThpp, uLBLS = get2DPoseMeans(fg, from=from, to=to)
+    xXpp,xYpp, xThpp, xLBLS = get2DPoseMax(fg, from=from, to=to)
+        # if meanmax == :mean
+        # elseif meanmax == :max
+        # end
+    Xpp  = meanmax == :mean ? uXpp : xXpp
+    Ypp  = meanmax == :mean ? uYpp : xYpp
+    Thpp = xThpp # always use max -- should be modefit
+    LBLS = meanmax == :mean ? uLBLS : xLBLS
 
     # lbls = lblsFromTo(1,length(Xpp))
     psplt = Union{}
     if lbls
       psplt = Gadfly.plot(
-      Gadfly.layer(x=Xpp,y=Ypp,label=LBLS,Geom.path(), Theme(line_width=1pt), Geom.label),
-      Coord.cartesian(fixed=true)
+        Gadfly.layer(x=Xpp,y=Ypp,label=LBLS,Geom.path(), Theme(line_width=1pt), Geom.label),
+        Coord.cartesian(fixed=true)
       )
     else
       psplt = Gadfly.plot(
-      Gadfly.layer(x=Xpp,y=Ypp,Geom.path(), Theme(line_width=1pt)),Coord.cartesian(fixed=true),
-      Coord.cartesian(fixed=true)
+        Gadfly.layer(x=Xpp,y=Ypp,Geom.path(), Theme(line_width=1pt)),Coord.cartesian(fixed=true),
+        Coord.cartesian(fixed=true)
       )
     end
 	# return psplt
