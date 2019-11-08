@@ -6,14 +6,15 @@ using Reexport
 
 using Statistics, LinearAlgebra
 using Compose
+using Dates
 # using Graphs
 using DistributedFactorGraphs
 using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
 using DocStringExtensions
 using ApproxManifoldProducts
+# import ApproxManifoldProducts: mmd! # future dependency
 
-using ApproxManifoldProducts
 # const AMP = ApproxManifoldProducts
 # import RoME: AMP
 

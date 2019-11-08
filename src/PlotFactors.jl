@@ -1,15 +1,25 @@
 
+# import RoMEPlotting: plotFactor, reportFactors, plotFactorMeasurements, getTimeEasy
 
-function plotFactorMeasurements(dfg::AbstractDFG, fctsym::Symbol, fct::FunctorInferenceType; hdl=[])
+function plotFactorMeasurements(dfg::AbstractDFG, fctsym::Symbol, fct::FunctorInferenceType; hdl=[], dist::Vector{Float64}=zeros(1))
   @error "plotFactorMeasurements not implemented yet for $(typeof(fct))."
 end
 
-function plotFactorMeasurements(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Pose2; hdl=[])
+function plotFactorMeasurements(dfg::AbstractDFG,
+                                fctsym::Symbol,
+                                fct::Pose2Pose2;
+                                hdl=[],
+                                dist::Vector{Float64}=[0.0;]  )
   #
   me, me0 = solveFactorMeasurements(dfg, fctsym)
 
-  pt = plotKDE([manikde!(me[1:2,:], Point2);manikde!(me0[1:2,:], Point2)], c=["red";"blue"], legend=["pred";"meas"], levels=3)
-  pc = plotKDECircular([manikde!(me[3:3,:], Sphere1);manikde!(me0[3:3,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve, Pose2Pose2, $fctsym")
+  PP = manikde!(me[1:2,:], Point2)
+  PPg = manikde!(me0[1:2,:], Point2)
+  dist[1] = minimum(abs.([kld(PPg, PP)[1]; kld(PP, PPg)[1]]))
+  pt = plotKDE([PP;PPg], c=["red";"blue"], legend=["pred";"meas"], levels=3, title="inv. solve, $fctsym,\nmin(|kld(..)|)=$(round(dist[1],digits=3))")
+
+  pc = plotKDECircular([manikde!(me[3:3,:], Sphere1);manikde!(me0[3:3,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve, $fctsym,\nPose2Pose2")
+
 
   push!(hdl, pt)
   push!(hdl, pc)
@@ -21,11 +31,12 @@ end
 function plotFactorMeasurements(dfg::AbstractDFG,
                                 fctsym::Symbol,
                                 fct::Pose2Point2BearingRange;
-                                hdl=[] )
+                                hdl=[],
+                                dist::Vector{Float64}=[0.0;] )
   #
   me, me0 = solveFactorMeasurements(dfg, fctsym)
 
-  pc = plotKDECircular([manikde!(me[1:1,:], Sphere1);manikde!(me0[1:1,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve, Pose2Point2BearingRange, $fctsym")
+  pc = plotKDECircular([manikde!(me[1:1,:], Sphere1);manikde!(me0[1:1,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve, $fctsym,\nPose2Point2BearingRange")
   pcl = plotKDE([manikde!(me[1:1,:], ContinuousScalar);manikde!(me0[1:1,:], ContinuousScalar)], c=["red";"blue"], legend=["pred";"meas"], title="unwrapped rotation, should be [-pi,pi)")
   pl = plotKDE([manikde!(me[2:2,:], ContinuousScalar);manikde!(me0[2:2,:], ContinuousScalar)], c=["red";"blue"], legend=["pred";"meas"])
 
@@ -42,14 +53,21 @@ end
 
 Calculate the "inverse" SLAM solution to compare measured and predicted noise model samples.
 """
-function plotFactorMeasurements(dfg::AbstractDFG, fctsym::Symbol;hdl=[])
+function plotFactorMeasurements(dfg::AbstractDFG,
+                                fctsym::Symbol;
+                                hdl=[],
+                                dist::Vector{Float64}=[0.0;]  )
+  #
   fct = getFactorType(dfg, fctsym)
-  plotFactorMeasurements(dfg, fctsym, fct, hdl=hdl)
+  plotFactorMeasurements(dfg, fctsym, fct, hdl=hdl, dist=dist)
 end
 
 
-
-function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Point2Range; hdl=[])
+function plotFactor(dfg::AbstractDFG,
+                    fctsym::Symbol,
+                    fct::Pose2Point2Range;
+                    hdl=[],
+                    dist::Vector{Float64}=Float64[0.0;]  )
   # variables
   vars = ls(dfg, fctsym)
 
@@ -72,7 +90,7 @@ function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Point2Range; hdl
   Gadfly.layer(x=smps, Geom.histogram(density=true), Theme(default_color=colorant"magenta")),
     Gadfly.layer(x=pred, Geom.histogram(density=true), Theme(default_color=colorant"deepskyblue")),
     Guide.manual_color_key("Legend", ["samples";"predicted"], ["magenta";"deepskyblue"]),
-    Guide.title("Pose2Point2Range: Predicted and measurement probability model"),
+    Guide.title("Pose2Point2Range $fctsym"),
     Guide.xlabel("range")
   )
 
@@ -127,7 +145,11 @@ function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Point2Range; hdl
 end
 
 
-function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Point2Bearing; hdl=[])
+function plotFactor(dfg::AbstractDFG,
+                    fctsym::Symbol,
+                    fct::Pose2Point2Bearing;
+                    hdl=[],
+                    dist::Vector{Float64}=Float64[0.0;]  )
   #
 
   # variables
@@ -188,7 +210,11 @@ function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Point2Bearing; h
 end
 
 
-function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Point2BearingRange; hdl=[])
+function plotFactor(dfg::AbstractDFG,
+                    fctsym::Symbol,
+                    fct::Pose2Point2BearingRange;
+                    hdl=[],
+                    dist::Vector{Float64}=Float64[0.0;]  )
     #
     hdlb = []
 
@@ -215,7 +241,7 @@ function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Point2BearingRan
     newguid = Gadfly.GuideElement[]
     for guid in hdl[4].guides
       if typeof(guid) == Gadfly.Guide.Title
-        push!(newguid, Gadfly.Guide.Title("Pose2Point2BearingRange: Predicted and measurement probability model"))
+        push!(newguid, Gadfly.Guide.Title("Pose2Point2BearingRange $fctsym"))
       else
         push!(newguid, guid)
       end
@@ -228,9 +254,13 @@ function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Point2BearingRan
     # plot a prediction of landmark
     predpoints = approxConv(dfg, fctsym, poin)
     PP = manikde!(predpoints, Point2)
-    predLandm = plotKDE([getKDE(dfg, poin); PP], levels=2, c=["red"; "deepskyblue"], legend=["landmark";"predicted"])
+    PPg= getKDE(dfg, poin)
+    dist[1] = minimum(abs.([kld(PPg, PP)[1]; kld(PP, PPg)[1]]))
+    predLandm = plotKDE([PPg; PP], levels=2, c=["red"; "deepskyblue"], legend=["landmark";"predicted"], title="min(|kld...|)=$(round(dist[1],digits=3))")
 
     push!(hdl, predLandm)
+
+    # AMP.mmd!(dist, PPg, predpoints)
 
     # measurement solution
     plotFactorMeasurements(dfg, fctsym, hdl=hdl)
@@ -239,7 +269,11 @@ function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Point2BearingRan
 end
 
 
-function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Pose2; hdl=[])
+function plotFactor(dfg::AbstractDFG,
+                    fctsym::Symbol,
+                    fct::Pose2Pose2;
+                    hdl=[],
+                    dist::Vector{Float64}=Float64[0.0;]  )
 
   # variables
   fct = getFactor(dfg, fctsym)
@@ -248,7 +282,7 @@ function plotFactor(dfg::AbstractDFG, fctsym::Symbol, fct::Pose2Pose2; hdl=[])
   pv1 = plotPose(dfg, vars[1], hdl=hdl)
   pv2 = plotPose(dfg, vars[2], hdl=hdl)
 
-  pv12 = plotFactorMeasurements(dfg, fctsym, hdl=hdl)
+  pv12 = plotFactorMeasurements(dfg, fctsym, hdl=hdl, dist=dist)
 
   vstack(pv1, pv2, pv12)
 end
@@ -259,8 +293,12 @@ end
 
 Return plot of each specific factor.
 """
-function plotFactor(dfg::AbstractDFG, fctsym::Symbol; hdl=[])
-  plotFactor(dfg, fctsym, getFactorType(dfg, fctsym), hdl=hdl)
+function plotFactor(dfg::AbstractDFG,
+                    fctsym::Symbol;
+                    hdl=[],
+                    dist::Vector{Float64}=Float64[0.0;]  )
+  #
+  plotFactor(dfg, fctsym, getFactorType(dfg, fctsym), hdl=hdl, dist=dist)
 end
 
 
@@ -269,23 +307,40 @@ end
 
 ## Reports
 
+getTimeEasy() = split(split("$(now())", 'T')[end],'.')[1]
+
+# import RoMEPlotting: getTimeEasy, reportFactors
+# import ApproxManifoldProducts: mmd!
+
+## Also in IIF >v0.7.9
+import IncrementalInference: isMultihypo
+isMultihypo(fct) = isa(solverData(fct).fnc.hypotheses, Distribution)
 
 function reportFactors(dfg::AbstractDFG,
                        T::Union{Type{Pose2Pose2}, Type{Pose2Point2BearingRange}, Type{Pose2Point2Range}, Type{Pose2Point2Bearing}},
                        fcts::Vector{Symbol}=ls(dfg, T);
-                       filepath="/tmp/caesar/random/report/$T.pdf",
+                       filepath=joinpath(getSolverParams(dfg).logpath, getTimeEasy()*"_$T.pdf"),
                        show::Bool=true  )
   #
   ss = split(filepath, '/')
   path = joinpath(ss[1:(end-1)]...)
   mkpath(path)
+  alldists= Vector{Float64}()
 
   files = String[]
   for fc in fcts
+    if isMultihypo(getFactor(dfg, fc))
+      # skip this factor
+      continue
+    end
     file = joinpath(path,"$fc.pdf")
-    plotFactor(dfg, fc) |> PDF(file)
+    ndist = Float64[0.0;]
+    plotFactor(dfg, fc, dist=ndist) |> PDF(file)
     push!(files, file)
+    push!(alldists, ndist[1])
   end
+  fileord = sortperm(alldists, rev=true)
+  files = files[fileord]
   push!(files, filepath)
 
   2 < length(files) ? run(`pdfunite $files`) : nothing
