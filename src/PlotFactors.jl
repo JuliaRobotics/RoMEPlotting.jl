@@ -1,19 +1,25 @@
 
 # import RoMEPlotting: plotFactor, reportFactors, plotFactorMeasurements, getTimeEasy
 
-function plotFactorMeasurements(dfg::AbstractDFG, fctsym::Symbol, fct::FunctorInferenceType; hdl=[])
+function plotFactorMeasurements(dfg::AbstractDFG, fctsym::Symbol, fct::FunctorInferenceType; hdl=[], dist::Vector{Float64}=zeros(1))
   @error "plotFactorMeasurements not implemented yet for $(typeof(fct))."
 end
 
 function plotFactorMeasurements(dfg::AbstractDFG,
                                 fctsym::Symbol,
                                 fct::Pose2Pose2;
-                                hdl=[])
+                                hdl=[],
+                                dist::Vector{Float64}=[0.0;]  )
   #
   me, me0 = solveFactorMeasurements(dfg, fctsym)
 
-  pt = plotKDE([manikde!(me[1:2,:], Point2);manikde!(me0[1:2,:], Point2)], c=["red";"blue"], legend=["pred";"meas"], levels=3)
+  PP = manikde!(me[1:2,:], Point2)
+  PPg = manikde!(me0[1:2,:], Point2)
+  dist[1] = minimum(abs.([kld(PPg, PP)[1]; kld(PP, PPg)[1]]))
+  pt = plotKDE([PP;PPg], c=["red";"blue"], legend=["pred";"meas"], levels=3, title="inv. solve, $fctsym,\nmin(|kld(..)|)=$(round(dist[1],digits=3))")
+
   pc = plotKDECircular([manikde!(me[3:3,:], Sphere1);manikde!(me0[3:3,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve, $fctsym,\nPose2Pose2")
+
 
   push!(hdl, pt)
   push!(hdl, pc)
@@ -25,7 +31,8 @@ end
 function plotFactorMeasurements(dfg::AbstractDFG,
                                 fctsym::Symbol,
                                 fct::Pose2Point2BearingRange;
-                                hdl=[] )
+                                hdl=[],
+                                dist::Vector{Float64}=[0.0;] )
   #
   me, me0 = solveFactorMeasurements(dfg, fctsym)
 
@@ -46,11 +53,14 @@ end
 
 Calculate the "inverse" SLAM solution to compare measured and predicted noise model samples.
 """
-function plotFactorMeasurements(dfg::AbstractDFG, fctsym::Symbol;hdl=[])
+function plotFactorMeasurements(dfg::AbstractDFG,
+                                fctsym::Symbol;
+                                hdl=[],
+                                dist::Vector{Float64}=[0.0;]  )
+  #
   fct = getFactorType(dfg, fctsym)
-  plotFactorMeasurements(dfg, fctsym, fct, hdl=hdl)
+  plotFactorMeasurements(dfg, fctsym, fct, hdl=hdl, dist=dist)
 end
-
 
 
 function plotFactor(dfg::AbstractDFG,
@@ -272,7 +282,7 @@ function plotFactor(dfg::AbstractDFG,
   pv1 = plotPose(dfg, vars[1], hdl=hdl)
   pv2 = plotPose(dfg, vars[2], hdl=hdl)
 
-  pv12 = plotFactorMeasurements(dfg, fctsym, hdl=hdl)
+  pv12 = plotFactorMeasurements(dfg, fctsym, hdl=hdl, dist=dist)
 
   vstack(pv1, pv2, pv12)
 end
