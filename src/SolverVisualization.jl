@@ -42,12 +42,13 @@ function plotKDE(fgl::G,
                  levels::Int=5,
                  fill::Bool=false,
                  layers::Bool=false,
-                 c=nothing  ) where G <: AbstractDFG
+                 c=nothing,
+                 overlay=nothing   ) where G <: AbstractDFG
   #
   p = getKDE(getVariable(fgl,sym))
   # mmarg = length(marg) > 0 ? marg : collect(1:Ndim(p))
   # mp = marginal(p,mmarg)
-  plotKDE(p, levels=levels, dims=dims, title=string(sym, "  ", title), fill=fill, layers=layers, c=c )
+  plotKDE(p, levels=levels, dims=dims, title=string(sym, "  ", title), fill=fill, layers=layers, c=c, overlay=overlay )
 end
 function plotKDE(fgl::G,
                  syms::Vector{Symbol};
@@ -56,7 +57,8 @@ function plotKDE(fgl::G,
                  title=nothing,
                  levels=3,
                  layers::Bool=false,
-                 c=getColorsByLength(length(addt))  ) where G <: AbstractDFG
+                 c=getColorsByLength(length(addt)),
+                 overlay=nothing   ) where G <: AbstractDFG
   #
   # TODO -- consider automated rotisary of color
   # colors = ["black";"red";"green";"blue";"cyan";"deepskyblue"; "yellow"]
@@ -77,7 +79,7 @@ function plotKDE(fgl::G,
     push!(MP, p)
     push!(LEG, "add")
   end
-  plotKDE(MP, c=c, levels=levels, dims=dims, legend=LEG, title=title, layers=layers)
+  plotKDE(MP, c=c, levels=levels, dims=dims, legend=LEG, title=title, layers=layers, overlay=overlay)
 end
 
 
@@ -699,6 +701,8 @@ end
 drawFactorBeliefs(fgl::G, flbl::T) where {G <: AbstractDFG, T <: AbstractString} = drawFactorBeliefs(fgl, Symbol(flbl))
 
 
+
+
 """
     $(SIGNATURES)
 
@@ -723,32 +727,41 @@ function plotLocalProduct(fgl::G,
   push!(lbls, "curr")
   pl = nothing
   pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N)
-  if length(parr) > 0 && length(partials) == 0
-    if pp != parr[1]
-      push!(arr,pp)
-      push!(lbls, "prod")
-      for a in parr
-        push!(arr, a)
+
+  # helper functions
+  function plotDirectProducts()
+      if pp != parr[1]
+        push!(arr,pp)
+        push!(lbls, "prod")
+        for a in parr
+          push!(arr, a)
+        end
+        @show lb, lbls
+        lbls = union(lbls, string.(lb))
       end
-      @show lb, lbls
-      lbls = union(lbls, string.(lb))
-    end
-    dims = length(dims) > 0 ? dims : collect(1:Ndim(pp))
-    colors = getColorsByLength(length(arr))
-    pl = plotKDE(arr, dims=dims, levels=levels, c=colors, title=string(title,lbl), legend=string.(lbls)) #
+      dims = length(dims) > 0 ? dims : collect(1:Ndim(pp))
+      colors = getColorsByLength(length(arr))
+      plotKDE(arr, dims=dims, levels=levels, c=colors, title=string(title,lbl), legend=string.(lbls)) #
+  end
+  function plotParialProducts()
+      # stack 1d plots to accomodate all the partials
+      PL = []
+      lbls = String["prod";"curr";string.(lb)]
+      pdims = sort(collect(keys(partials)))
+      for dimn in pdims
+        vals = partials[dimn]
+        proddim = marginal(pp, [dimn])
+        colors = getColorsByLength(length(vals)+2)
+        pl = plotKDE([proddim;getKDE(getVariable(fgl, lbl));vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
+        push!(PL, pl)
+      end
+      Gadfly.vstack(PL...)
+  end
+
+  if length(parr) > 0 && length(partials) == 0
+    pl = plotDirectProducts()
   elseif length(parr) == 0 && length(partials) > 0
-    # stack 1d plots to accomodate all the partials
-    PL = []
-    lbls = String["prod";"curr";string.(lb)]
-    pdims = sort(collect(keys(partials)))
-    for dimn in pdims
-      vals = partials[dimn]
-      proddim = marginal(pp, [dimn])
-      colors = getColorsByLength(length(vals)+2)
-      pl = plotKDE([proddim;getKDE(getVariable(fgl, lbl));vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
-      push!(PL, pl)
-    end
-    pl = Gadfly.vstack(PL...)
+    pl = plotParialProducts()
   else
     return error("plotLocalProduct not built for lengths parr, partials = $(length(parr)), $(length(partials)) yet.")
   end
