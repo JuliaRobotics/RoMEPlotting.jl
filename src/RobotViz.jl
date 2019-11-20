@@ -706,14 +706,53 @@ function plotKDE(fgl::FactorGraph,
                  title::Union{Nothing, T}=nothing,
                  overlay=nothing  ) where {T <: AbstractString}
   #
+  @warn "plotKDE for FactorGraph is deprecated, use DistributedFactorGraphs objects instead."
   verts = map((x)->getKDE(getVariable(fgl, x)), vsym)
   plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels, title=title, overlay=overlay )
 end
 
 function plotKDE(fgl::FactorGraph, vsym::Symbol; axis=nothing, dims=nothing, c=nothing, levels=4, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
-  @warn "plotKDE for FactorGraph is deprecated, use DFG objects instead."
+  @warn "plotKDE for FactorGraph is deprecated, use DistributedFactorGraphs objects instead."
   plotKDE(fgl, Symbol[vsym;], dims=dims, c=c, axis=axis, levels=levels, title=title)
 end
+
+
+"""
+    $SIGNATURES
+
+Convenience function to plot one Point2 or Pose2 location along with reference data if desired.
+"""
+function plotVariable2D(dfg::AbstractDFG,
+                        varsym::Symbol;
+                        refs::Vector=[],
+                        levels::Int=10 )
+  #
+  # make sure variable is in the right family
+  var = getVariable(dfg, varsym)
+  @assert isa(getSofttype(var), Union{Pose2, Point2})
+  pl = plotKDE(dfg, varsym, levels=levels)
+  if 0 < length(refs)
+    XX, YY = zeros(0), zeros(0)
+    for dict in refs
+        push!(XX,dict[varsym][1])
+        push!(YY,dict[varsym][2])
+    end
+    p2 = Gadfly.plot(x=XX,
+                     y=YY,
+                     Geom.point,
+                     Guide.Theme(default_color=colorant"red", point_size=5pt))
+    union!(p2.layers, pl.layers)
+    pl = p2
+  end
+  return pl
+end
+# pl = plotKDE(dfg, varsym, levels=levels)
+# pl = Gadfly.plot(x=[landmarks_design[:l1][1]; landmarks_real[:l1][1]],
+# y=[landmarks_design[:l1][2]; landmarks_real[:l1][2]],
+# Geom.point,
+# Guide.Theme(default_color=colorant"red", point_size=5pt))
+# p2 = plotKDE(fg, :l1, levels=20)
+# union!(pl.layers, p2.layers)
 
 
 
