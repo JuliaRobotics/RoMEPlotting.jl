@@ -86,11 +86,16 @@ function plotFactor(dfg::AbstractDFG,
   smps = rand(fct.Z, length(pred))
   plme = Gadfly.plot(x=smps, Geom.histogram(density=true), Theme(default_color=colorant"magenta"), Guide.title("measured"))
 
+  # measure kl divergence
+  PP = manikde!(smps, ContinuousScalar)
+  PPg = manikde!(pred, ContinuousScalar)
+  dist[1] = minimum(abs.([kld(PPg, PP)[1]; kld(PP, PPg)[1]]))
+
   modl = Gadfly.plot(
   Gadfly.layer(x=smps, Geom.histogram(density=true), Theme(default_color=colorant"magenta")),
     Gadfly.layer(x=pred, Geom.histogram(density=true), Theme(default_color=colorant"deepskyblue")),
     Guide.manual_color_key("Legend", ["samples";"predicted"], ["magenta";"deepskyblue"]),
-    Guide.title("Pose2Point2Range $fctsym"),
+    Guide.title("Pose2Point2Range $fctsym\nmin(|kld...|)=$(round(dist[1],digits=3))"),
     Guide.xlabel("range")
   )
 

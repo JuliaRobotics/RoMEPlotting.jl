@@ -422,7 +422,8 @@ function plotPose(::DynPose2,
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
-                  hdl=[] )
+                  hdl=[],
+                  scale::Float64=0.2 )
   #
   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
   p2 = plotKDE(bels, dims=[3], c=c)
@@ -443,7 +444,8 @@ function plotPose(::Pose3,
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
-                  hdl=[]  )
+                  hdl=[],
+                  scale::Float64=0.2  )
   #
   @show title
   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
