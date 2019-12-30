@@ -69,8 +69,30 @@ end
 
 
 
-# --------------------------------------------------------------
-# transfered in from IncrementalInference
+const AbstractMatrix__{T} = Union{AbstractArray{T,2}, Adjoint{T,<:AbstractArray{T,2}}}
+
+"""
+    $SIGNATURES
+
+Plot trajectory of Array{,2} with rows as consecutive entries and columns as x,y,theta.
+"""
+function plotTrajectoryArrayPose2(arr::AbstractMatrix__{<:Real};
+                                  spscale::Float64=0.5,
+                                  triadStride::Int=50)
+  #
+  @assert size(arr,2)==3
+  trajPlt = Gadfly.plot(x=arr[:,1], y=arr[:,2], Geom.path, Coord.cartesian(fixed=true, aspect_ratio=1))
+
+  if triadStride != -1
+    Xpp = arr[1:triadStride:end,1]
+    Ypp = arr[1:triadStride:end,2]
+    Thpp = arr[1:triadStride:end,3]
+    addXYLineLayers!(trajPlt, Xpp, Ypp, Thpp, l=spscale)
+  end
+  return trajPlt
+end
+
+
 
 ## TODO -- you were here with port starboard lines
 function stbPrtLineLayers!(pl, Xpp, Ypp, Thpp; l::Float64=5.0)
