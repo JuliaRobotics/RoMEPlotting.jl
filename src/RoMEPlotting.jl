@@ -66,6 +66,7 @@ export
   getColorsByLength,
 
   # Associated with RoME
+  plotTrajectoryArrayPose2,
   togglePrtStbLines,
   plotLsrScanFeats,
   drawFeatTrackers,
