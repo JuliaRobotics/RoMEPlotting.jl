@@ -146,6 +146,7 @@ function drawPoses(fg::G;
                    lbls=true,
                    drawhist=true,
                    spscale::Float64=5.0,
+                   drawTriads::Bool=true,
                    contour::Bool=true, levels::Int=1,
                    regexPoses=r"x"  ) where G <: AbstractDFG
     #
@@ -176,7 +177,7 @@ function drawPoses(fg::G;
       )
     end
 	# return psplt
-    addXYLineLayers!(psplt, Xpp, Ypp, Thpp, l=spscale)
+    drawTriads && addXYLineLayers!(psplt, Xpp, Ypp, Thpp, l=spscale)
     if drawhist
       Xp,Yp = get2DPoseSamples(fg, from=from, to=to)
       push!(psplt.layers,  Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)[1] )#(xbincount=100, ybincount=100))
@@ -256,6 +257,7 @@ Notes
 function drawPosesLandms(fgl::AbstractDFG;
                          from::Int64=0, to::Int64=99999999, minnei::Int64=0,
                          meanmax=:max, lbls=true, drawhist=false, MM::Dict{Int,T}=Dict{Int,Int}(),
+                         drawTriads::Bool=true,
                          contour::Bool=true, levels::Int=1,
                          showmm=true,
                          spscale::Float64=5.0,window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
@@ -267,7 +269,7 @@ function drawPosesLandms(fgl::AbstractDFG;
   xmin != nothing && xmax != nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
   ymin != nothing && ymax != nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
   ll = getVariableIds(fgl, regexLandmark)
-  p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, contour=contour)
+  p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, contour=contour, drawTriads=drawTriads)
   if length(ll) > 0
     pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, point_size=point_size, contour=contour)
     for l in pl.layers
@@ -420,7 +422,8 @@ function plotPose(::DynPose2,
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
-                  hdl=[] )
+                  hdl=[],
+                  scale::Float64=0.2 )
   #
   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
   p2 = plotKDE(bels, dims=[3], c=c)
@@ -441,7 +444,8 @@ function plotPose(::Pose3,
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
-                  hdl=[]  )
+                  hdl=[],
+                  scale::Float64=0.2  )
   #
   @show title
   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
