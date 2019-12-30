@@ -85,7 +85,7 @@ plotKDE( marginal(getKDE(getVariable(fg, :x2)),[1;2]) , dimLbls=["x";"y";"z"])
 axis = [[1.5;3.5]';[-1.25;1.25]';[-1.0;1.0]']
 
 # @warn "Reinsert draw test.pdf"
-plotKDE( p1, dimLbls=["x";"y";"z"], axis=axis) |> PDF("/tmp/test.pdf",30cm,20cm),
+plotKDE( p1, dimLbls=["x";"y";"z"], axis=axis) |> PDF("/tmp/test.pdf",30cm,20cm)
 
 #
 Base.rm("/tmp/test.pdf")
