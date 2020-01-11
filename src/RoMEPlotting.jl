@@ -85,11 +85,14 @@ export
   plotTrckStep,
   plotPose2Vels,
   plotProductVsKDE,
+  plotPairVariables,
+  plotPairPose2,
   plotVariableGivenFactor,
   plotCliqDownMsgs,
   plotFactor,
   plotFactorMeasurements,
   reportFactors
+
 
 
 

@@ -1272,6 +1272,39 @@ end
 """
     $SIGNATURES
 
+Development function to plot the same variable from both factor graphs together.
+"""
+function plotPairVariables(dfg1::G1,
+                           dfg2::G2,
+                           sym::Symbol;
+                           dims=nothing,
+                           levels::Int=3,
+                           title::String="") where {G1 <: AbstractDFG, G2 <: AbstractDFG}
+  #
+  X1 = getKDE(dfg1, sym)
+  X2 = getKDE(dfg2, sym)
+
+  plotKDE([X1;X2], c=["black";"red"], legend=["dfg1";"dfg2"], dims=dims, levels=levels, title=title*" $sym")
+end
+
+
+function plotPairPose2(dfg1::G1,
+                           dfg2::G2,
+                           sym::Symbol;
+                           dims=nothing,
+                           levels::Int=3,
+                           title::String="") where {G1 <: AbstractDFG, G2 <: AbstractDFG}
+  #
+  X1 = getKDE(dfg1, sym)
+  X2 = getKDE(dfg2, sym)
+
+  plotPose(Pose2(), [X1;X2], title*" $sym", c=["black";"red"], levels=levels)
+  # , legend=["dfg1";"dfg2"]
+end
+
+"""
+    $SIGNATURES
+
 Plot new proposal (convolution) for factor x of variable y given all other -- i.e. y|X
 
 Notes
