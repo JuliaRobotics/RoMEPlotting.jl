@@ -84,12 +84,15 @@ export
   plotPose2Vels,
   plotProductVsKDE,
   plotPairVariables,
-  plotPairPose2
+  plotPairPose2,
+  plotVariableGivenFactor
+
+
 
 
 include("SolverVisualization.jl")
-
 include("RobotViz.jl")
+include("PlotHexUtils.jl")
 
 
 end
