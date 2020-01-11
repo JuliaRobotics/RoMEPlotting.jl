@@ -743,7 +743,7 @@ function plotLocalProduct(fgl::G,
       colors = getColorsByLength(length(arr))
       plotKDE(arr, dims=dims, levels=levels, c=colors, title=string(title,lbl), legend=string.(lbls)) #
   end
-  function plotParialProducts()
+  function plotPartialProducts()
       # stack 1d plots to accomodate all the partials
       PL = []
       lbls = String["prod";"curr";string.(lb)]
@@ -761,7 +761,7 @@ function plotLocalProduct(fgl::G,
   if length(parr) > 0 && length(partials) == 0
     pl = plotDirectProducts()
   elseif length(parr) == 0 && length(partials) > 0
-    pl = plotParialProducts()
+    pl = plotPartialProducts()
   else
     return error("plotLocalProduct not built for lengths parr, partials = $(length(parr)), $(length(partials)) yet.")
   end
