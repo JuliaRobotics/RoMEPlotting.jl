@@ -13,6 +13,9 @@ julia:
 notifications:
   email: false
 
+jobs:
+  fast_finish: true
+
 matrix:
   allow_failures:
     - os: osx

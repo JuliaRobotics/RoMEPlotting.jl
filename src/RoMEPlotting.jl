@@ -6,14 +6,15 @@ using Reexport
 
 using Statistics, LinearAlgebra
 using Compose
+using Dates
 # using Graphs
 using DistributedFactorGraphs
 using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
 using DocStringExtensions
 using ApproxManifoldProducts
+# import ApproxManifoldProducts: mmd! # future dependency
 
-using ApproxManifoldProducts
 # const AMP = ApproxManifoldProducts
 # import RoME: AMP
 
@@ -35,10 +36,10 @@ export
   drawHorBeliefsList,
   spyCliqMat,
   plotKDE,
+  plotVariable2D,
   plotKDEofnc,
   plotKDEresiduals,
   plotMCMC,
-  plotKDE,
   plotUpMsgsAtCliq,
   plotPriorsAtCliq,
   investigateMultidimKDE,
@@ -59,12 +60,13 @@ export
   plotLocalProductCylinder,
   plotTreeProductUp,
   plotTreeProductDown,
-  plotTreeUpMsgs,
+  plotCliqUpMsgs,
   saveplot,
   animateVertexBelief,
   getColorsByLength,
 
   # Associated with RoME
+  plotTrajectoryArrayPose2,
   togglePrtStbLines,
   plotLsrScanFeats,
   drawFeatTrackers,
@@ -85,7 +87,11 @@ export
   plotProductVsKDE,
   plotPairVariables,
   plotPairPose2,
-  plotVariableGivenFactor
+  plotVariableGivenFactor,
+  plotCliqDownMsgs,
+  plotFactor,
+  plotFactorMeasurements,
+  reportFactors
 
 
 
@@ -93,6 +99,7 @@ export
 include("SolverVisualization.jl")
 include("RobotViz.jl")
 include("PlotHexUtils.jl")
+include("PlotFactors.jl")
 
 
 end
