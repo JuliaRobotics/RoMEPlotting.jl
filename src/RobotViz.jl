@@ -69,8 +69,30 @@ end
 
 
 
-# --------------------------------------------------------------
-# transfered in from IncrementalInference
+const AbstractMatrix__{T} = Union{AbstractArray{T,2}, Adjoint{T,<:AbstractArray{T,2}}}
+
+"""
+    $SIGNATURES
+
+Plot trajectory of Array{,2} with rows as consecutive entries and columns as x,y,theta.
+"""
+function plotTrajectoryArrayPose2(arr::AbstractMatrix__{<:Real};
+                                  spscale::Float64=0.5,
+                                  triadStride::Int=50)
+  #
+  @assert size(arr,2)==3
+  trajPlt = Gadfly.plot(x=arr[:,1], y=arr[:,2], Geom.path, Coord.cartesian(fixed=true, aspect_ratio=1))
+
+  if triadStride != -1
+    Xpp = arr[1:triadStride:end,1]
+    Ypp = arr[1:triadStride:end,2]
+    Thpp = arr[1:triadStride:end,3]
+    addXYLineLayers!(trajPlt, Xpp, Ypp, Thpp, l=spscale)
+  end
+  return trajPlt
+end
+
+
 
 ## TODO -- you were here with port starboard lines
 function stbPrtLineLayers!(pl, Xpp, Ypp, Thpp; l::Float64=5.0)
@@ -139,35 +161,56 @@ end
 Future:
 - Relax to user defined pose labeling scheme, for example `:p1, :p2, ...`
 """
-function drawPoses(fg::G; from::Int64=0,to::Int64=99999999,
-                    meanmax=:max, lbls=true, drawhist=true,
-                    spscale::Float64=5.0  ) where G <: AbstractDFG
+function drawPoses(fg::G;
+                   from::Int64=0,
+                   to::Int64=99999999,
+                   meanmax=:max,
+                   lbls=true,
+                   drawhist=true,
+                   spscale::Float64=5.0,
+                   drawTriads::Bool=true,
+                   contour::Bool=true, levels::Int=1,
+                   regexPoses=r"x"  ) where G <: AbstractDFG
+    #
+    @info "drawPoses always sets orientation to max, regardless of meanmax setting.  TODO modefit."
     #Gadfly.set_default_plot_size(20cm, 30cm)
-    Xp,Yp = get2DPoseSamples(fg, from=from, to=to)
-    Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; LBLS=String[];
-    if meanmax == :mean
-      Xpp,Ypp, Thpp, LBLS = get2DPoseMeans(fg, from=from, to=to)
-    elseif meanmax == :max
-      Xpp,Ypp, Thpp, LBLS = get2DPoseMax(fg, from=from, to=to)
-    end
+    # Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; LBLS=String[];
+    uXpp,uYpp, uThpp, uLBLS = get2DPoseMeans(fg, from=from, to=to)
+    xXpp,xYpp, xThpp, xLBLS = get2DPoseMax(fg, from=from, to=to)
+        # if meanmax == :mean
+        # elseif meanmax == :max
+        # end
+    Xpp  = meanmax == :mean ? uXpp : xXpp
+    Ypp  = meanmax == :mean ? uYpp : xYpp
+    Thpp = xThpp # always use max -- should be modefit
+    LBLS = meanmax == :mean ? uLBLS : xLBLS
 
     # lbls = lblsFromTo(1,length(Xpp))
     psplt = Union{}
     if lbls
       psplt = Gadfly.plot(
-      Gadfly.layer(x=Xpp,y=Ypp,label=LBLS,Geom.path(), Theme(line_width=1pt), Geom.label),
-      Coord.cartesian(fixed=true)
+        Gadfly.layer(x=Xpp,y=Ypp,label=LBLS,Geom.path(), Theme(line_width=1pt), Geom.label),
+        Coord.cartesian(fixed=true)
       )
     else
       psplt = Gadfly.plot(
-      Gadfly.layer(x=Xpp,y=Ypp,Geom.path(), Theme(line_width=1pt)),Coord.cartesian(fixed=true),
-      Coord.cartesian(fixed=true)
+        Gadfly.layer(x=Xpp,y=Ypp,Geom.path(), Theme(line_width=1pt)),Coord.cartesian(fixed=true),
+        Coord.cartesian(fixed=true)
       )
     end
 	# return psplt
-    addXYLineLayers!(psplt, Xpp, Ypp, Thpp, l=spscale)
+    drawTriads && addXYLineLayers!(psplt, Xpp, Ypp, Thpp, l=spscale)
     if drawhist
+      Xp,Yp = get2DPoseSamples(fg, from=from, to=to)
       push!(psplt.layers,  Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)[1] )#(xbincount=100, ybincount=100))
+    end
+    # add contours to pose estimates
+    if contour
+      varsyms = Symbol.(LBLS)
+      for vsym in varsyms
+        pln = plotKDE(fg, vsym, dims=[1;2], levels=levels, c=["gray90"])
+        union!(psplt.layers, pln.layers)
+      end
     end
     return psplt
 end
@@ -178,25 +221,28 @@ end
 
 2D plot of landmarks, assuming `:l1, :l2, ... :ln`.  Use `from` and `to` to control the range of landmarks `n` to include.
 """
-function drawLandms(fg::G;
+function drawLandms(fg::AbstractDFG;
                     from::Int64=0, to::Int64=99999999,
                     minnei::Int64=0,
                     meanmax=:max,
                     lbls=true,showmm=false,drawhist=true,
+                    contour::Bool=true, levels::Int=1,
                     c="red",
-                    MM::Dict{Int,T}=Dict{Int,Int}()  ) where {G <: AbstractDFG, T}
+                    MM::Dict{Int,T}=Dict{Int,Int}(),
+                    point_size=1pt,
+                    regexLandmark::Regex=r"l"  ) where T
     #Gadfly.set_default_plot_size(20cm, 30cm)
     Xp,Yp = get2DLandmSamples(fg, from=from, to=to)
     Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; lblstags=String[];
     if meanmax==:mean
-      Xpp,Ypp, t, lbltags = get2DLandmMeans(fg, from=from, to=to)
+      Xpp,Ypp, t, lbltags = get2DLandmMeans(fg, from=from, to=to, regexLandmark=regexLandmark)
     elseif meanmax==:max
-      Xpp,Ypp, t, lbltags = get2DLandmMax(fg, from=from, to=to,showmm=showmm,MM=MM)
+      Xpp,Ypp, t, lbltags = get2DLandmMax(fg, from=from, to=to,showmm=showmm,MM=MM, regexLandmark=regexLandmark)
     end
 
     if lbls
       psplt = Gadfly.plot(
-        Gadfly.layer(x=Xpp,y=Ypp, label=lbltags, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt), Geom.label),
+        Gadfly.layer(x=Xpp,y=Ypp, label=lbltags, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=point_size), Geom.label),
         Coord.cartesian(fixed=true)
         # ,Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)#(xbincount=100, ybincount=100)
       )
@@ -211,6 +257,14 @@ function drawLandms(fg::G;
       push!(psplt.layers, Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)[1])#(xbincount=100, ybincount=100)
     end
 
+    if contour
+      varsyms = Symbol.(lbltags)
+      for vsym in varsyms
+        pln = plotKDE(fg, vsym, dims=[1;2], levels=levels, c=["gray90"])
+        union!(psplt.layers, pln.layers)
+      end
+    end
+
     psplt
 end
 
@@ -222,16 +276,24 @@ end
 Notes
 - assumes `:l1`, `:l2`, ... for landmarks -- not using `tags=[:LANDMARK]` here yet (TODO).
 """
-function drawPosesLandms(fgl::G;
+function drawPosesLandms(fgl::AbstractDFG;
                          from::Int64=0, to::Int64=99999999, minnei::Int64=0,
-                         meanmax=:max,lbls=true,drawhist=true, MM::Dict{Int,T}=Dict{Int,Int}(), showmm=true,
+                         meanmax=:max, lbls=true, drawhist=false, MM::Dict{Int,T}=Dict{Int,Int}(),
+                         drawTriads::Bool=true,
+                         contour::Bool=true, levels::Int=1,
+                         showmm=true,
                          spscale::Float64=5.0,window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
-                         xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing  ) where {G <: AbstractDFG, T}
+                         xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing,
+                         point_size=1pt,
+                         regexLandmark=r"l",
+                         regexPoses=r"x"  ) where {T}
   #
-  ll = getVariableIds(fgl, r"l")
-  p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale)
+  xmin != nothing && xmax != nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
+  ymin != nothing && ymax != nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
+  ll = getVariableIds(fgl, regexLandmark)
+  p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, contour=contour, drawTriads=drawTriads)
   if length(ll) > 0
-    pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm)
+    pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, point_size=point_size, contour=contour)
     for l in pl.layers
       push!(p.layers, l)
     end
@@ -330,7 +392,9 @@ function plotPose(pt::Pose2,
                   levels=3,
                   c=nothing,
                   axis=nothing,
-                  scale::Float64=0.2)
+                  scale::Float64=0.2,
+                  overlay=nothing,
+                  hdl=[]  )
   #
   # ops = buildHybridManifoldCallbacks(pt.manifolds)
   # @show ran = getKDERange(p, addop=ops[1], diffop=ops[2])
@@ -339,7 +403,7 @@ function plotPose(pt::Pose2,
   p1 = plotKDE(pp, dims=[1;2], levels=levels, c=c, title=title, axis=ran )
   # p2 = plotKDE(bels, dims=[3], c=c)
 
-  cc = c == nothing ? ["cyan" for i in 1:length(pp)] : c
+  cc = c == nothing ? getColorsByLength(length(pp)) : c
 
   GG = BallTreeDensity[]
   for ppc in pp
@@ -349,6 +413,12 @@ function plotPose(pt::Pose2,
   end
   # p2 = AMP.plotCircBeliefs(GG, c=cc)
   p2 = AMP.plotKDECircular(GG, scale=scale, c=cc)
+
+  # deal with overlay
+
+
+  push!(hdl, p1)
+  push!(hdl, p2)
 
   Gadfly.hstack(p1,p2)
 end
@@ -360,27 +430,56 @@ function plotPose(pt::Pose2,
                   levels=3,
                   c=nothing,
                   axis=nothing,
-                  scale::Float64=0.2)
+                  scale::Float64=0.2,
+                  overlay=nothing,
+                  hdl=[]  )
   #
-  plotPose(pt, [pp;],title,levels=levels,c=c,axis=axis,scale=scale)
+  plotPose(pt, [pp;],title,levels=levels,c=c,axis=axis,scale=scale, overlay=overlay, hdl=hdl )
 end
 
 
-function plotPose(::DynPose2, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing, axis=nothing)
+function plotPose(::DynPose2,
+                  bels::Vector{BallTreeDensity},
+                  title;
+                  levels::Int=5,
+                  c=nothing,
+                  axis=nothing,
+                  hdl=[],
+                  scale::Float64=0.2 )
+  #
   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
   p2 = plotKDE(bels, dims=[3], c=c)
   p3 = plotKDE(bels, dims=[4;5], levels=levels, c=c)
+
+  push!(hdl, p1)
+  push!(hdl, p2)
+  push!(hdl, p3)
+
   Gadfly.vstack(p1,p2,p3)
 end
 
 # import RoMEPlotting: plotPose
 
-function plotPose(::Pose3, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing, axis=nothing)
+function plotPose(::Pose3,
+                  bels::Vector{BallTreeDensity},
+                  title;
+                  levels::Int=5,
+                  c=nothing,
+                  axis=nothing,
+                  hdl=[],
+                  scale::Float64=0.2  )
+  #
   @show title
   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
   p2 = plotKDE(bels, dims=[3], c=c)
   p3 = plotKDE(bels, dims=[4;5], levels=levels, c=c)
   p4 = plotKDE(bels, dims=[6], c=c)
+
+  push!(hdl, p1)
+  push!(hdl, p2)
+  push!(hdl, p3)
+  push!(hdl, p4)
+
   Gadfly.vstack(p1,p2,p3,p4)
 end
 
@@ -394,14 +493,16 @@ function plotPose(fgl::G,
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
+                  scale::Float64=0.2,
                   show::Bool=false,
                   filepath::AS="/tmp/tempposeplot.svg",
-                  app::AS="eog" ) where {G <: AbstractDFG, AS <: AbstractString}
+                  app::AS="eog",
+                  hdl=[]  ) where {G <: AbstractDFG, AS <: AbstractString}
   #
   typ = getData(getVariable(fgl, syms[1])).softtype
   pt = string(string.(syms)...)
   getvertsgg = (sym) -> getKDE(getVariable(fgl, sym))
-  pl = plotPose(typ, getvertsgg.(syms), pt, levels=levels, c=c, axis=axis)
+  pl = plotPose(typ, getvertsgg.(syms), pt, levels=levels, c=c, axis=axis, scale=scale, hdl=hdl )
 
   if length(filepath) > 0
     ext = split(filepath, '.')[end]
@@ -424,11 +525,13 @@ function plotPose(fgl::G,
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
+                  scale::Float64=0.2,
                   show::Bool=false,
                   filepath::AS="/tmp/tempposeplot.svg",
-                  app::AS="eog" ) where {G <: AbstractDFG, AS <: AbstractString}
+                  app::AS="eog",
+                  hdl=[]  ) where {G <: AbstractDFG, AS <: AbstractString}
   #
-  plotPose(fgl, [sym;], levels=levels, axis=axis, show=show, filepath=filepath, app=app)
+  plotPose(fgl, [sym;], levels=levels, axis=axis, show=show, filepath=filepath, app=app, hdl=hdl )
 end
 
 # deprecated
@@ -620,15 +723,62 @@ function plotPose3Pairs(fgl::FactorGraph, sym::Symbol; fill::Bool=true)
 end
 
 
-function plotKDE(fgl::FactorGraph, vsym::Vector{Symbol}; axis=nothing, dims=nothing, c=getColorsByLength(length(vsym)), levels=4, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
+function plotKDE(fgl::FactorGraph,
+                 vsym::Vector{Symbol};
+                 axis=nothing,
+                 dims=nothing,
+                 c=getColorsByLength(length(vsym)),
+                 levels::Int=4,
+                 title::Union{Nothing, T}=nothing,
+                 overlay=nothing  ) where {T <: AbstractString}
+  #
+  @warn "plotKDE for FactorGraph is deprecated, use DistributedFactorGraphs objects instead."
   verts = map((x)->getKDE(getVariable(fgl, x)), vsym)
-  plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels, title=title)
+  plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels, title=title, overlay=overlay )
 end
+
 function plotKDE(fgl::FactorGraph, vsym::Symbol; axis=nothing, dims=nothing, c=nothing, levels=4, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
+  @warn "plotKDE for FactorGraph is deprecated, use DistributedFactorGraphs objects instead."
   plotKDE(fgl, Symbol[vsym;], dims=dims, c=c, axis=axis, levels=levels, title=title)
 end
 
 
+"""
+    $SIGNATURES
+
+Convenience function to plot one Point2 or Pose2 location along with reference data if desired.
+"""
+function plotVariable2D(dfg::AbstractDFG,
+                        varsym::Symbol;
+                        refs::Vector=[],
+                        levels::Int=10 )
+  #
+  # make sure variable is in the right family
+  var = getVariable(dfg, varsym)
+  @assert isa(getSofttype(var), Union{Pose2, Point2})
+  pl = plotKDE(dfg, varsym, levels=levels)
+  if 0 < length(refs)
+    XX, YY = zeros(0), zeros(0)
+    for dict in refs
+        push!(XX,dict[varsym][1])
+        push!(YY,dict[varsym][2])
+    end
+    p2 = Gadfly.plot(x=XX,
+                     y=YY,
+                     Geom.point,
+                     Guide.Theme(default_color=colorant"red", point_size=5pt))
+    union!(p2.layers, pl.layers)
+    pl = p2
+  end
+  return pl
+end
+# pl = plotKDE(dfg, varsym, levels=levels)
+# pl = Gadfly.plot(x=[landmarks_design[:l1][1]; landmarks_real[:l1][1]],
+# y=[landmarks_design[:l1][2]; landmarks_real[:l1][2]],
+# Geom.point,
+# Guide.Theme(default_color=colorant"red", point_size=5pt))
+# p2 = plotKDE(fg, :l1, levels=20)
+# union!(pl.layers, p2.layers)
 
 
 

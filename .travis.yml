@@ -8,10 +8,14 @@ julia:
   - 1.0
   - 1.1
   - 1.2
+  - 1.3
   - nightly
 
 notifications:
   email: false
+
+jobs:
+  fast_finish: true
 
 matrix:
   allow_failures:
