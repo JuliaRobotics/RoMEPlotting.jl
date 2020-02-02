@@ -333,13 +333,14 @@ function reportFactors(dfg::AbstractDFG,
   alldists= Vector{Float64}()
 
   files = String[]
+  ndist = Float64[0.0;]
   for fc in fcts
     if isMultihypo(getFactor(dfg, fc))
       # skip this factor
       continue
     end
     file = joinpath(path,"$fc.pdf")
-    ndist = Float64[0.0;]
+    ndist[1] = 0.0
     plotFactor(dfg, fc, dist=ndist) |> PDF(file)
     push!(files, file)
     push!(alldists, ndist[1])

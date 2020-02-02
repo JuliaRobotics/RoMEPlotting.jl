@@ -28,6 +28,7 @@ include("testPlotKDE.jl")
 # println("Success")
 
 
-# Tests from RoME
 
-# drawPosesLandms(fg);
+# test ellipse function
+# Z = MvNormal([0.0;0],[9.0 5; 5 4])
+# eX = covEllipseParameterized(Z)
