@@ -5,6 +5,7 @@ using Reexport
 @reexport using Colors
 
 using Statistics, LinearAlgebra
+using StatsBase
 using Compose
 using Dates
 # using Graphs
@@ -15,19 +16,13 @@ using DocStringExtensions
 using ApproxManifoldProducts
 # import ApproxManifoldProducts: mmd! # future dependency
 
-# const AMP = ApproxManifoldProducts
-# import RoME: AMP
 
 import KernelDensityEstimatePlotting: plot, drawHorDens, plotKDE
 import IncrementalInference: CliqGibbsMC, DebugCliqMCMC
 import Graphs: plot
 import Gadfly: plot
 
-# TODO temporary fix for Compose based plotting in Julia 0.7 (Oct 2018)
-# see
-# @warn "[TEMPORARY WORKAROUND, pangolayout] for plotting with Compose and Gadfly.jl, see https://github.com/GiovineItalia/Gadfly.jl/issues/1206"
-# import Compose: pangolayout
-# const pangolayout = PangoLayout()
+
 
 export
   # Associated with IncrementalInference
@@ -93,6 +88,9 @@ export
   plotFactorMeasurements,
   reportFactors
 
+
+# EXPERIMENTAL
+const AbstractMatrix__{T} = Union{AbstractArray{T,2}, Adjoint{T,<:AbstractArray{T,2}}}
 
 
 

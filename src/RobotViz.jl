@@ -1,3 +1,10 @@
+# new exports from this file, WIP
+
+export covEllipseParameterized, plotCovEllipseLayer
+
+
+## Src
+
 global DISABLESTBPRTLINES = false
 
 function togglePrtStbLines()
@@ -68,8 +75,92 @@ function saveImgSeq(d::Dict{Int64,Array{Float64,2}}; from::Int=1,to::Int=10,step
 end
 
 
+"""
+    $SIGNATURES
 
-const AbstractMatrix__{T} = Union{AbstractArray{T,2}, Adjoint{T,<:AbstractArray{T,2}}}
+Calculate the ellipse from covariance matrix and return as lambda function.
+
+Notes
+- https://cookierobotics.com/007/
+
+Related
+
+plotCovEllipseLayer
+"""
+function covEllipseParameterized(distr::MvNormal; meanOffset::Bool=true)
+  println(round.(cov(distr), digits=3) )
+  a = cov(distr)[1,1]
+  b = cov(distr)[1,2] + cov(distr)[2,1]
+  b *= 0.5
+  c = cov(distr)[2,2]
+
+  λ1 = 0.5*(a+c) + sqrt(0.25*(a-c)^2 + b^2)
+  λ2 = 0.5*(a+c) - sqrt(0.25*(a-c)^2 + b^2)
+  θ = if b ≈ 0 && a >= c
+    0
+  elseif b ≈ 0 && a < c
+    pi/2
+  else
+    atan(λ1-a, b)
+  end
+  sλ1 = sqrt(λ1)
+  sλ2 = sqrt(λ2)
+  sθ =  sin(θ)
+  cθ =  cos(θ)
+  ox = meanOffset ? distr.μ[1] : 0
+  oy = meanOffset ? distr.μ[2] : 0
+  (t) -> [sλ1*cθ*cos(t)-sλ2*sθ*sin(t)+ox; sλ1*sθ*cos(t)+sλ2*cθ*sin(t)+oy]
+end
+
+covEllipseParameterized(pts::Array{Float64,2}; meanOffset::Bool=true) = covEllipseParameterized( fit(MvNormal, pts), meanOffset=meanOffset )
+covEllipseParameterized(X::BallTreeDensity; meanOffset::Bool=true) = covEllipseParameterized( getPoints(X), meanOffset=meanOffset )
+covEllipseParameterized(dfg::AbstractDFG, sym::Symbol; meanOffset::Bool=true) = covEllipseParameterized( getKDE(dfg, sym), meanOffset=meanOffset )
+
+
+"""
+    $SIGNATURES
+
+Plotting tool to draw Gadfly layers of ellipses of 2D covariance fitted to the belief of factor graph variable nonparametric points.
+
+Related
+
+covEllipseParameterized, drawPosesLandms
+"""
+function plotCovEllipseLayer(dfg::AbstractDFG,
+                             vsym::Symbol;
+                             points::Bool=true,
+                             ellipseColor::AbstractString="gray30",
+                             pointsColor::AbstractString="gray30",
+                             drawEllipse::Bool=true  )::Vector
+  #
+  PL = []
+
+  # points to work from
+  pp = getPoints(getKDE(dfg, vsym))
+
+  if drawEllipse
+    # get ellipse function
+    eX = covEllipseParameterized(pp[1:2,:], meanOffset=false)
+    vEl = eX.(0:0.02:2pi)
+    el = [(x->x[1]).(vEl) (x->x[2]).(vEl)]
+    # add suggested PPE mean offset
+    el[:,1] .+= getVariablePPE(dfg, vsym).suggested[1]
+    el[:,2] .+= getVariablePPE(dfg, vsym).suggested[2]
+
+    # add the ellipse layers
+    plelX2 = Gadfly.layer(x=el[:,1], y=el[:,2], Geom.path, Theme(default_color=parse(Colorant, ellipseColor)))
+    push!(PL, plelX2[1])
+  end
+
+  # add the points layer if needed
+  if points
+    plelX1 = Gadfly.layer(x=pp[1,:], y=pp[2,:], Geom.point, Theme(default_color=parse(Colorant, pointsColor), point_size=1pt))
+    push!(PL, plelX1[1])
+  end
+
+  return PL
+end
+
 
 """
     $SIGNATURES
@@ -124,7 +215,7 @@ function stbPrtLineLayers!(pl, Xpp, Ypp, Thpp; l::Float64=5.0)
 end
 
 # draw the reference frame as a red-green dyad
-function addXYLineLayers!(pl, Xpp, Ypp, Thpp; l::Float64=1.0)
+function addXYLineLayers!(pl, Xpp, Ypp, Thpp; l::Float64=1.0, manualColor::Union{Nothing, AbstractString}=nothing  )
     lnstpr = [l;0.0;0.0]
     lnstpg = [0.0;l;0.0]
 
@@ -141,8 +232,8 @@ function addXYLineLayers!(pl, Xpp, Ypp, Thpp; l::Float64=1.0)
       xsg = [Xpp[i];lng[1]]
       ysg = [Ypp[i];lng[2]]
 
-      push!(pl.layers, layer(x=xsr, y=ysr, Geom.path(), Gadfly.Theme(default_color=colorant"red", line_width=1.5pt))[1] )
-      push!(pl.layers, layer(x=xsg, y=ysg, Geom.path(), Gadfly.Theme(default_color=colorant"green", line_width=1.5pt))[1] )
+      push!(pl.layers, layer(x=xsr, y=ysr, Geom.path(), Gadfly.Theme(default_color=parse(Colorant, manualColor == nothing ? "red" : manualColor), line_width=1.5pt))[1] )
+      push!(pl.layers, layer(x=xsg, y=ysg, Geom.path(), Gadfly.Theme(default_color=parse(Colorant, manualColor == nothing ? "green" : manualColor), line_width=1.5pt))[1] )
     end
     nothing
 end
@@ -170,36 +261,51 @@ function drawPoses(fg::G;
                    spscale::Float64=5.0,
                    drawTriads::Bool=true,
                    contour::Bool=true, levels::Int=1,
-                   regexPoses=r"x"  ) where G <: AbstractDFG
+                   regexPoses=r"x\d",
+                   line_width=1pt,
+                   manualColor=nothing  ) where G <: AbstractDFG
     #
     @info "drawPoses always sets orientation to max, regardless of meanmax setting.  TODO modefit."
-    #Gadfly.set_default_plot_size(20cm, 30cm)
-    # Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; LBLS=String[];
-    uXpp,uYpp, uThpp, uLBLS = get2DPoseMeans(fg, from=from, to=to)
-    xXpp,xYpp, xThpp, xLBLS = get2DPoseMax(fg, from=from, to=to)
-        # if meanmax == :mean
-        # elseif meanmax == :max
-        # end
-    Xpp  = meanmax == :mean ? uXpp : xXpp
-    Ypp  = meanmax == :mean ? uYpp : xYpp
-    Thpp = xThpp # always use max -- should be modefit
-    LBLS = meanmax == :mean ? uLBLS : xLBLS
+
+    ## Use PPE.suggested
+    vsyms = getVariablesLabelsWithinRange(fg, regexPoses, from=from, to=to)
+
+    Ppes = map(x->getVariablePPE(fg, x), vsyms)
+    mask = Ppes .!= nothing
+    vsyms = vsyms[mask]
+    suggPpes = (x->x.suggested).(Ppes[mask])
+
+    Xpp  = (x->x[1]).(suggPpes)
+    Ypp  = (x->x[2]).(suggPpes)
+    Thpp = (x->x[3]).(suggPpes)
+    LBLS = string.(vsyms)
+
+      ## Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; LBLS=String[];
+    # uXpp,uYpp, uThpp, uLBLS = get2DPoseMeans(fg, from=from, to=to)
+    # xXpp,xYpp, xThpp, xLBLS = get2DPoseMax(fg, from=from, to=to)
+    # # TODO use PPE.suggested instead
+    # Xpp  = meanmax == :mean ? uXpp : xXpp
+    # Ypp  = meanmax == :mean ? uYpp : xYpp
+    # Thpp = xThpp # always use max -- should be modefit
+    # LBLS = meanmax == :mean ? uLBLS : xLBLS
+
 
     # lbls = lblsFromTo(1,length(Xpp))
     psplt = Union{}
+    thm = manualColor == nothing ? Theme(line_width=1pt) : Theme(line_width=line_width, default_color=parse(Colorant, manualColor))
     if lbls
       psplt = Gadfly.plot(
-        Gadfly.layer(x=Xpp,y=Ypp,label=LBLS,Geom.path(), Theme(line_width=1pt), Geom.label),
+        Gadfly.layer(x=Xpp,y=Ypp,label=LBLS,Geom.path(), thm, Geom.label),
         Coord.cartesian(fixed=true)
       )
     else
       psplt = Gadfly.plot(
-        Gadfly.layer(x=Xpp,y=Ypp,Geom.path(), Theme(line_width=1pt)),Coord.cartesian(fixed=true),
+        Gadfly.layer(x=Xpp,y=Ypp,Geom.path(), thm),Coord.cartesian(fixed=true),
         Coord.cartesian(fixed=true)
       )
     end
 	# return psplt
-    drawTriads && addXYLineLayers!(psplt, Xpp, Ypp, Thpp, l=spscale)
+    drawTriads && addXYLineLayers!(psplt, Xpp, Ypp, Thpp, l=spscale, manualColor=manualColor)
     if drawhist
       Xp,Yp = get2DPoseSamples(fg, from=from, to=to)
       push!(psplt.layers,  Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)[1] )#(xbincount=100, ybincount=100))
@@ -208,7 +314,7 @@ function drawPoses(fg::G;
     if contour
       varsyms = Symbol.(LBLS)
       for vsym in varsyms
-        pln = plotKDE(fg, vsym, dims=[1;2], levels=levels, c=["gray90"])
+        pln = plotKDE(fg, vsym, dims=[1;2], levels=levels, c=[(manualColor == nothing ? "gray90" : manualColor);])
         union!(psplt.layers, pln.layers)
       end
     end
@@ -227,18 +333,36 @@ function drawLandms(fg::AbstractDFG;
                     meanmax=:max,
                     lbls=true,showmm=false,drawhist=true,
                     contour::Bool=true, levels::Int=1,
-                    c="red",
+                    manualColor=nothing,
+                    c= manualColor==nothing ? "red" : manualColor,
                     MM::Dict{Int,T}=Dict{Int,Int}(),
                     point_size=1pt,
-                    regexLandmark::Regex=r"l"  ) where T
-    #Gadfly.set_default_plot_size(20cm, 30cm)
-    Xp,Yp = get2DLandmSamples(fg, from=from, to=to)
-    Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; lblstags=String[];
-    if meanmax==:mean
-      Xpp,Ypp, t, lbltags = get2DLandmMeans(fg, from=from, to=to, regexLandmark=regexLandmark)
-    elseif meanmax==:max
-      Xpp,Ypp, t, lbltags = get2DLandmMax(fg, from=from, to=to,showmm=showmm,MM=MM, regexLandmark=regexLandmark)
-    end
+                    regexLandmark::Regex=r"l",
+                    resampleGaussianFit::Int=0  ) where T
+    #
+
+    ## Use PPE.suggested
+    vsyms = getVariablesLabelsWithinRange(fg, regexLandmark, from=from, to=to)
+
+    Ppes = map(x->getVariablePPE(fg, x), vsyms)
+    mask = Ppes .!= nothing
+    vsyms = vsyms[mask]
+    suggPpes = (x->x.suggested).(Ppes[mask])
+
+    Xpp  = (x->x[1]).(suggPpes)
+    Ypp  = (x->x[2]).(suggPpes)
+    lbltags = string.(vsyms)
+
+    # Xp,Yp = get2DLandmSamples(fg, from=from, to=to)
+    # Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; lblstags=String[];
+    # # TODO transition to new PPE.suggested
+    # if meanmax==:mean
+    #   Xpp,Ypp, t, lbltags = get2DLandmMeans(fg, from=from, to=to, regexLandmark=regexLandmark)
+    # elseif meanmax==:max
+    #   Xpp,Ypp, t, lbltags = get2DLandmMax(fg, from=from, to=to,showmm=showmm,MM=MM, regexLandmark=regexLandmark)
+    # end
+
+
 
     if lbls
       psplt = Gadfly.plot(
@@ -257,10 +381,16 @@ function drawLandms(fg::AbstractDFG;
       push!(psplt.layers, Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)[1])#(xbincount=100, ybincount=100)
     end
 
+
     if contour
+      # make pretty near Gaussian contours?
+      if resampleGaussianFit != 0
+        #
+      end
       varsyms = Symbol.(lbltags)
       for vsym in varsyms
-        pln = plotKDE(fg, vsym, dims=[1;2], levels=levels, c=["gray90"])
+        @show manualColor
+        pln = plotKDE(fg, vsym, dims=[1;2], levels=levels, c=[(manualColor==nothing ? "gray90" : manualColor);])
         union!(psplt.layers, pln.layers)
       end
     end
@@ -278,22 +408,27 @@ Notes
 """
 function drawPosesLandms(fgl::AbstractDFG;
                          from::Int64=0, to::Int64=99999999, minnei::Int64=0,
-                         meanmax=:max, lbls=true, drawhist=false, MM::Dict{Int,T}=Dict{Int,Int}(),
+                         meanmax=:max, lbls=true,
                          drawTriads::Bool=true,
-                         contour::Bool=true, levels::Int=1,
-                         showmm=true,
-                         spscale::Float64=5.0,window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
+                         spscale::Float64=5.0,
+                         contour::Bool=true,
+                         levels::Int=1,
+                         drawhist=false, MM::Dict{Int,T}=Dict{Int,Int}(),
                          xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing,
-                         point_size=1pt,
+                         showmm=true,
+                         window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
+                         point_size=4pt,
+                         line_width=1pt,
                          regexLandmark=r"l",
-                         regexPoses=r"x"  ) where {T}
+                         regexPoses=r"x",
+                         manualColor=nothing  ) where {T}
   #
   xmin != nothing && xmax != nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
   ymin != nothing && ymax != nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
   ll = getVariableIds(fgl, regexLandmark)
-  p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, contour=contour, drawTriads=drawTriads)
+  p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, contour=contour, drawTriads=drawTriads, manualColor=manualColor, line_width=line_width)
   if length(ll) > 0
-    pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, point_size=point_size, contour=contour)
+    pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, point_size=point_size, contour=contour, manualColor=manualColor)
     for l in pl.layers
       push!(p.layers, l)
     end
