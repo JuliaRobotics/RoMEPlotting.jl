@@ -353,14 +353,14 @@ function drawLandms(fg::AbstractDFG;
     Ypp  = (x->x[2]).(suggPpes)
     lbltags = string.(vsyms)
 
-    # Xp,Yp = get2DLandmSamples(fg, from=from, to=to)
-    # Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; lblstags=String[];
-    # # TODO transition to new PPE.suggested
-    # if meanmax==:mean
-    #   Xpp,Ypp, t, lbltags = get2DLandmMeans(fg, from=from, to=to, regexLandmark=regexLandmark)
-    # elseif meanmax==:max
-    #   Xpp,Ypp, t, lbltags = get2DLandmMax(fg, from=from, to=to,showmm=showmm,MM=MM, regexLandmark=regexLandmark)
-    # end
+    Xp,Yp = get2DLandmSamples(fg, from=from, to=to)
+    Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; lblstags=String[];
+    # TODO transition to new PPE.suggested
+    if meanmax==:mean
+      Xpp,Ypp, t, lbltags = get2DLandmMeans(fg, from=from, to=to, regexLandmark=regexLandmark)
+    elseif meanmax==:max
+      Xpp,Ypp, t, lbltags = get2DLandmMax(fg, from=from, to=to,showmm=showmm,MM=MM, regexLandmark=regexLandmark)
+    end
 
 
 
