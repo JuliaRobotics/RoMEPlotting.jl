@@ -362,8 +362,6 @@ function drawLandms(fg::AbstractDFG;
     #   Xpp,Ypp, t, lbltags = get2DLandmMax(fg, from=from, to=to,showmm=showmm,MM=MM, regexLandmark=regexLandmark)
     # end
 
-
-
     if lbls
       psplt = Gadfly.plot(
         Gadfly.layer(x=Xpp,y=Ypp, label=lbltags, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=point_size), Geom.label),
@@ -378,7 +376,7 @@ function drawLandms(fg::AbstractDFG;
     end
 
     if drawhist
-      push!(psplt.layers, Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)[1])#(xbincount=100, ybincount=100)
+      push!(psplt.layers, Gadfly.layer(x=Xpp, y=Ypp, Geom.histogram2d)[1])#(xbincount=100, ybincount=100)
     end
 
 

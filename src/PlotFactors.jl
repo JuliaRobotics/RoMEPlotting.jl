@@ -328,7 +328,7 @@ function reportFactors(dfg::AbstractDFG,
                        show::Bool=true  )
   #
   ss = split(filepath, '/')
-  path = joinpath(ss[1:(end-1)]...)
+  path = joinpath("/", joinpath(ss[1:(end-1)]...), "tmp")
   mkpath(path)
   alldists= Vector{Float64}()
 
