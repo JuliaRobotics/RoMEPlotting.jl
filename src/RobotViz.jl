@@ -632,7 +632,7 @@ function plotPose(fgl::G,
                   app::AS="eog",
                   hdl=[]  ) where {G <: AbstractDFG, AS <: AbstractString}
   #
-  typ = getData(getVariable(fgl, syms[1])).softtype
+  typ = getSolverData(getVariable(fgl, syms[1])).softtype
   pt = string(string.(syms)...)
   getvertsgg = (sym) -> getKDE(getVariable(fgl, sym))
   pl = plotPose(typ, getvertsgg.(syms), pt, levels=levels, c=c, axis=axis, scale=scale, hdl=hdl )
