@@ -270,7 +270,7 @@ function drawPoses(fg::G;
     ## Use PPE.suggested
     vsyms = getVariablesLabelsWithinRange(fg, regexPoses, from=from, to=to)
 
-    Ppes = map(x->getVariablePPE(fg, x), vsyms)
+    Ppes = map(x->calcVariablePPE(fg, x), vsyms)
     mask = Ppes .!= nothing
     vsyms = vsyms[mask]
     suggPpes = (x->x.suggested).(Ppes[mask])
@@ -344,7 +344,7 @@ function drawLandms(fg::AbstractDFG;
     ## Use PPE.suggested
     vsyms = getVariablesLabelsWithinRange(fg, regexLandmark, from=from, to=to)
 
-    Ppes = map(x->getVariablePPE(fg, x), vsyms)
+    Ppes = map(x->calcVariablePPE(fg, x), vsyms)
     mask = Ppes .!= nothing
     vsyms = vsyms[mask]
     suggPpes = (x->x.suggested).(Ppes[mask])
