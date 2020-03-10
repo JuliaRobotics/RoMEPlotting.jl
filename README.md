@@ -1,7 +1,8 @@
 # RoMEPlotting.jl
 
-[![Build Status](https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl.svg?branch=master)](https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl)
-[![codecov.io](https://codecov.io/github/JuliaRobotics/RoMEPlotting.jl/coverage.svg?branch=master)](https://codecov.io/github/JuliaRobotics/RoMEPlotting.jl?branch=master)
+Release v0.2 | Dev | Test Coverage
+-------------|-----|--------------
+[![Build Status](https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl.svg?branch=release/v0.2)](https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl) | [![Build Status](https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl.svg?branch=master)](https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl) | [![codecov.io](https://codecov.io/github/JuliaRobotics/RoMEPlotting.jl/coverage.svg?branch=master)](https://codecov.io/github/JuliaRobotics/RoMEPlotting.jl?branch=master)
 
 2D plotting functionality for the RoME.jl package (presently only using Gadfly).
 
