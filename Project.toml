@@ -2,7 +2,7 @@ name = "RoMEPlotting"
 uuid = "238d586b-a4bf-555c-9891-eda6fc5e55a2"
 keywords = ["mm-iSAM", "SLAM", "plotting", "2D", "robotics", "navigation"]
 desc = "Visualization tools for the RoME.jl package."
-version = "0.2.1"
+version = "0.2.2"
 
 [deps]
 ApproxManifoldProducts = "9bbbb610-88a1-53cd-9763-118ce10c1f89"
@@ -34,7 +34,7 @@ DocStringExtensions = "0.7, 0.8, 0.9, 1"
 Fontconfig = "0.2, 0.3, 0.4, 0.5"
 Gadfly = "1"
 Graphs = "0.10.2"
-IncrementalInference = "0.9, 0.10, 0.11"
+IncrementalInference = "0.10, 0.11"
 KernelDensityEstimate = "0.5"
 KernelDensityEstimatePlotting = "0.1.6"
 Reexport = "0.2"
