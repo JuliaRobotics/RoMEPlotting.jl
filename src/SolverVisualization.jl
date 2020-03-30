@@ -199,24 +199,31 @@ end
 """
     $(SIGNATURES)
 
-Draw the up pass belief of lb from clique cllb.
+Draw the upward belief from clique `cllb::Symbol` message on variable `lb::Symbol`.
 
+Example:
+
+```julia
 plotUpMsgsAtCliq(tree, :x2, :x1)
+```
+
+Related
+
+plotKDE, getUpMsgs
 """
-function plotUpMsgsAtCliq(treel::BayesTree, lb::Symbol, cllb::Symbol;
-      show::Bool=true,
-      w=20cm, h=15cm,
-      levels::Int=1,
-      marg::Vector{Int}=Int[] )
+function plotUpMsgsAtCliq(treel::BayesTree,
+                          cllb::Symbol,
+                          lb::Symbol;
+                          show::Bool=true,
+                          w=20cm, h=15cm,
+                          levels::Int=1,
+                          dims::Union{Vector{Int}, Nothing}=nothing )
   #
-  cliq = whichCliq(treel, string(cllb))
-  cliqoutmsg = cliq.attributes["debug"].outmsg
-  lbls = cliq.attributes["debug"].outmsglbls
 
-  bel = kde!(cliqoutmsg.p[lbls[lb]])
-  bel = length(marg)==0 ? bel : marginal(bel, marg)
-
-  plotKDE(bel)
+  cliq = getCliq(treel, cllb)
+  cliqoutmsg = getUpMsgs(cliq)
+  bel = convert(BallTreeDensity, cliqoutmsg.belief[lb])
+  plotKDE(bel, dims=dims)
 end
 
 function plotMCMC(treel::BayesTree,
@@ -455,35 +462,35 @@ function investigateMultidimKDE(p::BallTreeDensity)
     return hstack(x,y)
 end
 
-function vArrPotentials(potens::Dict{Symbol,EasyMessage})
-  vv = Array{Gadfly.Compose.Context,1}(length(potens))
-  i = 0
-  oned=false
-  for p in potens
-      i+=1
-      pb = kde!(p[2].pts, p[2].bws)
-      if size(p[2].pts,1) > 3
-        # vv[i] = plotKDE(pb)
-        error("can't handle higher dimensional plots here yet")
-      elseif size(p[2].pts,1) > 1
-        vv[i] = investigateMultidimKDE(pb)
-      else
-        vv[i] = plotKDE(pb)
-      end
-  end
-  return vv
-end
+# function vArrPotentials(potens::Dict{Symbol,EasyMessage})
+#   vv = Array{Gadfly.Compose.Context,1}(length(potens))
+#   i = 0
+#   oned=false
+#   for p in potens
+#       i+=1
+#       pb = kde!(p[2].pts, p[2].bws)
+#       if size(p[2].pts,1) > 3
+#         # vv[i] = plotKDE(pb)
+#         error("can't handle higher dimensional plots here yet")
+#       elseif size(p[2].pts,1) > 1
+#         vv[i] = investigateMultidimKDE(pb)
+#       else
+#         vv[i] = plotKDE(pb)
+#       end
+#   end
+#   return vv
+# end
 
 
-function draw(em::EasyMessage;xlbl="X")
-  p = Union{}
-  if size(em.pts,1) == 1
-    p=plotKDE(kde!(em),xlbl=xlbl)
-  else
-    p=plotKDE(kde!(em))
-  end
-  return p
-end
+# function draw(em::EasyMessage;xlbl="X")
+#   p = Union{}
+#   if size(em.pts,1) == 1
+#     p=plotKDE(kde!(em),xlbl=xlbl)
+#   else
+#     p=plotKDE(kde!(em))
+#   end
+#   return p
+# end
 
 function whosWith(cliq::Graphs.ExVertex)
   println("$(cliq.attributes["label"])")
@@ -612,18 +619,18 @@ function predCurrFactorBeliefs(fgl::G,
 end
 
 
-function drawHorDens(fgl::G,
-                     pDens::Dict{Int,EasyMessage},
-                     N=200 ) where G <: AbstractDFG
-  #
-  p = BallTreeDensity[]
-  lbls = String[]
-  for pd in pDens
-    push!(p, kde!(pd[2].pts,pd[2].bws))
-    push!(lbls, getVariable(fgl,pd[1]).label)
-  end
-  drawHorDens(p,N=N,lbls=lbls)
-end
+# function drawHorDens(fgl::G,
+#                      pDens::Dict{Int,EasyMessage},
+#                      N=200 ) where G <: AbstractDFG
+#   #
+#   p = BallTreeDensity[]
+#   lbls = String[]
+#   for pd in pDens
+#     push!(p, kde!(pd[2].pts,pd[2].bws))
+#     push!(lbls, getVariable(fgl,pd[1]).label)
+#   end
+#   drawHorDens(p,N=N,lbls=lbls)
+# end
 
 function drawHorBeliefsList(fgl::G,
                             lbls::Array{Symbol,1};
@@ -869,12 +876,13 @@ Notes
 function plotTreeProductUp(fgl::G,
                            treel::BayesTree,
                            cliqsym::Symbol,
-                           varsym::Symbol=cliqsym  ) where G <: AbstractDFG
+                           varsym::Symbol=cliqsym;
+                           levels::Int=1 ) where G <: AbstractDFG
   #
   # build a subgraph copy of clique
   cliq = whichCliq(treel, cliqsym)
   syms = getCliqAllVarIds(cliq)
-  subfg = buildSubgraphFromLabels(fgl,syms)
+  subfg = buildSubgraphFromLabels!(fgl, syms)
 
   # add upward messages to subgraph
   msgs = getCliqChildMsgsUp(treel,cliq, BallTreeDensity)
@@ -885,7 +893,7 @@ function plotTreeProductUp(fgl::G,
   # stuff = treeProductUp(fgl, treel, cliqsym, varsym)
   # plotKDE(manikde!(stuff[1], getManifolds(fgl, varsym)))
   cllbl = cliq.attributes["label"]
-  return plotLocalProduct(subfg, varsym, title="Tree Up $(cllbl) | ")
+  return plotLocalProduct(subfg, varsym, title="Tree Up $(cllbl) | ", levels=levels)
 end
 
 
@@ -898,7 +906,7 @@ function plotTreeProductDown(fgl::G,
   # build a subgraph copy of clique
   cliq = whichCliq(treel, cliqsym)
   syms = getCliqAllVarIds(cliq)
-  subfg = buildSubgraphFromLabels(fgl,syms)
+  subfg = buildSubgraphFromLabels!(fgl,syms)
 
   # add upward messages to subgraph
   msgs = getCliqParentMsgDown(treel,cliq)
@@ -1346,7 +1354,7 @@ function plotCliqDownMsgs(tree::BayesTree,
                           existing=nothing  )
   #
   cliq = getCliq(tree,frnt)
-  msgs = getCliqMsgsDown(cliq)
+  msgs = getDwnMsgs(cliq)
 
   PL = []
 
