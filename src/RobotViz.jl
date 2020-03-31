@@ -432,7 +432,8 @@ function drawPosesLandms(fgl::AbstractDFG;
                          line_width=1pt,
                          regexLandmark=r"l",
                          regexPoses=r"x",
-                         manualColor=nothing  ) where {T}
+                         manualColor=nothing,
+                         title::AbstractString=""  ) where {T}
   #
   # deprecations
   if meanmax != :null
@@ -458,6 +459,9 @@ function drawPosesLandms(fgl::AbstractDFG;
   end
   co = Coord.Cartesian(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
   p.coord = co
+  if title != ""
+    push!(p.guides, Guide.title(title))
+  end
   return p
 end
 
