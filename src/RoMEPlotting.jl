@@ -8,7 +8,6 @@ using Statistics, LinearAlgebra
 using StatsBase
 using Compose
 using Dates
-# using Graphs
 using DistributedFactorGraphs
 using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
@@ -19,9 +18,7 @@ using ApproxManifoldProducts
 
 import KernelDensityEstimatePlotting: plot, drawHorDens, plotKDE
 import IncrementalInference: CliqGibbsMC, DebugCliqMCMC
-import Graphs: plot
 import Gadfly: plot
-
 
 
 export
