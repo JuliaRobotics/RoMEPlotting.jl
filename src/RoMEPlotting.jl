@@ -20,6 +20,9 @@ import KernelDensityEstimatePlotting: plot, drawHorDens, plotKDE
 import IncrementalInference: CliqGibbsMC, DebugCliqMCMC
 import Gadfly: plot
 
+# assuming this is a good size for everybody
+@info "Assuming plot size, Gadfly.set_default_plot_size(30cm,20cm)"
+Gadfly.set_default_plot_size(30cm,20cm)
 
 export
   # Associated with IncrementalInference
