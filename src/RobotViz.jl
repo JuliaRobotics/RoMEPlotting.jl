@@ -500,43 +500,6 @@ function drawSubmaps(fgl::G, fromto::Array{Int,1}; spread::Int=25,
   drawSubmaps(fgl, ft, m1hist=m1hist, m2hist=m2hist, m3hist=m3hist, showmm=showmm, MM=MM, xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
 end
 
-# function getKDEMax(p::BallTreeDensity;N=200)
-#   m = zeros(p.bt.dims)
-#   for i in 1:p.bt.dims
-#     mm = marginal(p,[i])
-#     rangeV = getKDERange(mm)
-#     X = linspace(rangeV[1],rangeV[2],N)
-#     yV = evaluateDualTree(mm,X)
-#     m[i] = X[findfirst(yV,maximum(yV))]
-#   end
-#   return m
-# end
-
-
-# function plotPose(::Pose2, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing)
-#   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
-#   p2 = plotKDE(bels, dims=[3], c=c)
-#
-#
-#   Gadfly.vstack(p1,p2)
-# end
-import KernelDensityEstimate: getKDERange
-
-function getKDERange(bds::Vector{BallTreeDensity}; extend=0.15)
-
-  dims = Ndim(bds[1])
-  ran = getKDERange(bds[1],extend=extend)
-
-  for bd in bds
-    rr = getKDERange(bd,extend=extend)
-    for i in 2:dims, j in 1:2
-      ran[i,j] = maximum([rr[i,j]; ran[i,j]])
-    end
-  end
-  return ran
-end
-
-# import RoMEPlotting: plotPose
 
 """
     $SIGNATURES
