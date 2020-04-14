@@ -255,7 +255,8 @@ Future:
 function drawPoses(fg::G;
                    from::Int64=0,
                    to::Int64=99999999,
-                   meanmax=:max,
+                   meanmax=:null,
+                   ppe=:suggested,
                    lbls=true,
                    drawhist=true,
                    spscale::Float64=5.0,
@@ -265,7 +266,11 @@ function drawPoses(fg::G;
                    line_width=1pt,
                    manualColor=nothing  ) where G <: AbstractDFG
     #
-    @info "drawPoses always sets orientation to max, regardless of meanmax setting.  TODO modefit."
+    # deprecations
+    if meanmax != :null
+      @warn "drawPoses meanmax keyword is deprecated, use ppe instead."
+      ppe = meanmax
+    end
 
     ## Use PPE.suggested
     vsyms = getVariablesLabelsWithinRange(fg, regexPoses, from=from, to=to)
@@ -273,7 +278,7 @@ function drawPoses(fg::G;
     Ppes = map(x->calcVariablePPE(fg, x), vsyms)
     mask = Ppes .!= nothing
     vsyms = vsyms[mask]
-    suggPpes = (x->x.suggested).(Ppes[mask])
+    suggPpes = (x->getfield(x,ppe)).(Ppes[mask])
 
     Xpp  = (x->x[1]).(suggPpes)
     Ypp  = (x->x[2]).(suggPpes)
@@ -330,7 +335,8 @@ end
 function drawLandms(fg::AbstractDFG;
                     from::Int64=0, to::Int64=99999999,
                     minnei::Int64=0,
-                    meanmax=:max,
+                    meanmax=:null,
+                    ppe::Symbol=:suggested,
                     lbls=true,showmm=false,drawhist=true,
                     contour::Bool=true, levels::Int=1,
                     manualColor=nothing,
@@ -340,6 +346,10 @@ function drawLandms(fg::AbstractDFG;
                     regexLandmark::Regex=r"l",
                     resampleGaussianFit::Int=0  ) where T
     #
+    if meanmax != :null
+      @warn "drawPoses meanmax keyword is deprecated, use ppe instead."
+      ppe = meanmax
+    end
 
     ## Use PPE.suggested
     vsyms = getVariablesLabelsWithinRange(fg, regexLandmark, from=from, to=to)
@@ -347,7 +357,7 @@ function drawLandms(fg::AbstractDFG;
     Ppes = map(x->calcVariablePPE(fg, x), vsyms)
     mask = Ppes .!= nothing
     vsyms = vsyms[mask]
-    suggPpes = (x->x.suggested).(Ppes[mask])
+    suggPpes = (x->getfield(x,ppe)).(Ppes[mask])
 
     Xpp  = (x->x[1]).(suggPpes)
     Ypp  = (x->x[2]).(suggPpes)
@@ -406,7 +416,10 @@ Notes
 """
 function drawPosesLandms(fgl::AbstractDFG;
                          from::Int64=0, to::Int64=99999999, minnei::Int64=0,
-                         meanmax=:max, lbls=true,
+                         meanmax=:null,
+                         posesPPE=:suggested,
+                         landmsPPE=:suggested,
+                         lbls=true,
                          drawTriads::Bool=true,
                          spscale::Float64=5.0,
                          contour::Bool=true,
@@ -419,14 +432,22 @@ function drawPosesLandms(fgl::AbstractDFG;
                          line_width=1pt,
                          regexLandmark=r"l",
                          regexPoses=r"x",
-                         manualColor=nothing  ) where {T}
+                         manualColor=nothing,
+                         title::AbstractString=""  ) where {T}
+  #
+  # deprecations
+  if meanmax != :null
+    @warn "drawPosesLandms meanmax keyword is deprecated, use posesPPE or landmsPPE instead."
+    posesPPE = meanmax
+    landmsPPE = meanmax
+  end
   #
   xmin != nothing && xmax != nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
   ymin != nothing && ymax != nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
   ll = getVariableIds(fgl, regexLandmark)
-  p = drawPoses(fgl, from=from,to=to,meanmax=meanmax,lbls=lbls,drawhist=drawhist, spscale=spscale, contour=contour, drawTriads=drawTriads, manualColor=manualColor, line_width=line_width)
+  p = drawPoses(fgl, from=from,to=to,ppe=posesPPE,lbls=lbls,drawhist=drawhist, spscale=spscale, contour=contour, drawTriads=drawTriads, manualColor=manualColor, line_width=line_width)
   if length(ll) > 0
-    pl = drawLandms(fgl, from=from, to=to, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, point_size=point_size, contour=contour, manualColor=manualColor)
+    pl = drawLandms(fgl, from=from, to=to, ppe=landmsPPE, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, point_size=point_size, contour=contour, manualColor=manualColor)
     for l in pl.layers
       push!(p.layers, l)
     end
@@ -438,6 +459,9 @@ function drawPosesLandms(fgl::AbstractDFG;
   end
   co = Coord.Cartesian(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
   p.coord = co
+  if title != ""
+    push!(p.guides, Guide.title(title))
+  end
   return p
 end
 
@@ -476,43 +500,6 @@ function drawSubmaps(fgl::G, fromto::Array{Int,1}; spread::Int=25,
   drawSubmaps(fgl, ft, m1hist=m1hist, m2hist=m2hist, m3hist=m3hist, showmm=showmm, MM=MM, xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
 end
 
-# function getKDEMax(p::BallTreeDensity;N=200)
-#   m = zeros(p.bt.dims)
-#   for i in 1:p.bt.dims
-#     mm = marginal(p,[i])
-#     rangeV = getKDERange(mm)
-#     X = linspace(rangeV[1],rangeV[2],N)
-#     yV = evaluateDualTree(mm,X)
-#     m[i] = X[findfirst(yV,maximum(yV))]
-#   end
-#   return m
-# end
-
-
-# function plotPose(::Pose2, bels::Vector{BallTreeDensity}, title; levels::Int=5, c=nothing)
-#   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
-#   p2 = plotKDE(bels, dims=[3], c=c)
-#
-#
-#   Gadfly.vstack(p1,p2)
-# end
-import KernelDensityEstimate: getKDERange
-
-function getKDERange(bds::Vector{BallTreeDensity}; extend=0.15)
-
-  dims = Ndim(bds[1])
-  ran = getKDERange(bds[1],extend=extend)
-
-  for bd in bds
-    rr = getKDERange(bd,extend=extend)
-    for i in 2:dims, j in 1:2
-      ran[i,j] = maximum([rr[i,j]; ran[i,j]])
-    end
-  end
-  return ran
-end
-
-# import RoMEPlotting: plotPose
 
 """
     $SIGNATURES

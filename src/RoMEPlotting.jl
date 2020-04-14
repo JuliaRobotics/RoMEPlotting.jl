@@ -8,7 +8,6 @@ using Statistics, LinearAlgebra
 using StatsBase
 using Compose
 using Dates
-# using Graphs
 using DistributedFactorGraphs
 using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
@@ -19,10 +18,11 @@ using ApproxManifoldProducts
 
 import KernelDensityEstimatePlotting: plot, drawHorDens, plotKDE
 import IncrementalInference: CliqGibbsMC, DebugCliqMCMC
-import Graphs: plot
 import Gadfly: plot
 
-
+# assuming this is a good size for everybody
+@info "Assuming plot size, Gadfly.set_default_plot_size(30cm,20cm)"
+Gadfly.set_default_plot_size(30cm,20cm)
 
 export
   # Associated with IncrementalInference
