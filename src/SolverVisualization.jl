@@ -877,7 +877,8 @@ function plotTreeProductUp(fgl::G,
                            treel::BayesTree,
                            cliqsym::Symbol,
                            varsym::Symbol=cliqsym;
-                           levels::Int=1 ) where G <: AbstractDFG
+                           levels::Int=1,
+                           dims::Vector{Int}=Int[]  ) where G <: AbstractDFG
   #
   # build a subgraph copy of clique
   cliq = whichCliq(treel, cliqsym)
@@ -893,7 +894,7 @@ function plotTreeProductUp(fgl::G,
   # stuff = treeProductUp(fgl, treel, cliqsym, varsym)
   # plotKDE(manikde!(stuff[1], getManifolds(fgl, varsym)))
   cllbl = cliq.attributes["label"]
-  return plotLocalProduct(subfg, varsym, title="Tree Up $(cllbl) | ", levels=levels)
+  return plotLocalProduct(subfg, varsym, title="Tree Up $(cllbl) | ", levels=levels, dims=dims)
 end
 
 
