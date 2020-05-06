@@ -96,4 +96,32 @@ export drawComicStrip
 
 
 
+# function plotKDE(fgl::FactorGraph,
+#                  vsym::Vector{Symbol};
+#                  axis=nothing,
+#                  dims=nothing,
+#                  c=getColorsByLength(length(vsym)),
+#                  levels::Int=4,
+#                  title::Union{Nothing, T}=nothing,
+#                  overlay=nothing  ) where {T <: AbstractString}
+#   #
+#   @warn "plotKDE for FactorGraph is deprecated, use DistributedFactorGraphs objects instead."
+#   verts = map((x)->getKDE(getVariable(fgl, x)), vsym)
+#   plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels, title=title, overlay=overlay )
+# end
+#
+# function plotKDE(fgl::FactorGraph,
+#                  vsym::Symbol;
+#                  axis=nothing,
+#                  dims=nothing,
+#                  c=nothing,
+#                  levels=4,
+#                  title::Union{Nothing, T}=nothing) where {T <: AbstractString}
+#   #
+#   @warn "plotKDE for FactorGraph is deprecated, use DistributedFactorGraphs objects instead."
+#   plotKDE(fgl, Symbol[vsym;], dims=dims, c=c, axis=axis, levels=levels, title=title)
+# end
+
+
+
 #

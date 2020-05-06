@@ -791,7 +791,7 @@ end
 
 
 
-function plotPose3Pairs(fgl::FactorGraph, sym::Symbol; fill::Bool=true)
+function plotPose3Pairs(fgl::AbstractDFG, sym::Symbol; fill::Bool=true)
   p1= plotKDE(fgl, sym, dims=[1;2], fill=fill)
   p2 = plotKDE(fgl, sym, dims=[6;3], fill=fill)
   p3 = plotKDE(fgl, sym, dims=[4;5], fill=fill)
@@ -800,32 +800,6 @@ function plotPose3Pairs(fgl::FactorGraph, sym::Symbol; fill::Bool=true)
   nothing
 end
 
-
-function plotKDE(fgl::FactorGraph,
-                 vsym::Vector{Symbol};
-                 axis=nothing,
-                 dims=nothing,
-                 c=getColorsByLength(length(vsym)),
-                 levels::Int=4,
-                 title::Union{Nothing, T}=nothing,
-                 overlay=nothing  ) where {T <: AbstractString}
-  #
-  @warn "plotKDE for FactorGraph is deprecated, use DistributedFactorGraphs objects instead."
-  verts = map((x)->getKDE(getVariable(fgl, x)), vsym)
-  plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels, title=title, overlay=overlay )
-end
-
-function plotKDE(fgl::FactorGraph,
-                 vsym::Symbol;
-                 axis=nothing,
-                 dims=nothing,
-                 c=nothing,
-                 levels=4,
-                 title::Union{Nothing, T}=nothing) where {T <: AbstractString}
-  #
-  @warn "plotKDE for FactorGraph is deprecated, use DistributedFactorGraphs objects instead."
-  plotKDE(fgl, Symbol[vsym;], dims=dims, c=c, axis=axis, levels=levels, title=title)
-end
 
 
 """
