@@ -67,7 +67,7 @@ println("test Pose2D plotting")
 
 plotSLAM2DPoses(fg);
 plotSLAM2DLandmarks(fg);
-splotSLAM2D(fg);
+plotSLAM2D(fg);
 
 p1 = getKDE(fg, :l1)
 # pts = getVal(fg, :l1)
