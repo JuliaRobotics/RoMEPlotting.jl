@@ -8,6 +8,8 @@ export drawSubmaps, drawMarginalContour, drawFeatTrackers, investigatePoseKDE
 export drawHorBeliefsList, drawUpMsgAtCliq, drawFactorBeliefs
 export drawPose2DMC!
 
+
+
 @deprecate drawPoses(x...) plotSLAM2DPoses(x...)
 @deprecate drawLandms(x...) plotSLAM2DLandmarks(x...)
 @deprecate drawPosesLandms(x...) plotSLAM2D(x...)
@@ -67,5 +69,37 @@ end
 #   end
 #   return p
 # end
+
+export drawOneMC!
+export drawMCMCDebug
+export drawTreeUpwardMsgs
+export drawFrontalDens
+export drawUpMCMCPose2D!
+export drawUpMCMCPose2D!
+export drawDwnMCMCPose2D!
+export drawDwnMCMCPose2D!
+export drawLbl
+export drawAnalysis
+export drawAllPose2DBeliefs
+export drawAllPose2DBeliefs
+export drawComicStripLM
+export drawComicStrip
+
+@deprecate drawOneMC!(x...) plotOneMC!(x...)
+@deprecate drawMCMCDebug(x...) plotMCMCDebug(x...)
+@deprecate drawTreeUpwardMsgs(x...) plotTreeUpwardMsgs(x...)
+@deprecate drawFrontalDens(x...) plotFrontalDens(x...)
+@deprecate drawUpMCMCPose2D!(x...) plotUpMCMCPose2D!(x...)
+@deprecate drawUpMCMCPose2D!(x...) plotUpMCMCPose2D!(x...)
+@deprecate drawDwnMCMCPose2D!(x...) plotDwnMCMCPose2D!(x...)
+@deprecate drawDwnMCMCPose2D!(x...) plotDwnMCMCPose2D!(x...)
+@deprecate drawLbl(x...) plotLbl(x...)
+@deprecate drawAnalysis(x...) plotAnalysis(x...)
+@deprecate drawAllPose2DBeliefs(x...) plotAllPose2DBeliefs(x...)
+@deprecate drawAllPose2DBeliefs(x...) plotAllPose2DBeliefs(x...)
+@deprecate drawComicStripLM(x...) plotComicStripLM(x...)
+@deprecate drawComicStrip(x...) plotComicStrip(x...)
+
+
 
 #
