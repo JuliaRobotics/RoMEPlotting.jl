@@ -462,35 +462,6 @@ function investigateMultidimKDE(p::BallTreeDensity)
     return hstack(x,y)
 end
 
-# function vArrPotentials(potens::Dict{Symbol,EasyMessage})
-#   vv = Array{Gadfly.Compose.Context,1}(length(potens))
-#   i = 0
-#   oned=false
-#   for p in potens
-#       i+=1
-#       pb = kde!(p[2].pts, p[2].bws)
-#       if size(p[2].pts,1) > 3
-#         # vv[i] = plotKDE(pb)
-#         error("can't handle higher dimensional plots here yet")
-#       elseif size(p[2].pts,1) > 1
-#         vv[i] = investigateMultidimKDE(pb)
-#       else
-#         vv[i] = plotKDE(pb)
-#       end
-#   end
-#   return vv
-# end
-
-
-# function draw(em::EasyMessage;xlbl="X")
-#   p = Union{}
-#   if size(em.pts,1) == 1
-#     p=plotKDE(kde!(em),xlbl=xlbl)
-#   else
-#     p=plotKDE(kde!(em))
-#   end
-#   return p
-# end
 
 function whosWith(cliq::Graphs.ExVertex)
   println("$(cliq.attributes["label"])")
@@ -505,7 +476,7 @@ function whosWith(bt::BayesTree, frt::String)
 end
 
 
-function drawUpMsgAtCliq(fg::G,
+function plotUpMsgAtCliq(fg::G,
                          cliq::Graphs.ExVertex  ) where G <: AbstractDFG
   #
   for id in keys(cliq.attributes["data"].debug.outmsg.p)
@@ -517,14 +488,14 @@ function drawUpMsgAtCliq(fg::G,
   vArrPotentials(potens)
 end
 
-function drawUpMsgAtCliq(fg::G,
+function plotUpMsgAtCliq(fg::G,
                          bt::BayesTree,
                          lbl::Union{String,Symbol}  ) where G <: AbstractDFG
   #
-  drawUpMsgAtCliq(fg, whichCliq(bt, Symbol(lbl)) )
+  plotUpMsgAtCliq(fg, whichCliq(bt, Symbol(lbl)) )
 end
 
-# function drawDwnMsgAtCliq(fg::FactorGraph, cliq::Graphs.ExVertex)
+
 function dwnMsgsAtCliq(fg::G,
                        cliq::Graphs.ExVertex  ) where G <: AbstractDFG
   #
@@ -544,7 +515,7 @@ function dwnMsgsAtCliq(fg::G,
   dwnMsgsAtCliq(fg, whichCliq(bt, Symbol(lbl)) )
 end
 
-function drawPose2DMC!(plots::Array{Gadfly.Compose.Context,1},
+function plotPose2DMC!(plots::Array{Gadfly.Compose.Context,1},
                        cliqMC::CliqGibbsMC )
   #
   for prod in cliqMC.prods
@@ -559,7 +530,7 @@ function mcmcPose2D!(plots::Array{Gadfly.Compose.Context,1},
                      iter::Int=1  )
     # for mc in cliqDbg.mcmc
     mc = cliqDbg.mcmc[iter]
-    v = drawPose2DMC!(plots, mc)
+    v = plotPose2DMC!(plots, mc)
     # end
     return v
 end
@@ -619,20 +590,7 @@ function predCurrFactorBeliefs(fgl::G,
 end
 
 
-# function drawHorDens(fgl::G,
-#                      pDens::Dict{Int,EasyMessage},
-#                      N=200 ) where G <: AbstractDFG
-#   #
-#   p = BallTreeDensity[]
-#   lbls = String[]
-#   for pd in pDens
-#     push!(p, kde!(pd[2].pts,pd[2].bws))
-#     push!(lbls, getVariable(fgl,pd[1]).label)
-#   end
-#   drawHorDens(p,N=N,lbls=lbls)
-# end
-
-function drawHorBeliefsList(fgl::G,
+function plotHorBeliefsList(fgl::G,
                             lbls::Array{Symbol,1};
                             nhor::Int=-1,
                             gt=nothing,
@@ -674,7 +632,7 @@ function drawHorBeliefsList(fgl::G,
   vv
 end
 
-function drawFactorBeliefs(fgl::G,
+function plotFactorBeliefs(fgl::G,
                            flbl::Symbol ) where G <: AbstractDFG
   #
   if !haskey(fgl.fIDs, flbl)
@@ -705,7 +663,7 @@ function drawFactorBeliefs(fgl::G,
   # end
   nothing
 end
-drawFactorBeliefs(fgl::G, flbl::T) where {G <: AbstractDFG, T <: AbstractString} = drawFactorBeliefs(fgl, Symbol(flbl))
+plotFactorBeliefs(fgl::G, flbl::T) where {G <: AbstractDFG, T <: AbstractString} = plotFactorBeliefs(fgl, Symbol(flbl))
 
 
 

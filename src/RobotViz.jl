@@ -21,7 +21,7 @@ function plotLsrScanFeats(br::Array{Float64,2})
   Guide.yticks(ticks=collect(0:10:80)))
 end
 
-function drawFeatTrackers(trkrs::Dict{Int64,Feature}, bfts::Array{Float64,2})
+function plotFeatTrackers(trkrs::Dict{Int64,Feature}, bfts::Array{Float64,2})
   musX = Float64[]
   varX = Float64[]
   musY = Float64[]
@@ -124,7 +124,7 @@ Plotting tool to draw Gadfly layers of ellipses of 2D covariance fitted to the b
 
 Related
 
-covEllipseParameterized, drawPosesLandms
+covEllipseParameterized, plotSLAM2DPosesLandms
 """
 function plotCovEllipseLayer(dfg::AbstractDFG,
                              vsym::Symbol;
@@ -252,23 +252,23 @@ end
 Future:
 - Relax to user defined pose labeling scheme, for example `:p1, :p2, ...`
 """
-function drawPoses(fg::G;
-                   from::Int64=0,
-                   to::Int64=99999999,
-                   meanmax=:null,
-                   ppe=:suggested,
-                   lbls=true,
-                   drawhist=true,
-                   spscale::Float64=5.0,
-                   drawTriads::Bool=true,
-                   contour::Bool=true, levels::Int=1,
-                   regexPoses=r"x\d",
-                   line_width=1pt,
-                   manualColor=nothing  ) where G <: AbstractDFG
+function plotSLAM2DPoses(fg::G;
+                         from::Int64=0,
+                         to::Int64=99999999,
+                         meanmax=:null,
+                         ppe=:suggested,
+                         lbls=true,
+                         drawhist=true,
+                         spscale::Float64=5.0,
+                         drawTriads::Bool=true,
+                         contour::Bool=true, levels::Int=1,
+                         regexPoses=r"x\d",
+                         line_width=1pt,
+                         manualColor=nothing  ) where G <: AbstractDFG
     #
     # deprecations
     if meanmax != :null
-      @warn "drawPoses meanmax keyword is deprecated, use ppe instead."
+      @warn "plotSLAM2DPoses meanmax keyword is deprecated, use ppe instead."
       ppe = meanmax
     end
 
@@ -327,27 +327,28 @@ function drawPoses(fg::G;
 end
 
 
+
 """
     $(SIGNATURES)
 
 2D plot of landmarks, assuming `:l1, :l2, ... :ln`.  Use `from` and `to` to control the range of landmarks `n` to include.
 """
-function drawLandms(fg::AbstractDFG;
-                    from::Int64=0, to::Int64=99999999,
-                    minnei::Int64=0,
-                    meanmax=:null,
-                    ppe::Symbol=:suggested,
-                    lbls=true,showmm=false,drawhist=true,
-                    contour::Bool=true, levels::Int=1,
-                    manualColor=nothing,
-                    c= manualColor==nothing ? "red" : manualColor,
-                    MM::Dict{Int,T}=Dict{Int,Int}(),
-                    point_size=1pt,
-                    regexLandmark::Regex=r"l",
-                    resampleGaussianFit::Int=0  ) where T
+function plotSLAM2DLandmarks(fg::AbstractDFG;
+                             from::Int64=0, to::Int64=99999999,
+                             minnei::Int64=0,
+                             meanmax=:null,
+                             ppe::Symbol=:suggested,
+                             lbls=true,showmm=false,drawhist=true,
+                             contour::Bool=true, levels::Int=1,
+                             manualColor=nothing,
+                             c= manualColor==nothing ? "red" : manualColor,
+                             MM::Dict{Int,T}=Dict{Int,Int}(),
+                             point_size=1pt,
+                             regexLandmark::Regex=r"l",
+                             resampleGaussianFit::Int=0  ) where T
     #
     if meanmax != :null
-      @warn "drawPoses meanmax keyword is deprecated, use ppe instead."
+      @warn "plotSLAM2DPoses meanmax keyword is deprecated, use ppe instead."
       ppe = meanmax
     end
 
@@ -406,6 +407,7 @@ function drawLandms(fg::AbstractDFG;
     psplt
 end
 
+
 """
     $(SIGNATURES)
 
@@ -413,41 +415,48 @@ end
 
 Notes
 - assumes `:l1`, `:l2`, ... for landmarks -- not using `tags=[:LANDMARK]` here yet (TODO).
+- Can increase default Gadfly plot size (for JSSVG in browser): `Gadfly.set_default_plot_size(35cm,20cm)`.
+
+Examples:
+```julia
+fg = generateCanonicalFG_Hexagonal()
+plotSLAM2D(fg)
+```
 """
-function drawPosesLandms(fgl::AbstractDFG;
-                         from::Int64=0, to::Int64=99999999, minnei::Int64=0,
-                         meanmax=:null,
-                         posesPPE=:suggested,
-                         landmsPPE=:suggested,
-                         lbls=true,
-                         drawTriads::Bool=true,
-                         spscale::Float64=5.0,
-                         contour::Bool=true,
-                         levels::Int=1,
-                         drawhist=false, MM::Dict{Int,T}=Dict{Int,Int}(),
-                         xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing,
-                         showmm=true,
-                         window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
-                         point_size=4pt,
-                         line_width=1pt,
-                         regexLandmark=r"l",
-                         regexPoses=r"x",
-                         manualColor=nothing,
-                         title::AbstractString=""  ) where {T}
+function plotSLAM2D(fgl::AbstractDFG;
+                    from::Int64=0, to::Int64=99999999, minnei::Int64=0,
+                    meanmax=:null,
+                    posesPPE=:suggested,
+                    landmsPPE=:suggested,
+                    lbls=true,
+                    drawTriads::Bool=true,
+                    spscale::Float64=5.0,
+                    contour::Bool=true,
+                    levels::Int=1,
+                    drawhist=false, MM::Dict{Int,T}=Dict{Int,Int}(),
+                    xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing,
+                    showmm=true,
+                    window::Union{Nothing, Tuple{Symbol, Real}}=nothing,
+                    point_size=4pt,
+                    line_width=1pt,
+                    regexLandmark=r"l",
+                    regexPoses=r"x",
+                    manualColor=nothing,
+                    title::AbstractString=""  ) where {T}
   #
   # deprecations
   if meanmax != :null
-    @warn "drawPosesLandms meanmax keyword is deprecated, use posesPPE or landmsPPE instead."
+    @warn "plotSLAM2DPosesLandms meanmax keyword is deprecated, use posesPPE or landmsPPE instead."
     posesPPE = meanmax
     landmsPPE = meanmax
   end
   #
   xmin != nothing && xmax != nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
   ymin != nothing && ymax != nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
-  ll = getVariableIds(fgl, regexLandmark)
-  p = drawPoses(fgl, from=from,to=to,ppe=posesPPE,lbls=lbls,drawhist=drawhist, spscale=spscale, contour=contour, drawTriads=drawTriads, manualColor=manualColor, line_width=line_width)
+  ll = listVariables(fgl, regexLandmark)
+  p = plotSLAM2DPoses(fgl, from=from,to=to,ppe=posesPPE,lbls=lbls,drawhist=drawhist, spscale=spscale, contour=contour, drawTriads=drawTriads, manualColor=manualColor, line_width=line_width)
   if length(ll) > 0
-    pl = drawLandms(fgl, from=from, to=to, ppe=landmsPPE, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, point_size=point_size, contour=contour, manualColor=manualColor)
+    pl = plotSLAM2DLandmarks(fgl, from=from, to=to, ppe=landmsPPE, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, point_size=point_size, contour=contour, manualColor=manualColor)
     for l in pl.layers
       push!(p.layers, l)
     end
@@ -465,20 +474,21 @@ function drawPosesLandms(fgl::AbstractDFG;
   return p
 end
 
-function drawSubmaps(fgl::G, fromto::Array{Int,2};
+
+function plotSLAM2DSubmaps(fgl::G, fromto::Array{Int,2};
                      m1hist=false, m2hist=false, m3hist=false,
                      showmm=false, MM::Dict{Int,T} = Dict{Int,Any}(),
                      xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {G <: AbstractDFG, T}
   #
-  p = drawLandms(fgl, from=fromto[1,1], to=fromto[1,2], drawhist=m1hist, showmm=showmm, MM=MM)
+  p = plotSLAM2DLandmarks(fgl, from=fromto[1,1], to=fromto[1,2], drawhist=m1hist, showmm=showmm, MM=MM)
   if size(fromto,1) >1
-    p2 = drawLandms(fgl, from=fromto[2,1], to=fromto[2,2], drawhist=m2hist,c="blue", showmm=showmm, MM=MM)
+    p2 = plotSLAM2DLandmarks(fgl, from=fromto[2,1], to=fromto[2,2], drawhist=m2hist,c="blue", showmm=showmm, MM=MM)
     for l in p2.layers
       push!(p.layers, l)
     end
   end
   if size(fromto,1) >2
-    p3 = drawLandms(fgl, from=fromto[3,1], to=fromto[3,2], drawhist=m3hist,c="magenta", showmm=showmm, MM=MM)
+    p3 = plotSLAM2DLandmarks(fgl, from=fromto[3,1], to=fromto[3,2], drawhist=m3hist,c="magenta", showmm=showmm, MM=MM)
     for l in p3.layers
       push!(p.layers, l)
     end
@@ -488,7 +498,7 @@ function drawSubmaps(fgl::G, fromto::Array{Int,2};
   return p
 end
 
-function drawSubmaps(fgl::G, fromto::Array{Int,1}; spread::Int=25,
+function plotSLAM2DSubmaps(fgl::G, fromto::Array{Int,1}; spread::Int=25,
                      m1hist=false, m2hist=false, m3hist=false,
                      showmm=false, MM::Dict{Int,T}=Dict{Int,Any}(),
                      xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {G <: AbstractDFG, T}
@@ -497,7 +507,7 @@ function drawSubmaps(fgl::G, fromto::Array{Int,1}; spread::Int=25,
   for i in 1:length(fromto)
     ft[i,1] = fromto[i]-spread; ft[i,2] = fromto[i]+spread;
   end
-  drawSubmaps(fgl, ft, m1hist=m1hist, m2hist=m2hist, m3hist=m3hist, showmm=showmm, MM=MM, xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
+  plotSLAM2DSubmaps(fgl, ft, m1hist=m1hist, m2hist=m2hist, m3hist=m3hist, showmm=showmm, MM=MM, xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
 end
 
 
@@ -654,62 +664,10 @@ function plotPose(fgl::G,
   plotPose(fgl, [sym;], levels=levels, axis=axis, show=show, filepath=filepath, app=app, hdl=hdl )
 end
 
-# deprecated
-function investigatePoseKDE(p::BallTreeDensity, p0::BallTreeDensity)
-    # co = ["black"; "blue"]
-    # h = Union{}
-    # x = plotKDE([marginal(p,[1]); marginal(p0,[1])], c=co )
-    # y = plotKDE([marginal(p,[2]); marginal(p0,[2])], c=co )
-    # if p.bt.dims >= 3
-    #   th = plotKDE([marginal(p,[3]); marginal(p0,[3])], c=co )
-    #   h = hstack(x,y,th)
-    # else
-    #   h = hstack(x,y)
-    # end
-    #
-    # return h
-    return investigateMultidimKDE(p, p0)
-end
-
-
-function investigatePoseKDE(p::Array{BallTreeDensity,1})
-    # co = ["black"; "blue"; "green"; "red"; "magenta"; "cyan"; "cyan1"; "cyan2";
-    # "magenta"; "cyan"; "cyan1"; "cyan2"; "magenta"; "cyan"; "cyan1"; "cyan2"; "magenta";
-    # "cyan"; "cyan1"; "cyan2"; "magenta"; "cyan"; "cyan1"; "cyan2"]
-    # # compute all the marginals
-    # Pm = Array{Array{BallTreeDensity,1},1}()
-    # push!(Pm,stackMarginals(p,1)) #[marginal(p[1],[1]); marginal(p[2],[1])]
-    # push!(Pm,stackMarginals(p,2)) #[marginal(p[1],[2]); marginal(p[2],[2])]
-    #
-    # h = Union{}
-    # x = plotKDE(Pm[1], c=co )
-    # y = plotKDE(Pm[2], c=co )
-    # if p[1].bt.dims >= 3
-    #   #Pm3 = [marginal(p[1],[3]); marginal(p[2],[3])]
-    #   push!(Pm,stackMarginals(p,3)) # [marginal(p[1],[3]); marginal(p[2],[3])]
-    #   th = plotKDE(Pm[3], c=co )
-    #   h = hstack(x,y,th)
-    # else
-    #   h = hstack(x,y)
-    # end
-    # return h
-    return investigateMultidimKDE(p)
-end
-
-function investigatePoseKDE(p::BallTreeDensity)
-    # x = plotKDE(marginal(p,[1]) )
-    # y = plotKDE(marginal(p,[2]) )
-    # if p.bt.dims >= 3
-    #   th = plotKDE(marginal(p,[3]) )
-    #   return hstack(x,y,th)
-    # end
-    # return hstack(x,y)
-    return investigateMultidimKDE(p)
-end
 
 # import RoMEPlotting: drawMarginalContour
 
-function drawMarginalContour(fgl::G, lbl::String;
+function plotMarginalContour(fgl::G, lbl::String;
     xmin=-150,xmax=150,ymin=-150,ymax=150,n=200 ) where G <: AbstractDFG
   #
   p = getKDE(getVariable(fgl,Symbol(lbl)))  # p = getKDE(getVert(fgl,lbl))
@@ -725,11 +683,11 @@ end
 function accumulateMarginalContours(fgl, order;
     xmin=-150,xmax=150,ymin=-150,ymax=150,n=200 )
   #
-  pl = drawMarginalContour(fgl, order[1],xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n)
+  pl = plotMarginalContour(fgl, order[1],xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n)
   pl2 = nothing
   PL = []
   for or in order[1:end]
-    pl2 = drawMarginalContour(fgl, or, xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n)
+    pl2 = plotMarginalContour(fgl, or, xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n)
     push!(PL, pl2)
     push!(pl.layers, pl2.layers[1])
   end
@@ -857,7 +815,14 @@ function plotKDE(fgl::FactorGraph,
   plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels, title=title, overlay=overlay )
 end
 
-function plotKDE(fgl::FactorGraph, vsym::Symbol; axis=nothing, dims=nothing, c=nothing, levels=4, title::Union{Nothing, T}=nothing) where {T <: AbstractString}
+function plotKDE(fgl::FactorGraph,
+                 vsym::Symbol;
+                 axis=nothing,
+                 dims=nothing,
+                 c=nothing,
+                 levels=4,
+                 title::Union{Nothing, T}=nothing) where {T <: AbstractString}
+  #
   @warn "plotKDE for FactorGraph is deprecated, use DistributedFactorGraphs objects instead."
   plotKDE(fgl, Symbol[vsym;], dims=dims, c=c, axis=axis, levels=levels, title=title)
 end
