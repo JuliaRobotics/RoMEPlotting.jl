@@ -2,7 +2,7 @@ name = "RoMEPlotting"
 uuid = "238d586b-a4bf-555c-9891-eda6fc5e55a2"
 keywords = ["mm-iSAM", "SLAM", "plotting", "2D", "robotics", "navigation"]
 desc = "Visualization tools for the RoME.jl package."
-version = "0.2.2"
+version = "0.3.0"
 
 [deps]
 ApproxManifoldProducts = "9bbbb610-88a1-53cd-9763-118ce10c1f89"
@@ -29,12 +29,12 @@ ApproxManifoldProducts = "0.1"
 Cairo = "0.6, 0.7, 0.8, 1"
 Colors = "0.9.4, 0.10, 0.11, 0.12"
 Compose = "0.8"
-DistributedFactorGraphs = "0.6, 0.7"
+DistributedFactorGraphs = "0.7, 0.8"
 DocStringExtensions = "0.7, 0.8, 0.9, 1"
 Fontconfig = "0.2, 0.3, 0.4, 0.5"
 Gadfly = "1"
 Graphs = "0.10.2"
-IncrementalInference = "0.10, 0.11"
+IncrementalInference = "0.11, 0.12"
 KernelDensityEstimate = "0.5"
 KernelDensityEstimatePlotting = "0.1.6"
 Reexport = "0.2"
@@ -43,9 +43,7 @@ StatsBase = "0.25, 0.26, 0.27, 0.28, 0.29, 0.30, 0.31, 0.32, 0.33"
 julia = "1"
 
 [extras]
-Cairo = "159f3aea-2a34-519c-b102-8c37f9878175"
-Fontconfig = "186bb1d3-e1f7-5a2c-a377-96d770f13627"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Cairo", "Fontconfig"]
+test = ["Test"]

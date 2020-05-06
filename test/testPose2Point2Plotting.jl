@@ -65,8 +65,9 @@ tree, smt, hist = solveTree!(fg)
 
 println("test Pose2D plotting")
 
-drawPoses(fg);
-drawPosesLandms(fg);
+plotSLAM2DPoses(fg);
+plotSLAM2DLandmarks(fg);
+plotSLAM2D(fg);
 
 p1 = getKDE(fg, :l1)
 # pts = getVal(fg, :l1)

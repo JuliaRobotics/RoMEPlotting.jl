@@ -4,6 +4,8 @@ using Reexport
 @reexport using Gadfly
 @reexport using Colors
 
+using Cairo, Fontconfig
+
 using Statistics, LinearAlgebra
 using StatsBase
 using Compose
@@ -27,8 +29,7 @@ Gadfly.set_default_plot_size(30cm,20cm)
 export
   # Associated with IncrementalInference
   investigateMultidimKDE,
-  drawHorDens,
-  drawHorBeliefsList,
+  drawHorDens, # from KDEPlotting
   spyCliqMat,
   plotKDE,
   plotVariable2D,
@@ -38,18 +39,15 @@ export
   plotUpMsgsAtCliq,
   plotPriorsAtCliq,
   investigateMultidimKDE,
-  draw,
   plot,
   whosWith,
-  drawUpMsgAtCliq,
+  plotUpMsgAtCliq,
   dwnMsgsAtCliq,
-  drawPose2DMC!,
+  plotPose2DMC!,
   mcmcPose2D!,
-  # drawUpMCMCPose2D!,
-  # drawDwnMCMCPose2D!,
-  drawLbl,
+  plotLbl,
   predCurrFactorBeliefs,
-  drawFactorBeliefs,
+  plotFactorBeliefs,
   localProduct,
   plotLocalProduct,
   plotLocalProductCylinder,
@@ -64,16 +62,13 @@ export
   plotTrajectoryArrayPose2,
   togglePrtStbLines,
   plotLsrScanFeats,
-  drawFeatTrackers,
   saveImgSeq,
   stbPrtLineLayers!,
-  drawPoses,
-  drawLandms,
-  drawPosesLandms,
-  drawSubmaps,
-  investigatePoseKDE, # not sure, likely obsolete -- use plotPose instead
+  plotSLAM2D,
+  plotSLAM2DPoses,
+  plotSLAM2DLandmarks,
   plotPose,
-  drawMarginalContour,
+  plotMarginalContour,
   accumulateMarginalContours,
   plotPose3Pairs,
   progressExamplePlot,
@@ -98,6 +93,6 @@ include("SolverVisualization.jl")
 include("RobotViz.jl")
 include("PlotHexUtils.jl")
 include("PlotFactors.jl")
-
+include("Deprecated.jl")
 
 end

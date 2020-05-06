@@ -282,7 +282,7 @@ function plotMCMC(treel::BayesTree,
   return "$(tmpfilepath)/$(string(lbll))mcmc.gif"
 end
 
-function drawOneMC!(cliqMC::CliqGibbsMC, minmax, mcmc=0; offs=2.0)
+function plotOneMC!(cliqMC::CliqGibbsMC, minmax, mcmc=0; offs=2.0)
 
     if mcmc>minmax[4]
       minmax[4]=mcmc
@@ -297,7 +297,7 @@ function drawOneMC!(cliqMC::CliqGibbsMC, minmax, mcmc=0; offs=2.0)
 
 end
 
-function drawMCMCDebug(cliq; offs=2.0)
+function plotMCMCDebug(cliq; offs=2.0)
     println("$(cliq.attributes["label"])")
     cliqDbg = cliq.attributes["data"].debug
     MCd = 100.0/length(cliqDbg.mcmc)
@@ -321,7 +321,7 @@ function drawMCMCDebug(cliq; offs=2.0)
 end
 
 
-function drawTreeUpwardMsgs(fgl::G,
+function plotTreeUpwardMsgs(fgl::G,
                             bt::BayesTree;
                             N=300 ) where G <: AbstractDFG
   #
@@ -335,12 +335,10 @@ function drawTreeUpwardMsgs(fgl::G,
       i+=1
       vv[i] = drawHorDens(fgl, cliq[2].attributes["debug"].outmsg.p, N)
   end
-  #[r[j] = @spawn drawCliqueMsgs(bt.cliques[j+1]) for j in 1:len]
-  #[vv[j] = fetch(r[j]) for j in 1:len]
   vv
 end
 
-function drawFrontalDens(fg::G,
+function plotFrontalDens(fg::G,
                          bt::BayesTree;
                          N=300,
                          gt=Union{} ) where G <: AbstractDFG
@@ -462,35 +460,6 @@ function investigateMultidimKDE(p::BallTreeDensity)
     return hstack(x,y)
 end
 
-# function vArrPotentials(potens::Dict{Symbol,EasyMessage})
-#   vv = Array{Gadfly.Compose.Context,1}(length(potens))
-#   i = 0
-#   oned=false
-#   for p in potens
-#       i+=1
-#       pb = kde!(p[2].pts, p[2].bws)
-#       if size(p[2].pts,1) > 3
-#         # vv[i] = plotKDE(pb)
-#         error("can't handle higher dimensional plots here yet")
-#       elseif size(p[2].pts,1) > 1
-#         vv[i] = investigateMultidimKDE(pb)
-#       else
-#         vv[i] = plotKDE(pb)
-#       end
-#   end
-#   return vv
-# end
-
-
-# function draw(em::EasyMessage;xlbl="X")
-#   p = Union{}
-#   if size(em.pts,1) == 1
-#     p=plotKDE(kde!(em),xlbl=xlbl)
-#   else
-#     p=plotKDE(kde!(em))
-#   end
-#   return p
-# end
 
 function whosWith(cliq::Graphs.ExVertex)
   println("$(cliq.attributes["label"])")
@@ -505,7 +474,7 @@ function whosWith(bt::BayesTree, frt::String)
 end
 
 
-function drawUpMsgAtCliq(fg::G,
+function plotUpMsgAtCliq(fg::G,
                          cliq::Graphs.ExVertex  ) where G <: AbstractDFG
   #
   for id in keys(cliq.attributes["data"].debug.outmsg.p)
@@ -517,14 +486,14 @@ function drawUpMsgAtCliq(fg::G,
   vArrPotentials(potens)
 end
 
-function drawUpMsgAtCliq(fg::G,
+function plotUpMsgAtCliq(fg::G,
                          bt::BayesTree,
                          lbl::Union{String,Symbol}  ) where G <: AbstractDFG
   #
-  drawUpMsgAtCliq(fg, whichCliq(bt, Symbol(lbl)) )
+  plotUpMsgAtCliq(fg, whichCliq(bt, Symbol(lbl)) )
 end
 
-# function drawDwnMsgAtCliq(fg::FactorGraph, cliq::Graphs.ExVertex)
+
 function dwnMsgsAtCliq(fg::G,
                        cliq::Graphs.ExVertex  ) where G <: AbstractDFG
   #
@@ -544,7 +513,7 @@ function dwnMsgsAtCliq(fg::G,
   dwnMsgsAtCliq(fg, whichCliq(bt, Symbol(lbl)) )
 end
 
-function drawPose2DMC!(plots::Array{Gadfly.Compose.Context,1},
+function plotPose2DMC!(plots::Array{Gadfly.Compose.Context,1},
                        cliqMC::CliqGibbsMC )
   #
   for prod in cliqMC.prods
@@ -559,12 +528,12 @@ function mcmcPose2D!(plots::Array{Gadfly.Compose.Context,1},
                      iter::Int=1  )
     # for mc in cliqDbg.mcmc
     mc = cliqDbg.mcmc[iter]
-    v = drawPose2DMC!(plots, mc)
+    v = plotPose2DMC!(plots, mc)
     # end
     return v
 end
 
-function drawUpMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
+function plotUpMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
                            cliq::Graphs.ExVertex,
                            iter::Int=1 )
   #
@@ -574,7 +543,7 @@ function drawUpMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
   mcmcPose2D!(plots, cliqDbg, iter)
 end
 
-function drawUpMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
+function plotUpMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
                            bt::BayesTree,
                            frt::String,
                            iter::Int=1 )
@@ -582,7 +551,7 @@ function drawUpMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
   drawUpMCMCPose2D!(plots, whichCliq(bt,frt), iter)
 end
 
-function drawDwnMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
+function plotDwnMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
                             cliq::Graphs.ExVertex,
                             iter::Int=1  )
   #
@@ -592,7 +561,7 @@ function drawDwnMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
   mcmcPose2D!(plots, cliqDbg, iter)
 end
 
-function drawDwnMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
+function plotDwnMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
                             bt::BayesTree,
                             frt::String,
                             iter::Int=1 )
@@ -600,7 +569,7 @@ function drawDwnMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
   drawDwnMCMCPose2D!(plots, whichCliq(bt,frt), iter)
 end
 
-function drawLbl(fgl::G, lbl::Symbol) where G <: AbstractDFG
+function plotLbl(fgl::G, lbl::Symbol) where G <: AbstractDFG
     plotKDE(getKDE(getVariable(fgl,lbl)))
 end
 drawLbl(fgl::G, lbl::T) where {G <: AbstractDFG, T <: AbstractString} = drawLbl(fgl, Symbol(lbl))
@@ -619,20 +588,7 @@ function predCurrFactorBeliefs(fgl::G,
 end
 
 
-# function drawHorDens(fgl::G,
-#                      pDens::Dict{Int,EasyMessage},
-#                      N=200 ) where G <: AbstractDFG
-#   #
-#   p = BallTreeDensity[]
-#   lbls = String[]
-#   for pd in pDens
-#     push!(p, kde!(pd[2].pts,pd[2].bws))
-#     push!(lbls, getVariable(fgl,pd[1]).label)
-#   end
-#   drawHorDens(p,N=N,lbls=lbls)
-# end
-
-function drawHorBeliefsList(fgl::G,
+function plotHorBeliefsList(fgl::G,
                             lbls::Array{Symbol,1};
                             nhor::Int=-1,
                             gt=nothing,
@@ -674,7 +630,7 @@ function drawHorBeliefsList(fgl::G,
   vv
 end
 
-function drawFactorBeliefs(fgl::G,
+function plotFactorBeliefs(fgl::G,
                            flbl::Symbol ) where G <: AbstractDFG
   #
   if !haskey(fgl.fIDs, flbl)
@@ -705,7 +661,7 @@ function drawFactorBeliefs(fgl::G,
   # end
   nothing
 end
-drawFactorBeliefs(fgl::G, flbl::T) where {G <: AbstractDFG, T <: AbstractString} = drawFactorBeliefs(fgl, Symbol(flbl))
+plotFactorBeliefs(fgl::G, flbl::T) where {G <: AbstractDFG, T <: AbstractString} = plotFactorBeliefs(fgl, Symbol(flbl))
 
 
 
@@ -1050,7 +1006,7 @@ function analyzeSolution(FGL::Array{<: AbstractDFG,1},fggt=Union{})
 end
 # discrete_color_manual(colors...; levels=nothing,order=nothing) is deprecated, use color_discrete_manual(colors...; levels=levels,order=order) instead.
 
-function drawAnalysis(df,dfth)
+function plotAnalysis(df,dfth)
   return vstack(
   Gadfly.plot(df, x="x", y="y", color="label", Geom.line,
          Scale.discrete_color_manual("red","black")),
@@ -1067,7 +1023,7 @@ function getAllFGsKDEs(fgD::Array{<: AbstractDFG,1}, vertsym::Symbol)
   return ret
 end
 
-function drawAllPose2DBeliefs(plots::Array{Gadfly.Compose.Context,1}, fgD::Array{<: AbstractDFG,1})
+function plotAllPose2DBeliefs(plots::Array{Gadfly.Compose.Context,1}, fgD::Array{<: AbstractDFG,1})
     ids = sort(collect(keys(fgD[1].v)))
     co = ["black"; "blue"; "green"; "red"; "magenta"; "cyan"; "cyan1"; "cyan2"]
     println(co[1:length(fgD)])
@@ -1080,7 +1036,7 @@ function drawAllPose2DBeliefs(plots::Array{Gadfly.Compose.Context,1}, fgD::Array
 end
 
 # legacy function -- use the array version instead
-function drawAllPose2DBeliefs(plots::Array{Gadfly.Compose.Context,1}, fgD::G, fgD0=Union{}) where G <: AbstractDFG
+function plotAllPose2DBeliefs(plots::Array{Gadfly.Compose.Context,1}, fgD::G, fgD0=Union{}) where G <: AbstractDFG
   println("WARNING: drawAllPose2DBeliefs -- legacy function -- use the array version instead.")
   if fgD0 != Union{}
     drawAllPose2DBeliefs(plots, [fgD;fgD0])
@@ -1089,7 +1045,7 @@ function drawAllPose2DBeliefs(plots::Array{Gadfly.Compose.Context,1}, fgD::G, fg
   end
 end
 
-function drawComicStripLM(fgD::Array{<: AbstractDFG,1})
+function plotComicStripLM(fgD::Array{<: AbstractDFG,1})
     comicA = Array{Gadfly.Plot,1}()
     for fgd in fgD
         cv = drawPosesLandms(fgd)
@@ -1099,7 +1055,7 @@ function drawComicStripLM(fgD::Array{<: AbstractDFG,1})
     hstack(comicA)
 end
 
-function drawComicStrip(fgD::Array{<: AbstractDFG,1})
+function plotComicStrip(fgD::Array{<: AbstractDFG,1})
     comicA = Array{Gadfly.Plot,1}()
     for fgd in fgD
         cv = drawPoses(fgd)
