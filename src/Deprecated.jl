@@ -10,16 +10,16 @@ export drawPose2DMC!
 
 
 
-@deprecate drawPoses(x...) plotSLAM2DPoses(x...)
-@deprecate drawLandms(x...) plotSLAM2DLandmarks(x...)
-@deprecate drawPosesLandms(x...) plotSLAM2D(x...)
-@deprecate drawSubmaps(x...) plotSLAM2DSubmaps(x...)
-@deprecate drawMarginalContour(x...) plotMarginalContour(x...)
-@deprecate drawFeatTrackers(x...) plotFeatTrackers(x...)
-@deprecate drawHorBeliefsList(x...) plotHorBeliefsList(x...)
-@deprecate drawUpMsgAtCliq(x...) plotUpMsgAtCliq(x...)
-@deprecate drawFactorBeliefs(x...) plotFactorBeliefs(x...)
-@deprecate drawPose2DMC!(x...) plotPose2DMC!(x...)
+@deprecate drawPoses(x...; kwargs...) plotSLAM2DPoses(x...; kwargs...)
+@deprecate drawLandms(x...; kwargs...) plotSLAM2DLandmarks(x...; kwargs...)
+@deprecate drawPosesLandms(x...; kwargs...) plotSLAM2D(x...; kwargs...)
+@deprecate drawSubmaps(x...; kwargs...) plotSLAM2DSubmaps(x...; kwargs...)
+@deprecate drawMarginalContour(x...; kwargs...) plotMarginalContour(x...; kwargs...)
+@deprecate drawFeatTrackers(x...; kwargs...) plotFeatTrackers(x...; kwargs...)
+@deprecate drawHorBeliefsList(x...; kwargs...) plotHorBeliefsList(x...; kwargs...)
+@deprecate drawUpMsgAtCliq(x...; kwargs...) plotUpMsgAtCliq(x...; kwargs...)
+@deprecate drawFactorBeliefs(x...; kwargs...) plotFactorBeliefs(x...; kwargs...)
+@deprecate drawPose2DMC!(x...; kwargs...) plotPose2DMC!(x...; kwargs...)
 
 
 # deprecated
@@ -36,7 +36,7 @@ function investigatePoseKDE(p::BallTreeDensity)
     return investigateMultidimKDE(p)
 end
 
-@deprecate investigatePoseKDE(x...) plotPose(x...)
+@deprecate investigatePoseKDE(x...; kwargs...) plotPose(x...; kwargs...)
 
 
 
@@ -82,17 +82,17 @@ export drawAllPose2DBeliefs
 export drawComicStripLM
 export drawComicStrip
 
-@deprecate drawOneMC!(x...) plotOneMC!(x...)
-@deprecate drawMCMCDebug(x...) plotMCMCDebug(x...)
-@deprecate drawTreeUpwardMsgs(x...) plotTreeUpwardMsgs(x...)
-@deprecate drawFrontalDens(x...) plotFrontalDens(x...)
-@deprecate drawUpMCMCPose2D!(x...) plotUpMCMCPose2D!(x...)
-@deprecate drawDwnMCMCPose2D!(x...) plotDwnMCMCPose2D!(x...)
-@deprecate drawLbl(x...) plotLbl(x...)
-@deprecate drawAnalysis(x...) plotAnalysis(x...)
-@deprecate drawAllPose2DBeliefs(x...) plotAllPose2DBeliefs(x...)
-@deprecate drawComicStripLM(x...) plotComicStripLM(x...)
-@deprecate drawComicStrip(x...) plotComicStrip(x...)
+@deprecate drawOneMC!(x...; kwargs...) plotOneMC!(x...; kwargs...)
+@deprecate drawMCMCDebug(x...; kwargs...) plotMCMCDebug(x...; kwargs...)
+@deprecate drawTreeUpwardMsgs(x...; kwargs...) plotTreeUpwardMsgs(x...; kwargs...)
+@deprecate drawFrontalDens(x...; kwargs...) plotFrontalDens(x...; kwargs...)
+@deprecate drawUpMCMCPose2D!(x...; kwargs...) plotUpMCMCPose2D!(x...; kwargs...)
+@deprecate drawDwnMCMCPose2D!(x...; kwargs...) plotDwnMCMCPose2D!(x...; kwargs...)
+@deprecate drawLbl(x...; kwargs...) plotLbl(x...; kwargs...)
+@deprecate drawAnalysis(x...; kwargs...) plotAnalysis(x...; kwargs...)
+@deprecate drawAllPose2DBeliefs(x...; kwargs...) plotAllPose2DBeliefs(x...; kwargs...)
+@deprecate drawComicStripLM(x...; kwargs...) plotComicStripLM(x...; kwargs...)
+@deprecate drawComicStrip(x...; kwargs...) plotComicStrip(x...; kwargs...)
 
 
 
