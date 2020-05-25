@@ -6,16 +6,19 @@
 
 Plot Pose2Pose2 measurement and predicted values in factor centric manner -- i.e. used with inverse solve.
 """
-function plotFactorValues(::Type{Pose2Pose2},
-                          asMeasured::AbstractMatrix{<:Real},
-                          asPredicted::AbstractMatrix{<:Real} )
+function plotFactorValues(asMeasured::AbstractMatrix{<:Real},
+                          asPredicted::AbstractMatrix{<:Real},
+                          fct::Type{T}=Pose2Pose2;
+                          fctsym="",
+                          hdl=[],
+                          dist::Vector{Float64}=zeros(1) ) where {T <: FunctorInferenceType}
   #
   PP  = manikde!(asPredicted[1:2,:], Point2)
   PPg = manikde!(asMeasured[1:2,:], Point2)
   dist[1] = minimum(abs.([kld(PPg, PP)[1]; kld(PP, PPg)[1]]))
-  pt = plotKDE([PP;PPg], c=["red";"blue"], legend=["pred";"meas"], levels=3, title="inv. solve, $fctsym,\nmin(|kld(..)|)=$(round(dist[1],digits=3))")
+  pt = plotKDE([PP;PPg], c=["red";"blue"], legend=["pred";"meas"], levels=3, title="inv. solve $fctsym,\nmin(|kld(..)|)=$(round(dist[1],digits=3))")
 
-  pc = plotKDECircular([manikde!(asPredicted[3:3,:], Sphere1);manikde!(asMeasured[3:3,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve, $fctsym,\n$(typeof(fct))")
+  pc = plotKDECircular([manikde!(asPredicted[3:3,:], Sphere1);manikde!(asMeasured[3:3,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve $fctsym,\n$(T)")
 
   push!(hdl, pt)
   push!(hdl, pc)
@@ -29,7 +32,12 @@ end
 
 Calculate the "inverse" SLAM solution to compare measured and predicted noise model samples.
 """
-function plotFactorMeasurements(dfg::AbstractDFG, fctsym::Symbol, fct::FunctorInferenceType; hdl=[], dist::Vector{Float64}=zeros(1))
+function plotFactorMeasurements(dfg::AbstractDFG,
+                                fctsym::Symbol,
+                                fct::FunctorInferenceType;
+                                hdl=[],
+                                dist::Vector{Float64}=zeros(1) )
+  #
   @error "plotFactorMeasurements not implemented yet for $(typeof(fct))."
 end
 
