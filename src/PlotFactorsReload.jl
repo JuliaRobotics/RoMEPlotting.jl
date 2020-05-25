@@ -9,18 +9,7 @@ function plotFactorMeasurements(dfg::AbstractDFG,
   #
   me, me0 = solveFactorMeasurements(dfg, fctsym)
 
-  PP = manikde!(me[1:2,:], Point2)
-  PPg = manikde!(me0[1:2,:], Point2)
-  dist[1] = minimum(abs.([kld(PPg, PP)[1]; kld(PP, PPg)[1]]))
-  pt = plotKDE([PP;PPg], c=["red";"blue"], legend=["pred";"meas"], levels=3, title="inv. solve, $fctsym,\nmin(|kld(..)|)=$(round(dist[1],digits=3))")
-
-  pc = plotKDECircular([manikde!(me[3:3,:], Sphere1);manikde!(me0[3:3,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve, $fctsym,\n$(typeof(fct))")
-
-
-  push!(hdl, pt)
-  push!(hdl, pc)
-
-  hstack(pt, pc)
+  plotFactorValues(Pose2Pose2, me0, me)
 end
 
 

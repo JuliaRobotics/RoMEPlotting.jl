@@ -81,6 +81,7 @@ export
   plotVariableGivenFactor,
   plotCliqDownMsgs,
   plotFactor,
+  plotFactorValues,
   plotFactorMeasurements,
   reportFactors
 
