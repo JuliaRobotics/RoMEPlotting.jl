@@ -41,3 +41,41 @@ function plotFactor(dfg::AbstractDFG,
 
   vstack(pv1, pv2, pv12)
 end
+
+
+
+function reportFactors(dfg::AbstractDFG,
+                       T::PlotTypesPose2,
+                       fcts::Vector{Symbol}=ls(dfg, T);
+                       filepath=joinpath(getSolverParams(dfg).logpath, getTimeEasy()*"_$T.pdf"),
+                       show::Bool=true  )
+  #
+  ss = split(filepath, '/')
+  path = joinpath("/", joinpath(ss[1:(end-1)]...), "tmp")
+  mkpath(path)
+  alldists= Vector{Float64}()
+
+  files = String[]
+  ndist = Float64[0.0;]
+  for fc in fcts
+    if isMultihypo(getFactor(dfg, fc))
+      # skip this factor
+      continue
+    end
+    file = joinpath(path,"$fc.pdf")
+    ndist[1] = 0.0
+    plotFactor(dfg, fc, dist=ndist) |> PDF(file)
+    push!(files, file)
+    push!(alldists, ndist[1])
+  end
+  fileord = sortperm(alldists, rev=true)
+  files = files[fileord]
+  push!(files, filepath)
+
+  2 < length(files) ? run(`pdfunite $files`) : nothing
+  !show ? nothing : (@async run(`evince $filepath`))
+  return filepath
+end
+
+
+#

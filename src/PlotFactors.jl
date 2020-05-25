@@ -280,42 +280,13 @@ getTimeEasy() = split(split("$(now())", 'T')[end],'.')[1]
 import IncrementalInference: isMultihypo
 isMultihypo(fct) = isa(solverData(fct).fnc.hypotheses, Distribution)
 
-@show PlotTypesPose2
 
-function reportFactors(dfg::AbstractDFG,
-                       T::PlotTypesPose2,
-                       fcts::Vector{Symbol}=ls(dfg, T);
-                       filepath=joinpath(getSolverParams(dfg).logpath, getTimeEasy()*"_$T.pdf"),
-                       show::Bool=true  )
-  #
-  ss = split(filepath, '/')
-  path = joinpath("/", joinpath(ss[1:(end-1)]...), "tmp")
-  mkpath(path)
-  alldists= Vector{Float64}()
+"""
+$SIGNATURES
 
-  files = String[]
-  ndist = Float64[0.0;]
-  for fc in fcts
-    if isMultihypo(getFactor(dfg, fc))
-      # skip this factor
-      continue
-    end
-    file = joinpath(path,"$fc.pdf")
-    ndist[1] = 0.0
-    plotFactor(dfg, fc, dist=ndist) |> PDF(file)
-    push!(files, file)
-    push!(alldists, ndist[1])
-  end
-  fileord = sortperm(alldists, rev=true)
-  files = files[fileord]
-  push!(files, filepath)
-
-  2 < length(files) ? run(`pdfunite $files`) : nothing
-  !show ? nothing : (@async run(`evince $filepath`))
-  return filepath
-end
-
-
+Methods to generate plots of all requested factor user supplied vs. current predicted measurement -- i.e. inverse solve.
+"""
+reportFactors() = @info "Empty function to support both automated documentation and conditional features (@require)."
 
 
 
