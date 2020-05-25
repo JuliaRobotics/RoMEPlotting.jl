@@ -15,6 +15,7 @@ using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
 using DocStringExtensions
 using ApproxManifoldProducts
+using Requires
 # import ApproxManifoldProducts: mmd! # future dependency
 
 
@@ -88,11 +89,27 @@ export
 const AbstractMatrix__{T} = Union{AbstractArray{T,2}, Adjoint{T,<:AbstractArray{T,2}}}
 
 
+using Requires
+
+# will be overwritten if flux is present (dont make const)
+PlotTypesPose2 = Union{Type{Pose2Pose2}, Type{Pose2Point2BearingRange}, Type{Pose2Point2Range}, Type{Pose2Point2Bearing}}
+ExtendedPose2Pose2Types = Pose2Pose2
+
 
 include("SolverVisualization.jl")
 include("RobotViz.jl")
 include("PlotHexUtils.jl")
 include("PlotFactors.jl")
 include("Deprecated.jl")
+
+function __init__()
+  @require Flux="587475ba-b771-5e3f-ad9e-33799f191a9c" begin
+    @info "RoMEPlotting is adding Flux related functionality."
+    include("FluxSpecificFeatures.jl")
+    # rerun since a few functions need to be reloaded with Flux
+    include("PlotFactors.jl")
+  end
+  #
+end
 
 end

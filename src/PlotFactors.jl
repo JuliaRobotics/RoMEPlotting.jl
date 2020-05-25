@@ -7,7 +7,7 @@ end
 
 function plotFactorMeasurements(dfg::AbstractDFG,
                                 fctsym::Symbol,
-                                fct::Pose2Pose2;
+                                fct::ExtendedPose2Pose2Types;
                                 hdl=[],
                                 dist::Vector{Float64}=[0.0;]  )
   #
@@ -18,7 +18,7 @@ function plotFactorMeasurements(dfg::AbstractDFG,
   dist[1] = minimum(abs.([kld(PPg, PP)[1]; kld(PP, PPg)[1]]))
   pt = plotKDE([PP;PPg], c=["red";"blue"], legend=["pred";"meas"], levels=3, title="inv. solve, $fctsym,\nmin(|kld(..)|)=$(round(dist[1],digits=3))")
 
-  pc = plotKDECircular([manikde!(me[3:3,:], Sphere1);manikde!(me0[3:3,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve, $fctsym,\nPose2Pose2")
+  pc = plotKDECircular([manikde!(me[3:3,:], Sphere1);manikde!(me0[3:3,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve, $fctsym,\n$(typeof(fct))")
 
 
   push!(hdl, pt)
@@ -276,7 +276,7 @@ end
 
 function plotFactor(dfg::AbstractDFG,
                     fctsym::Symbol,
-                    fct::Pose2Pose2;
+                    fct::ExtendedPose2Pose2Types;
                     hdl=[],
                     dist::Vector{Float64}=Float64[0.0;]  )
 
@@ -321,8 +321,10 @@ getTimeEasy() = split(split("$(now())", 'T')[end],'.')[1]
 import IncrementalInference: isMultihypo
 isMultihypo(fct) = isa(solverData(fct).fnc.hypotheses, Distribution)
 
+@show PlotTypesPose2
+
 function reportFactors(dfg::AbstractDFG,
-                       T::Union{Type{Pose2Pose2}, Type{Pose2Point2BearingRange}, Type{Pose2Point2Range}, Type{Pose2Point2Bearing}},
+                       T::PlotTypesPose2,
                        fcts::Vector{Symbol}=ls(dfg, T);
                        filepath=joinpath(getSolverParams(dfg).logpath, getTimeEasy()*"_$T.pdf"),
                        show::Bool=true  )
