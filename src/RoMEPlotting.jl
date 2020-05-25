@@ -100,6 +100,7 @@ include("SolverVisualization.jl")
 include("RobotViz.jl")
 include("PlotHexUtils.jl")
 include("PlotFactors.jl")
+include("PlotFactorsReload.jl")
 include("Deprecated.jl")
 
 function __init__()
@@ -107,7 +108,7 @@ function __init__()
     @info "RoMEPlotting is adding Flux related functionality."
     include("FluxSpecificFeatures.jl")
     # rerun since a few functions need to be reloaded with Flux
-    include("PlotFactors.jl")
+    include("PlotFactorsReload.jl")
   end
   #
 end
