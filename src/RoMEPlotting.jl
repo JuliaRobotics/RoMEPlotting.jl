@@ -1,10 +1,10 @@
 module RoMEPlotting
 
+using Cairo, Fontconfig
+
 using Reexport
 @reexport using Gadfly
 @reexport using Colors
-
-using Cairo, Fontconfig
 
 using Statistics, LinearAlgebra
 using StatsBase

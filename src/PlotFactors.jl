@@ -15,8 +15,9 @@ function plotFactorValues(asMeasured::AbstractMatrix{<:Real},
   #
   PP  = manikde!(asPredicted[1:2,:], Point2)
   PPg = manikde!(asMeasured[1:2,:], Point2)
-  dist[1] = minimum(abs.([kld(PPg, PP)[1]; kld(PP, PPg)[1]]))
-  pt = plotKDE([PP;PPg], c=["red";"blue"], legend=["pred";"meas"], levels=3, title="inv. solve $fctsym,\nmin(|kld(..)|)=$(round(dist[1],digits=3))")
+  # dist[1] = minimum(abs.([kld(PPg, PP)[1]; kld(PP, PPg)[1]]))
+  mmd!(dist, asPredicted, asMeasured, SE2_Manifold)
+  pt = plotKDE([PP;PPg], c=["red";"blue"], legend=["pred";"meas"], levels=3, title="inv. solve $fctsym,\nmmd(..)=$(round(dist[1],digits=3))")
 
   pc = plotKDECircular([manikde!(asPredicted[3:3,:], Sphere1);manikde!(asMeasured[3:3,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve $fctsym,\n$(T)")
 
