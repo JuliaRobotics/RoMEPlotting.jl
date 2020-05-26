@@ -37,7 +37,9 @@ function reportFactors(dfg::AbstractDFG,
                        T::PlotTypesPose2,
                        fcts::Vector{Symbol}=ls(dfg, T);
                        filepath=joinpath(getSolverParams(dfg).logpath, getTimeEasy()*"_$T.pdf"),
-                       show::Bool=true  )
+                       show::Bool=true,
+                       pdfWidth=20cm,
+                       pdfHeight=30cm)
   #
   ss = split(filepath, '/')
   path = joinpath("/", joinpath(ss[1:(end-1)]...), "tmp")
@@ -53,7 +55,7 @@ function reportFactors(dfg::AbstractDFG,
     end
     file = joinpath(path,"$fc.pdf")
     ndist[1] = 0.0
-    plotFactor(dfg, fc, dist=ndist) |> PDF(file)
+    plotFactor(dfg, fc, dist=ndist) |> PDF(file, pdfWidth, pdfHeight)
     push!(files, file)
     push!(alldists, ndist[1])
   end

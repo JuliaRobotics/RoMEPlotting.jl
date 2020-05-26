@@ -697,19 +697,6 @@ end
 
 
 
-function plotPose3Pairs(fgl::G, sym::Symbol; fill::Bool=true) where {G <: AbstractDFG}
-  p1= plotKDE(fgl, :x1, dims=[1;2], fill=fill)
-  p2 = plotKDE(fgl, :x1, dims=[6;3], fill=fill)
-  p3 = plotKDE(fgl, :x1, dims=[4;5], fill=fill)
-  Gadfly.draw(PDF("/tmp/RoMEvstackPose3.pdf",15cm, 20cm), vstack(p1,p2,p3) )
-  @async run(`evince /tmp/RoMEvstackPose3.pdf`)
-  nothing
-end
-
-
-
-
-
 # Victoria Park Plotting functions
 
 
@@ -799,6 +786,7 @@ function plotPose3Pairs(fgl::AbstractDFG, sym::Symbol; fill::Bool=true)
   @async run(`evince /tmp/RoMEvstackPose3.pdf`)
   nothing
 end
+
 
 
 
