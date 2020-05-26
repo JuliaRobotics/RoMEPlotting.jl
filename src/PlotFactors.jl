@@ -1,31 +1,46 @@
 
 # import RoMEPlotting: plotFactor, reportFactors, plotFactorMeasurements, getTimeEasy
 
-function plotFactorMeasurements(dfg::AbstractDFG, fctsym::Symbol, fct::FunctorInferenceType; hdl=[], dist::Vector{Float64}=zeros(1))
-  @error "plotFactorMeasurements not implemented yet for $(typeof(fct))."
-end
+"""
+    $SIGNATURES
 
-function plotFactorMeasurements(dfg::AbstractDFG,
-                                fctsym::Symbol,
-                                fct::Pose2Pose2;
-                                hdl=[],
-                                dist::Vector{Float64}=[0.0;]  )
+Plot Pose2Pose2 measurement and predicted values in factor centric manner -- i.e. used with inverse solve.
+"""
+function plotFactorValues(asMeasured::AbstractMatrix{<:Real},
+                          asPredicted::AbstractMatrix{<:Real},
+                          fct::Type{T}=Pose2Pose2;
+                          fctsym="",
+                          hdl=[],
+                          dist::Vector{Float64}=zeros(1) ) where {T <: FunctorInferenceType}
   #
-  me, me0 = solveFactorMeasurements(dfg, fctsym)
-
-  PP = manikde!(me[1:2,:], Point2)
-  PPg = manikde!(me0[1:2,:], Point2)
+  PP  = manikde!(asPredicted[1:2,:], Point2)
+  PPg = manikde!(asMeasured[1:2,:], Point2)
   dist[1] = minimum(abs.([kld(PPg, PP)[1]; kld(PP, PPg)[1]]))
-  pt = plotKDE([PP;PPg], c=["red";"blue"], legend=["pred";"meas"], levels=3, title="inv. solve, $fctsym,\nmin(|kld(..)|)=$(round(dist[1],digits=3))")
+  pt = plotKDE([PP;PPg], c=["red";"blue"], legend=["pred";"meas"], levels=3, title="inv. solve $fctsym,\nmin(|kld(..)|)=$(round(dist[1],digits=3))")
 
-  pc = plotKDECircular([manikde!(me[3:3,:], Sphere1);manikde!(me0[3:3,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve, $fctsym,\nPose2Pose2")
-
+  pc = plotKDECircular([manikde!(asPredicted[3:3,:], Sphere1);manikde!(asMeasured[3:3,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve $fctsym,\n$(T)")
 
   push!(hdl, pt)
   push!(hdl, pc)
 
   hstack(pt, pc)
 end
+
+
+"""
+    $SIGNATURES
+
+Calculate the "inverse" SLAM solution to compare measured and predicted noise model samples.
+"""
+function plotFactorMeasurements(dfg::AbstractDFG,
+                                fctsym::Symbol,
+                                fct::FunctorInferenceType;
+                                hdl=[],
+                                dist::Vector{Float64}=zeros(1) )
+  #
+  @error "plotFactorMeasurements not implemented yet for $(typeof(fct))."
+end
+
 
 
 function plotFactorMeasurements(dfg::AbstractDFG,
@@ -48,11 +63,6 @@ function plotFactorMeasurements(dfg::AbstractDFG,
 end
 
 
-"""
-    $SIGNATURES
-
-Calculate the "inverse" SLAM solution to compare measured and predicted noise model samples.
-"""
 function plotFactorMeasurements(dfg::AbstractDFG,
                                 fctsym::Symbol;
                                 hdl=[],
@@ -62,7 +72,11 @@ function plotFactorMeasurements(dfg::AbstractDFG,
   plotFactorMeasurements(dfg, fctsym, fct, hdl=hdl, dist=dist)
 end
 
+"""
+    $SIGNATURES
 
+Return plot of each specific factor.
+"""
 function plotFactor(dfg::AbstractDFG,
                     fctsym::Symbol,
                     fct::Pose2Point2Range;
@@ -275,30 +289,6 @@ end
 
 
 function plotFactor(dfg::AbstractDFG,
-                    fctsym::Symbol,
-                    fct::Pose2Pose2;
-                    hdl=[],
-                    dist::Vector{Float64}=Float64[0.0;]  )
-
-  # variables
-  fct = getFactor(dfg, fctsym)
-  vars = fct._variableOrderSymbols
-
-  pv1 = plotPose(dfg, vars[1], hdl=hdl)
-  pv2 = plotPose(dfg, vars[2], hdl=hdl)
-
-  pv12 = plotFactorMeasurements(dfg, fctsym, hdl=hdl, dist=dist)
-
-  vstack(pv1, pv2, pv12)
-end
-
-
-"""
-    $SIGNATURES
-
-Return plot of each specific factor.
-"""
-function plotFactor(dfg::AbstractDFG,
                     fctsym::Symbol;
                     hdl=[],
                     dist::Vector{Float64}=Float64[0.0;]  )
@@ -321,40 +311,13 @@ getTimeEasy() = split(split("$(now())", 'T')[end],'.')[1]
 import IncrementalInference: isMultihypo
 isMultihypo(fct) = isa(solverData(fct).fnc.hypotheses, Distribution)
 
-function reportFactors(dfg::AbstractDFG,
-                       T::Union{Type{Pose2Pose2}, Type{Pose2Point2BearingRange}, Type{Pose2Point2Range}, Type{Pose2Point2Bearing}},
-                       fcts::Vector{Symbol}=ls(dfg, T);
-                       filepath=joinpath(getSolverParams(dfg).logpath, getTimeEasy()*"_$T.pdf"),
-                       show::Bool=true  )
-  #
-  ss = split(filepath, '/')
-  path = joinpath("/", joinpath(ss[1:(end-1)]...), "tmp")
-  mkpath(path)
-  alldists= Vector{Float64}()
 
-  files = String[]
-  ndist = Float64[0.0;]
-  for fc in fcts
-    if isMultihypo(getFactor(dfg, fc))
-      # skip this factor
-      continue
-    end
-    file = joinpath(path,"$fc.pdf")
-    ndist[1] = 0.0
-    plotFactor(dfg, fc, dist=ndist) |> PDF(file)
-    push!(files, file)
-    push!(alldists, ndist[1])
-  end
-  fileord = sortperm(alldists, rev=true)
-  files = files[fileord]
-  push!(files, filepath)
+"""
+$SIGNATURES
 
-  2 < length(files) ? run(`pdfunite $files`) : nothing
-  !show ? nothing : (@async run(`evince $filepath`))
-  return filepath
-end
-
-
+Methods to generate plots of all requested factor user supplied vs. current predicted measurement -- i.e. inverse solve.
+"""
+reportFactors() = @info "Empty function to support both automated documentation and conditional features (@require)."
 
 
 
