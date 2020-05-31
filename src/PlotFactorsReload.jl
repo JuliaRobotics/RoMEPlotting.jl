@@ -7,9 +7,9 @@ function plotFactorMeasurements(dfg::AbstractDFG,
                                 hdl=[],
                                 dist::Vector{Float64}=[0.0;]  )
   #
-  me, me0 = solveFactorMeasurements(dfg, fctsym)
+  asMeas, asPred = solveFactorMeasurements(dfg, fctsym)
 
-  plotFactorValues(me0, me, Pose2Pose2, fctsym=fctsym,hdl=hdl,dist=dist)
+  plotFactorValues(asMeas, asPred, Pose2Pose2, fctsym=fctsym,hdl=hdl,dist=dist)
 end
 
 

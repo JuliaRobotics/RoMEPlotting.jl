@@ -9,17 +9,18 @@ Plot Pose2Pose2 measurement and predicted values in factor centric manner -- i.e
 function plotFactorValues(asMeasured::AbstractMatrix{<:Real},
                           asPredicted::AbstractMatrix{<:Real},
                           fct::Type{T}=Pose2Pose2;
+                          title="inv. solve",
                           fctsym="",
                           hdl=[],
                           dist::Vector{Float64}=zeros(1) ) where {T <: FunctorInferenceType}
   #
-  PP  = manikde!(asPredicted[1:2,:], Point2)
   PPg = manikde!(asMeasured[1:2,:], Point2)
+  PP  = manikde!(asPredicted[1:2,:], Point2)
   # dist[1] = minimum(abs.([kld(PPg, PP)[1]; kld(PP, PPg)[1]]))
   mmd!(dist, asPredicted, asMeasured, SE2_Manifold)
-  pt = plotKDE([PP;PPg], c=["red";"blue"], legend=["pred";"meas"], levels=3, title="inv. solve $fctsym,\nmmd(..)=$(round(dist[1],digits=3))")
+  pt = plotKDE([PPg;PP], c=["blue";"red"], legend=["meas";"pred";], levels=3, title="$title $fctsym,\nmmd(..)=$(round(dist[1],digits=3))")
 
-  pc = plotKDECircular([manikde!(asPredicted[3:3,:], Sphere1);manikde!(asMeasured[3:3,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve $fctsym,\n$(T)")
+  pc = plotKDECircular([manikde!(asMeasured[3:3,:], Sphere1);manikde!(asPredicted[3:3,:], Sphere1);], c=["blue";"red";], legend=["meas";"pred";], title="$title $fctsym,\n$(T)")
 
   push!(hdl, pt)
   push!(hdl, pc)
@@ -50,11 +51,11 @@ function plotFactorMeasurements(dfg::AbstractDFG,
                                 hdl=[],
                                 dist::Vector{Float64}=[0.0;] )
   #
-  me, me0 = solveFactorMeasurements(dfg, fctsym)
+  asMeas, asPred = solveFactorMeasurements(dfg, fctsym)
 
-  pc = plotKDECircular([manikde!(me[1:1,:], Sphere1);manikde!(me0[1:1,:], Sphere1)], c=["red";"blue"], legend=["pred";"meas"], title="inv. solve, $fctsym,\nPose2Point2BearingRange")
-  pcl = plotKDE([manikde!(me[1:1,:], ContinuousScalar);manikde!(me0[1:1,:], ContinuousScalar)], c=["red";"blue"], legend=["pred";"meas"], title="unwrapped rotation, should be [-pi,pi)")
-  pl = plotKDE([manikde!(me[2:2,:], ContinuousScalar);manikde!(me0[2:2,:], ContinuousScalar)], c=["red";"blue"], legend=["pred";"meas"])
+  pc = plotKDECircular([manikde!(asPred[1:1,:], Sphere1);manikde!(asMeas[1:1,:], Sphere1)], c=["blue";"red";], legend=["meas";"pred";], title="inv. solve, $fctsym,\nPose2Point2BearingRange")
+  pcl = plotKDE([manikde!(asPred[1:1,:], ContinuousScalar);manikde!(asMeas[1:1,:], ContinuousScalar)], c=["blue";"red";], legend=["meas";"pred";], title="unwrapped rotation, should be [-pi,pi)")
+  pl = plotKDE([manikde!(asPred[2:2,:], ContinuousScalar);manikde!(asMeas[2:2,:], ContinuousScalar)], c=["blue";"red";], legend=["meas";"pred";])
 
   push!(hdl, pc)
   push!(hdl, pcl)
