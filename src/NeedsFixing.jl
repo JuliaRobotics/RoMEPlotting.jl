@@ -112,3 +112,100 @@ function plotPriorsAtCliq(tree::BayesTree,
   # cc = COLORS[1:(len+2)]
   plotKDE(arr, c=COLORS, legend=lg, levels=levels, fill=fill );
 end
+
+
+
+function plotMCMC(treel::BayesTree,
+                  lbll::Symbol;
+                  delay::Int=200,
+                  show::Bool=true,
+                  w=20cm, h=15cm,
+                  levels::Int=1,
+                  dims=nothing  )
+  #
+  cliq = whichCliq(treel, string(lbll))
+  cliqdbg = cliq.attributes["debug"]
+
+  vidx = 1
+  for lb in cliqdbg.mcmc[1].lbls
+    if lb == lbll
+      break;
+    else
+      vidx += 1
+    end
+  end
+
+  tmpfilepath = joinpath(dirname(@__FILE__),"tmpimgs")
+  ARR = BallTreeDensity[]
+  COLORS = getColorsByLength()
+  # COLORS = ["black";"red";"green";"blue";"cyan";"deepskyblue";"magenta"]
+  for i in 1:length(cliqdbg.mcmc)
+    ppr = kde!(cliqdbg.mcmc[i].prods[vidx].prev)
+    ppp = kde!(cliqdbg.mcmc[i].prods[vidx].product)
+    ARR = [ARR;ppr;ppr;cliqdbg.mcmc[i].prods[vidx].potentials]
+  end
+  rangeV = getKDERange(ARR)
+  ppp = nothing
+  for i in 1:length(cliqdbg.mcmc)
+    ppr = kde!(cliqdbg.mcmc[i].prods[vidx].prev)
+    ppp = kde!(cliqdbg.mcmc[i].prods[vidx].product)
+    arr = [ppr;ppp;cliqdbg.mcmc[i].prods[vidx].potentials]
+    len = length(cliqdbg.mcmc[i].prods[vidx].potentials)
+    lg = String["p";"n";cliqdbg.mcmc[i].prods[vidx].potentialfac] #map(string, 1:len)]
+    COLORS_l = getColorsByLength(len+2)
+    cc = plotKDE(arr, c=COLORS_l, legend=lg, levels=levels, fill=true, axis=rangeV, dims=dims );
+    Gadfly.draw(PNG(joinpath(tmpfilepath,"$(string(lbll))mcmc$(i).png"),w,h),cc)
+  end
+  # draw initial and final result
+  pp0 = kde!(cliqdbg.mcmc[1].prods[vidx].prev)
+  i = 0
+  cc = plotKDE([pp0], c=[COLORS[1]], legend=["0"], levels=levels, fill=true, axis=rangeV, dims=dims );
+  Gadfly.draw(PNG(joinpath(tmpfilepath,"$(string(lbll))mcmc$(i).png"),w,h),cc)
+
+  i = length(cliqdbg.mcmc)+1
+  cc = plotKDE([pp0;ppp], c=COLORS[1:2], legend=["0";"n"], levels=levels, fill=true, axis=rangeV, dims=dims );
+  Gadfly.draw(PNG(joinpath(tmpfilepath,"$(string(lbll))mcmc$(i).png"),w,h),cc)
+  # generate output
+  @warn "Maintenance required, run manually:  \"convert -delay $(delay) $(tmpfilepath)/$(string(lbll))mcmc*.png $(tmpfilepath)/$(string(lbll))mcmc.gif\""
+  # run(`convert -delay $(delay) $(tmpfilepath)/$(string(lbll))mcmc*.png $(tmpfilepath)/$(string(lbll))mcmc.gif`)
+  # !show ? nothing : (@async run(`eog $(tmpfilepath)/$(string(lbll))mcmc.gif`) )
+  # return "$(tmpfilepath)/$(string(lbll))mcmc.gif"
+end
+
+function plotOneMC!(cliqMC::CliqGibbsMC, minmax, mcmc=0; offs=2.0)
+
+    if mcmc>minmax[4]
+      minmax[4]=mcmc
+    end
+
+    i = 0.0
+    for prod in cliqMC.prods
+        prodVal = kde!(prod.product,"lcv")
+        plotKDEProd!([prodVal;prod.potentials],minmax, h=-i*offs, mcmc=mcmc)
+        i += 1.0
+    end
+
+end
+
+function plotMCMCDebug(cliq; offs=2.0)
+    println("$(cliq.attributes["label"])")
+    cliqDbg = cliq.attributes["data"].debug
+    MCd = 100.0/length(cliqDbg.mcmc)
+    MCo=0.0
+    minmax=[99999,-99999,-10,-99999.0]
+    for mc in cliqDbg.mcmc
+        drawOneMC!(mc, minmax, MCo, offs=offs)
+        MCo+=MCd
+    end
+
+    n = 3
+    y = linspace(minmax[1], minmax[2], n)
+    x = linspace(minmax[3],minmax[4],n)
+    xgrid = repmat(x',n,1)
+    ygrid = repmat(y,1,n)
+    z = zeros(n,n)
+
+    for i in 1:length(cliqDbg.mcmc[1].prods)
+      surf(xgrid,ygrid,z-(i-1)*offs,alpha=0.04, linewidth=0.0)
+    end
+end
