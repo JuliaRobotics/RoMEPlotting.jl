@@ -18,10 +18,11 @@ using ApproxManifoldProducts
 using Requires
 # import ApproxManifoldProducts: mmd! # future dependency
 
-
-import KernelDensityEstimatePlotting: plot, drawHorDens, plotKDE
-import IncrementalInference: CliqGibbsMC, DebugCliqMCMC
 import Gadfly: plot
+import KernelDensityEstimatePlotting: plot, drawHorDens, plotKDE
+import KernelDensityEstimatePlotting: getColorsByLength
+
+import IncrementalInference: CliqGibbsMC, DebugCliqMCMC
 
 # assuming this is a good size for everybody
 @info "Assuming plot size, Gadfly.set_default_plot_size(30cm,20cm)"
@@ -103,6 +104,7 @@ include("PlotHexUtils.jl")
 include("PlotFactors.jl")
 include("PlotFactorsReload.jl")
 include("Deprecated.jl")
+include("NeedsFixing.jl")
 
 function __init__()
   @require Flux="587475ba-b771-5e3f-ad9e-33799f191a9c" begin

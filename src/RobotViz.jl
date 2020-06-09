@@ -114,7 +114,7 @@ end
 
 covEllipseParameterized(pts::Array{Float64,2}; meanOffset::Bool=true) = covEllipseParameterized( fit(MvNormal, pts), meanOffset=meanOffset )
 covEllipseParameterized(X::BallTreeDensity; meanOffset::Bool=true) = covEllipseParameterized( getPoints(X), meanOffset=meanOffset )
-covEllipseParameterized(dfg::AbstractDFG, sym::Symbol; meanOffset::Bool=true) = covEllipseParameterized( getKDE(dfg, sym), meanOffset=meanOffset )
+covEllipseParameterized(dfg::AbstractDFG, sym::Symbol; meanOffset::Bool=true, solveKey::Symbol=:default) = covEllipseParameterized( getKDE(dfg, sym, solveKey), meanOffset=meanOffset, solveKey=solveKey )
 
 
 """
@@ -128,15 +128,16 @@ covEllipseParameterized, plotSLAM2DPosesLandms
 """
 function plotCovEllipseLayer(dfg::AbstractDFG,
                              vsym::Symbol;
+                             solveKey::Symbol=:default,
                              points::Bool=true,
                              ellipseColor::AbstractString="gray30",
                              pointsColor::AbstractString="gray30",
-                             drawEllipse::Bool=true  )::Vector
+                             drawEllipse::Bool=true  )
   #
   PL = []
 
   # points to work from
-  pp = getPoints(getKDE(dfg, vsym))
+  pp = getPoints(getKDE(dfg, vsym, solveKey))
 
   if drawEllipse
     # get ellipse function
@@ -144,8 +145,8 @@ function plotCovEllipseLayer(dfg::AbstractDFG,
     vEl = eX.(0:0.02:2pi)
     el = [(x->x[1]).(vEl) (x->x[2]).(vEl)]
     # add suggested PPE mean offset
-    el[:,1] .+= getVariablePPE(dfg, vsym).suggested[1]
-    el[:,2] .+= getVariablePPE(dfg, vsym).suggested[2]
+    el[:,1] .+= getVariablePPE(dfg, vsym, solveKey).suggested[1]
+    el[:,2] .+= getVariablePPE(dfg, vsym, solveKey).suggested[2]
 
     # add the ellipse layers
     plelX2 = Gadfly.layer(x=el[:,1], y=el[:,2], Geom.path, Theme(default_color=parse(Colorant, ellipseColor)))
@@ -252,7 +253,8 @@ end
 Future:
 - Relax to user defined pose labeling scheme, for example `:p1, :p2, ...`
 """
-function plotSLAM2DPoses(fg::G;
+function plotSLAM2DPoses(fg::AbstractDFG;
+                         solveKey::Symbol=:default,
                          from::Int64=0,
                          to::Int64=99999999,
                          meanmax=:null,
@@ -264,7 +266,7 @@ function plotSLAM2DPoses(fg::G;
                          contour::Bool=true, levels::Int=1,
                          regexPoses=r"x\d",
                          line_width=1pt,
-                         manualColor=nothing  ) where G <: AbstractDFG
+                         manualColor=nothing  )
     #
     # deprecations
     if meanmax != :null
@@ -275,7 +277,7 @@ function plotSLAM2DPoses(fg::G;
     ## Use PPE.suggested
     vsyms = getVariablesLabelsWithinRange(fg, regexPoses, from=from, to=to)
 
-    Ppes = map(x->calcVariablePPE(fg, x), vsyms)
+    Ppes = map(x->calcVariablePPE(fg, x, solveKey=solveKey), vsyms)
     mask = Ppes .!= nothing
     vsyms = vsyms[mask]
     suggPpes = (x->getfield(x,ppe)).(Ppes[mask])
@@ -319,7 +321,7 @@ function plotSLAM2DPoses(fg::G;
     if contour
       varsyms = Symbol.(LBLS)
       for vsym in varsyms
-        pln = plotKDE(fg, vsym, dims=[1;2], levels=levels, c=[(manualColor == nothing ? "gray90" : manualColor);])
+        pln = plotKDE(fg, vsym, solveKey=solveKey, dims=[1;2], levels=levels, c=[(manualColor == nothing ? "gray90" : manualColor);])
         union!(psplt.layers, pln.layers)
       end
     end
@@ -334,6 +336,7 @@ end
 2D plot of landmarks, assuming `:l1, :l2, ... :ln`.  Use `from` and `to` to control the range of landmarks `n` to include.
 """
 function plotSLAM2DLandmarks(fg::AbstractDFG;
+                             solveKey::Symbol=:default,
                              from::Int64=0, to::Int64=99999999,
                              minnei::Int64=0,
                              meanmax=:null,
@@ -355,7 +358,7 @@ function plotSLAM2DLandmarks(fg::AbstractDFG;
     ## Use PPE.suggested
     vsyms = getVariablesLabelsWithinRange(fg, regexLandmark, from=from, to=to)
 
-    Ppes = map(x->calcVariablePPE(fg, x), vsyms)
+    Ppes = map(x->calcVariablePPE(fg, x, solveKey=solveKey), vsyms)
     mask = Ppes .!= nothing
     vsyms = vsyms[mask]
     suggPpes = (x->getfield(x,ppe)).(Ppes[mask])
@@ -398,8 +401,7 @@ function plotSLAM2DLandmarks(fg::AbstractDFG;
       end
       varsyms = Symbol.(lbltags)
       for vsym in varsyms
-        @show manualColor
-        pln = plotKDE(fg, vsym, dims=[1;2], levels=levels, c=[(manualColor==nothing ? "gray90" : manualColor);])
+        pln = plotKDE(fg, vsym, solveKey=solveKey, dims=[1;2], levels=levels, c=[(manualColor==nothing ? "gray90" : manualColor);])
         union!(psplt.layers, pln.layers)
       end
     end
@@ -424,6 +426,7 @@ plotSLAM2D(fg)
 ```
 """
 function plotSLAM2D(fgl::AbstractDFG;
+                    solveKey::Symbol=:default,
                     from::Int64=0, to::Int64=99999999, minnei::Int64=0,
                     meanmax=:null,
                     posesPPE=:suggested,
@@ -454,15 +457,15 @@ function plotSLAM2D(fgl::AbstractDFG;
   xmin != nothing && xmax != nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
   ymin != nothing && ymax != nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
   ll = listVariables(fgl, regexLandmark)
-  p = plotSLAM2DPoses(fgl, from=from,to=to,ppe=posesPPE,lbls=lbls,drawhist=drawhist, spscale=spscale, contour=contour, drawTriads=drawTriads, manualColor=manualColor, line_width=line_width)
+  p = plotSLAM2DPoses(fgl, solveKey=solveKey, from=from,to=to,ppe=posesPPE,lbls=lbls,drawhist=drawhist, spscale=spscale, contour=contour, drawTriads=drawTriads, manualColor=manualColor, line_width=line_width)
   if length(ll) > 0
-    pl = plotSLAM2DLandmarks(fgl, from=from, to=to, ppe=landmsPPE, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, point_size=point_size, contour=contour, manualColor=manualColor)
+    pl = plotSLAM2DLandmarks(fgl, solveKey=solveKey, from=from, to=to, ppe=landmsPPE, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, point_size=point_size, contour=contour, manualColor=manualColor)
     for l in pl.layers
       push!(p.layers, l)
     end
   end
   if window != nothing
-    focusX = getKDEMax(getKDE(getVariable(fgl,window[1])))
+    focusX = getKDEMax( getKDE(getVariable(fgl,window[1]),solveKey) )
     pwind = window[2]
     p.coord = Coord.cartesian(xmin=focusX[1]-pwind,xmax=focusX[1]+pwind,ymin=focusX[2]-pwind,ymax=focusX[2]+pwind)
   end
@@ -618,20 +621,21 @@ end
 
 Example: pl = plotPose(fg, [:x1; :x2; :x3])
 """
-function plotPose(fgl::G,
+function plotPose(fgl::AbstractDFG,
                   syms::Vector{Symbol};
+                  solveKey::Symbol=:default,
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
                   scale::Float64=0.2,
                   show::Bool=false,
-                  filepath::AS="/tmp/tempposeplot.svg",
-                  app::AS="eog",
-                  hdl=[]  ) where {G <: AbstractDFG, AS <: AbstractString}
+                  filepath::AbstractString="/tmp/tempposeplot.svg",
+                  app::AbstractString="eog",
+                  hdl=[]  )
   #
-  typ = getSolverData(getVariable(fgl, syms[1])).softtype
+  typ = getSolverData(getVariable(fgl, syms[1]), solveKey).softtype
   pt = string(string.(syms)...)
-  getvertsgg = (sym) -> getKDE(getVariable(fgl, sym))
+  getvertsgg = (sym) -> getKDE(getVariable(fgl, sym), solveKey)
   pl = plotPose(typ, getvertsgg.(syms), pt, levels=levels, c=c, axis=axis, scale=scale, hdl=hdl )
 
   if length(filepath) > 0
@@ -667,10 +671,11 @@ end
 
 # import RoMEPlotting: drawMarginalContour
 
-function plotMarginalContour(fgl::G, lbl::String;
-    xmin=-150,xmax=150,ymin=-150,ymax=150,n=200 ) where G <: AbstractDFG
+function plotMarginalContour(fgl::AbstractDFG, lbl::String;
+                             solveKey::Symbol=:default,
+                             xmin=-150,xmax=150,ymin=-150,ymax=150,n=200 )
   #
-  p = getKDE(getVariable(fgl,Symbol(lbl)))  # p = getKDE(getVert(fgl,lbl))
+  p = getKDE(getVariable(fgl,Symbol(lbl)), solveKey)  # p = getKDE(getVert(fgl,lbl))
   Gadfly.plot(z=(x,y)->evaluateDualTree(p,vectoarr2([x,y]))[1],
     x=collect(range(xmin,stop=xmax,length=n)),
     y=collect(range(ymin,stop=ymax,length=n)),
@@ -681,13 +686,14 @@ function plotMarginalContour(fgl::G, lbl::String;
 end
 
 function accumulateMarginalContours(fgl, order;
-    xmin=-150,xmax=150,ymin=-150,ymax=150,n=200 )
+                                    solveKey::Symbol=:default,
+                                    xmin=-150,xmax=150,ymin=-150,ymax=150,n=200 )
   #
-  pl = plotMarginalContour(fgl, order[1],xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n)
+  pl = plotMarginalContour(fgl, order[1],solveKey=solveKey, xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n)
   pl2 = nothing
   PL = []
   for or in order[1:end]
-    pl2 = plotMarginalContour(fgl, or, xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n)
+    pl2 = plotMarginalContour(fgl, or, solveKey=solveKey, xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,n=n)
     push!(PL, pl2)
     push!(pl.layers, pl2.layers[1])
   end
@@ -857,16 +863,17 @@ end
 
 
 
-function plotTrailingPoses(fg::G,
+function plotTrailingPoses(fg::AbstractDFG,
                            pp::Vector{Symbol},
                            title="";
+                           solveKey::Symbol=:default,
                            levels=2,
                            c=nothing,
                            axis=nothing,
                            scale::Float64=0.2,
-                           circlen::Int=5) where G <: AbstractDFG
+                           circlen::Int=5)
   #
-  plotTrailingPoses(Pose2(), map(x->getKDE(fg,x),pp), scale=scale, title=title, circlen=circlen)
+  plotTrailingPoses(Pose2(), map(x->getKDE(fg,x, solveKey),pp), scale=scale, title=title, circlen=circlen)
 end
 
 # gg = (x)->plotTrailingPoses(fg, [Symbol("x$i") for i in (x+60):-5:x],circlen=3)

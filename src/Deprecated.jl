@@ -9,6 +9,21 @@ export drawHorBeliefsList, drawUpMsgAtCliq, drawFactorBeliefs
 export drawPose2DMC!
 
 
+# """
+#     $(SIGNATURES)
+#
+# Standardize the length colors used by RoMEPlotting.
+#
+# Notes
+# - Duplicated in KernelDensityEstimatePlotting
+# """
+# function getColorsByLength(len::Int=10)::Vector{String}
+#   COLORS = String["red";"green";"blue";"black";"deepskyblue";"yellow";"magenta"]
+#   morecyan = ["cyan" for i in (length(COLORS)+1):len]
+#   retc = [COLORS; morecyan]
+#   return retc[1:len]
+# end
+
 
 @deprecate drawPoses(x...; kwargs...) plotSLAM2DPoses(x...; kwargs...)
 @deprecate drawLandms(x...; kwargs...) plotSLAM2DLandmarks(x...; kwargs...)
