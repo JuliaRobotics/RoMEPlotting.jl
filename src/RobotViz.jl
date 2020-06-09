@@ -321,7 +321,7 @@ function plotSLAM2DPoses(fg::AbstractDFG;
     if contour
       varsyms = Symbol.(LBLS)
       for vsym in varsyms
-        pln = plotKDE(fg, vsym, dims=[1;2], levels=levels, c=[(manualColor == nothing ? "gray90" : manualColor);])
+        pln = plotKDE(fg, vsym, solveKey=solveKey, dims=[1;2], levels=levels, c=[(manualColor == nothing ? "gray90" : manualColor);])
         union!(psplt.layers, pln.layers)
       end
     end
@@ -401,8 +401,7 @@ function plotSLAM2DLandmarks(fg::AbstractDFG;
       end
       varsyms = Symbol.(lbltags)
       for vsym in varsyms
-        @show manualColor
-        pln = plotKDE(fg, vsym, dims=[1;2], levels=levels, c=[(manualColor==nothing ? "gray90" : manualColor);])
+        pln = plotKDE(fg, vsym, solveKey=solveKey, dims=[1;2], levels=levels, c=[(manualColor==nothing ? "gray90" : manualColor);])
         union!(psplt.layers, pln.layers)
       end
     end
@@ -676,7 +675,7 @@ function plotMarginalContour(fgl::AbstractDFG, lbl::String;
                              solveKey::Symbol=:default,
                              xmin=-150,xmax=150,ymin=-150,ymax=150,n=200 )
   #
-  p = getKDE(getVariable(fgl,Symbol(lbl)), solveKey=solveKey)  # p = getKDE(getVert(fgl,lbl))
+  p = getKDE(getVariable(fgl,Symbol(lbl)), solveKey)  # p = getKDE(getVert(fgl,lbl))
   Gadfly.plot(z=(x,y)->evaluateDualTree(p,vectoarr2([x,y]))[1],
     x=collect(range(xmin,stop=xmax,length=n)),
     y=collect(range(ymin,stop=ymax,length=n)),
