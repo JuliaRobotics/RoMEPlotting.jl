@@ -114,7 +114,7 @@ end
 
 covEllipseParameterized(pts::Array{Float64,2}; meanOffset::Bool=true) = covEllipseParameterized( fit(MvNormal, pts), meanOffset=meanOffset )
 covEllipseParameterized(X::BallTreeDensity; meanOffset::Bool=true) = covEllipseParameterized( getPoints(X), meanOffset=meanOffset )
-covEllipseParameterized(dfg::AbstractDFG, sym::Symbol; meanOffset::Bool=true, solveKey::Symbol=:default) = covEllipseParameterized( getKDE(dfg, sym), meanOffset=meanOffset, solveKey=solveKey )
+covEllipseParameterized(dfg::AbstractDFG, sym::Symbol; meanOffset::Bool=true, solveKey::Symbol=:default) = covEllipseParameterized( getKDE(dfg, sym, solveKey), meanOffset=meanOffset, solveKey=solveKey )
 
 
 """
@@ -137,7 +137,7 @@ function plotCovEllipseLayer(dfg::AbstractDFG,
   PL = []
 
   # points to work from
-  pp = getPoints(getKDE(dfg, vsym, solveKey=solveKey))
+  pp = getPoints(getKDE(dfg, vsym, solveKey))
 
   if drawEllipse
     # get ellipse function
@@ -465,7 +465,7 @@ function plotSLAM2D(fgl::AbstractDFG;
     end
   end
   if window != nothing
-    focusX = getKDEMax( getKDE(getVariable(fgl,window[1]),solveKey=solveKey) )
+    focusX = getKDEMax( getKDE(getVariable(fgl,window[1]),solveKey) )
     pwind = window[2]
     p.coord = Coord.cartesian(xmin=focusX[1]-pwind,xmax=focusX[1]+pwind,ymin=focusX[2]-pwind,ymax=focusX[2]+pwind)
   end
@@ -635,7 +635,7 @@ function plotPose(fgl::AbstractDFG,
   #
   typ = getSolverData(getVariable(fgl, syms[1]), solveKey).softtype
   pt = string(string.(syms)...)
-  getvertsgg = (sym) -> getKDE(getVariable(fgl, sym), solveKey=solveKey)
+  getvertsgg = (sym) -> getKDE(getVariable(fgl, sym), solveKey)
   pl = plotPose(typ, getvertsgg.(syms), pt, levels=levels, c=c, axis=axis, scale=scale, hdl=hdl )
 
   if length(filepath) > 0
@@ -873,7 +873,7 @@ function plotTrailingPoses(fg::AbstractDFG,
                            scale::Float64=0.2,
                            circlen::Int=5)
   #
-  plotTrailingPoses(Pose2(), map(x->getKDE(fg,x, solveKey=solveKey),pp), scale=scale, title=title, circlen=circlen)
+  plotTrailingPoses(Pose2(), map(x->getKDE(fg,x, solveKey),pp), scale=scale, title=title, circlen=circlen)
 end
 
 # gg = (x)->plotTrailingPoses(fg, [Symbol("x$i") for i in (x+60):-5:x],circlen=3)
