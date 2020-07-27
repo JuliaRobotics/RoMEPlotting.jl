@@ -1,5 +1,6 @@
 # new exports from this file, WIP
 
+export calcDyadScaleAdaptive
 export covEllipseParameterized, plotCovEllipseLayer
 
 
@@ -169,7 +170,7 @@ end
 Plot trajectory of Array{,2} with rows as consecutive entries and columns as x,y,theta.
 """
 function plotTrajectoryArrayPose2(arr::AbstractMatrix__{<:Real};
-                                  spscale::Float64=0.5,
+                                  spscale::Real=0.5,
                                   triadStride::Int=50)
   #
   @assert size(arr,2)==3
@@ -187,7 +188,7 @@ end
 
 
 ## TODO -- you were here with port starboard lines
-function stbPrtLineLayers!(pl, Xpp, Ypp, Thpp; l::Float64=5.0)
+function stbPrtLineLayers!(pl, Xpp, Ypp, Thpp; l::Real=5.0)
     if DISABLESTBPRTLINES
       return nothing
     end
@@ -216,7 +217,7 @@ function stbPrtLineLayers!(pl, Xpp, Ypp, Thpp; l::Float64=5.0)
 end
 
 # draw the reference frame as a red-green dyad
-function addXYLineLayers!(pl, Xpp, Ypp, Thpp; l::Float64=1.0, manualColor::Union{Nothing, AbstractString}=nothing  )
+function addXYLineLayers!(pl, Xpp, Ypp, Thpp; l::Real=1.0, manualColor::Union{Nothing, AbstractString}=nothing  )
     lnstpr = [l;0.0;0.0]
     lnstpg = [0.0;l;0.0]
 
@@ -245,6 +246,21 @@ end
 #   return lbls
 # end
 
+
+"""
+    $SIGNATURES
+Adaptively size the `dyadScale` value for plotSLAM2DPose.
+"""
+function calcDyadScaleAdaptive(Xpp::AbstractVector{<:Real},
+                               Ypp::AbstractVector{<:Real};
+                               scaling::Real=0.25)
+
+  dists = diff(Xpp).^2 + diff(Ypp).^2 |> vec .|> sqrt
+ scaling*Statistics.mean(dists)
+end
+
+
+
 """
     $(SIGNATURES)
 
@@ -260,8 +276,9 @@ function plotSLAM2DPoses(fg::AbstractDFG;
                          meanmax=:null,
                          ppe=:suggested,
                          lbls=true,
-                         drawhist=true,
-                         spscale::Float64=5.0,
+                         drawhist=false,
+                         spscale::Union{Nothing, <:Real}=nothing,
+                         dyadScale::Union{Nothing, <:Real}=nothing,
                          drawTriads::Bool=true,
                          contour::Bool=true, levels::Int=1,
                          regexPoses=r"x\d",
@@ -273,6 +290,7 @@ function plotSLAM2DPoses(fg::AbstractDFG;
       @warn "plotSLAM2DPoses meanmax keyword is deprecated, use ppe instead."
       ppe = meanmax
     end
+    !(spscale isa Nothing) ? (dyadScale=spscale; @warn("keyword spscale is deprecated, use dyadScale instead")) : nothing
 
     ## Use PPE.suggested
     vsyms = getVariablesLabelsWithinRange(fg, regexPoses, from=from, to=to)
@@ -287,15 +305,8 @@ function plotSLAM2DPoses(fg::AbstractDFG;
     Thpp = (x->x[3]).(suggPpes)
     LBLS = string.(vsyms)
 
-      ## Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; LBLS=String[];
-    # uXpp,uYpp, uThpp, uLBLS = get2DPoseMeans(fg, from=from, to=to)
-    # xXpp,xYpp, xThpp, xLBLS = get2DPoseMax(fg, from=from, to=to)
-    # # TODO use PPE.suggested instead
-    # Xpp  = meanmax == :mean ? uXpp : xXpp
-    # Ypp  = meanmax == :mean ? uYpp : xYpp
-    # Thpp = xThpp # always use max -- should be modefit
-    # LBLS = meanmax == :mean ? uLBLS : xLBLS
-
+    # adaptively scale dyad size
+    dyadScale = dyadScale isa Nothing ? calcDyadScaleAdaptive(Xpp, Ypp) : dyadScale
 
     # lbls = lblsFromTo(1,length(Xpp))
     psplt = Union{}
@@ -312,7 +323,7 @@ function plotSLAM2DPoses(fg::AbstractDFG;
       )
     end
 	# return psplt
-    drawTriads && addXYLineLayers!(psplt, Xpp, Ypp, Thpp, l=spscale, manualColor=manualColor)
+    drawTriads && addXYLineLayers!(psplt, Xpp, Ypp, Thpp, l=dyadScale, manualColor=manualColor)
     if drawhist
       Xp,Yp = get2DPoseSamples(fg, from=from, to=to)
       push!(psplt.layers,  Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)[1] )#(xbincount=100, ybincount=100))
@@ -433,7 +444,8 @@ function plotSLAM2D(fgl::AbstractDFG;
                     landmsPPE=:suggested,
                     lbls=true,
                     drawTriads::Bool=true,
-                    spscale::Float64=5.0,
+                    spscale::Union{Nothing, <:Real}=nothing,
+                    dyadScale::Union{Nothing, <:Real}=nothing,
                     contour::Bool=true,
                     levels::Int=1,
                     drawhist=false, MM::Dict{Int,T}=Dict{Int,Int}(),
@@ -453,11 +465,12 @@ function plotSLAM2D(fgl::AbstractDFG;
     posesPPE = meanmax
     landmsPPE = meanmax
   end
+  !(spscale isa Nothing) ? (dyadScale=spscale; @warn("keyword spscale is deprecated, use dyadScale instead")) : nothing
   #
   xmin != nothing && xmax != nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
   ymin != nothing && ymax != nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
   ll = listVariables(fgl, regexLandmark)
-  p = plotSLAM2DPoses(fgl, solveKey=solveKey, from=from,to=to,ppe=posesPPE,lbls=lbls,drawhist=drawhist, spscale=spscale, contour=contour, drawTriads=drawTriads, manualColor=manualColor, line_width=line_width)
+  p = plotSLAM2DPoses(fgl, solveKey=solveKey, from=from,to=to,ppe=posesPPE,lbls=lbls,drawhist=drawhist, dyadScale=dyadScale, contour=contour, drawTriads=drawTriads, manualColor=manualColor, line_width=line_width)
   if length(ll) > 0
     pl = plotSLAM2DLandmarks(fgl, solveKey=solveKey, from=from, to=to, ppe=landmsPPE, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, point_size=point_size, contour=contour, manualColor=manualColor)
     for l in pl.layers
@@ -525,7 +538,7 @@ function plotPose(pt::Pose2,
                   levels=3,
                   c=nothing,
                   axis=nothing,
-                  scale::Float64=0.2,
+                  scale::Real=0.2,
                   overlay=nothing,
                   hdl=[]  )
   #
@@ -563,7 +576,7 @@ function plotPose(pt::Pose2,
                   levels=3,
                   c=nothing,
                   axis=nothing,
-                  scale::Float64=0.2,
+                  scale::Real=0.2,
                   overlay=nothing,
                   hdl=[]  )
   #
@@ -578,7 +591,7 @@ function plotPose(::DynPose2,
                   c=nothing,
                   axis=nothing,
                   hdl=[],
-                  scale::Float64=0.2 )
+                  scale::Real=0.2 )
   #
   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
   p2 = plotKDE(bels, dims=[3], c=c)
@@ -600,7 +613,7 @@ function plotPose(::Pose3,
                   c=nothing,
                   axis=nothing,
                   hdl=[],
-                  scale::Float64=0.2  )
+                  scale::Real=0.2  )
   #
   @show title
   p1 = plotKDE(bels, dims=[1;2], levels=levels, c=c, title=title)
@@ -627,7 +640,7 @@ function plotPose(fgl::AbstractDFG,
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
-                  scale::Float64=0.2,
+                  scale::Real=0.2,
                   show::Bool=false,
                   filepath::AbstractString="/tmp/tempposeplot.svg",
                   app::AbstractString="eog",
@@ -659,7 +672,7 @@ function plotPose(fgl::G,
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
-                  scale::Float64=0.2,
+                  scale::Real=0.2,
                   show::Bool=false,
                   filepath::AS="/tmp/tempposeplot.svg",
                   app::AS="eog",
@@ -841,7 +854,7 @@ function plotTrailingPoses(pt::Pose2,
                            levels=2,
                            c=nothing,
                            axis=nothing,
-                           scale::Float64=0.2,
+                           scale::Real=0.2,
                            circlen::Int=5)
 
 ran = axis == nothing ? getKDERange(pp) : axis
@@ -870,7 +883,7 @@ function plotTrailingPoses(fg::AbstractDFG,
                            levels=2,
                            c=nothing,
                            axis=nothing,
-                           scale::Float64=0.2,
+                           scale::Real=0.2,
                            circlen::Int=5)
   #
   plotTrailingPoses(Pose2(), map(x->getKDE(fg,x, solveKey),pp), scale=scale, title=title, circlen=circlen)
