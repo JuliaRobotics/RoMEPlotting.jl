@@ -18,7 +18,7 @@ function plotFactorValues(asMeasured::AbstractMatrix{<:Real},
   PP  = manikde!(asPredicted[1:2,:], Point2)
   # dist[1] = minimum(abs.([kld(PPg, PP)[1]; kld(PP, PPg)[1]]))
   mmd!(dist, asPredicted, asMeasured, SE2_Manifold)
-  pt = plotKDE([PPg;PP], c=["blue";"red"], legend=["meas";"pred";], levels=3, title="$title $fctsym,\nmmd(..)=$(round(dist[1],digits=3))")
+  pt = plotKDE([PPg;PP], c=["blue";"red"], legend=["meas";"pred";], levels=3, title="$title $fctsym,\nmmd(..)=$(round(dist[1],digits=6))")
 
   pc = plotKDECircular([manikde!(asMeasured[3:3,:], Sphere1);manikde!(asPredicted[3:3,:], Sphere1);], c=["blue";"red";], legend=["meas";"pred";], title="$title $fctsym,\n$(T)")
 
@@ -320,6 +320,7 @@ $SIGNATURES
 Methods to generate plots of all requested factor user supplied vs. current predicted measurement -- i.e. inverse solve.
 """
 reportFactors() = @info "Empty function to support both automated documentation and conditional features (@require)."
+
 
 
 
