@@ -234,8 +234,8 @@ function addXYLineLayers!(pl, Xpp, Ypp, Thpp; l::Real=1.0, manualColor::Union{No
       xsg = [Xpp[i];lng[1]]
       ysg = [Ypp[i];lng[2]]
 
-      push!(pl.layers, layer(x=xsr, y=ysr, Geom.path(), Gadfly.Theme(default_color=parse(Colorant, manualColor == nothing ? "red" : manualColor), line_width=1.5pt))[1] )
-      push!(pl.layers, layer(x=xsg, y=ysg, Geom.path(), Gadfly.Theme(default_color=parse(Colorant, manualColor == nothing ? "green" : manualColor), line_width=1.5pt))[1] )
+      push!(pl.layers, layer(x=xsr, y=ysr, Geom.path(), Gadfly.Theme(default_color=parse(Colorant, manualColor === nothing ? "red" : manualColor), line_width=1.5pt))[1] )
+      push!(pl.layers, layer(x=xsg, y=ysg, Geom.path(), Gadfly.Theme(default_color=parse(Colorant, manualColor === nothing ? "green" : manualColor), line_width=1.5pt))[1] )
     end
     nothing
 end
@@ -310,7 +310,7 @@ function plotSLAM2DPoses(fg::AbstractDFG;
 
     # lbls = lblsFromTo(1,length(Xpp))
     psplt = Union{}
-    thm = manualColor == nothing ? Theme(line_width=1pt) : Theme(line_width=line_width, default_color=parse(Colorant, manualColor))
+    thm = manualColor === nothing ? Theme(line_width=1pt) : Theme(line_width=line_width, default_color=parse(Colorant, manualColor))
     if lbls
       psplt = Gadfly.plot(
         Gadfly.layer(x=Xpp,y=Ypp,label=LBLS,Geom.path(), thm, Geom.label),
@@ -332,7 +332,7 @@ function plotSLAM2DPoses(fg::AbstractDFG;
     if contour
       varsyms = Symbol.(LBLS)
       for vsym in varsyms
-        pln = plotKDE(fg, vsym, solveKey=solveKey, dims=[1;2], levels=levels, c=[(manualColor == nothing ? "gray90" : manualColor);])
+        pln = plotKDE(fg, vsym, solveKey=solveKey, dims=[1;2], levels=levels, c=[(manualColor === nothing ? "gray90" : manualColor);])
         union!(psplt.layers, pln.layers)
       end
     end
@@ -537,6 +537,7 @@ function plotPose(pt::Pose2,
                   title="plotPose2";
                   levels=3,
                   c=nothing,
+                  legend=nothing,
                   axis=nothing,
                   scale::Real=0.2,
                   overlay=nothing,
@@ -544,12 +545,12 @@ function plotPose(pt::Pose2,
   #
   # ops = buildHybridManifoldCallbacks(pt.manifolds)
   # @show ran = getKDERange(p, addop=ops[1], diffop=ops[2])
-  ran = axis == nothing ? getKDERange(pp) : axis
+  ran = axis === nothing ? getKDERange(pp) : axis
 
-  p1 = plotKDE(pp, dims=[1;2], levels=levels, c=c, title=title, axis=ran )
+  p1 = plotKDE(pp, dims=[1;2], levels=levels, c=c, axis=ran )
   # p2 = plotKDE(bels, dims=[3], c=c)
 
-  cc = c == nothing ? getColorsByLength(length(pp)) : c
+  cc = c === nothing ? getColorsByLength(length(pp)) : c
 
   GG = BallTreeDensity[]
   for ppc in pp
@@ -558,7 +559,7 @@ function plotPose(pt::Pose2,
     push!(GG, gg)
   end
   # p2 = AMP.plotCircBeliefs(GG, c=cc)
-  p2 = AMP.plotKDECircular(GG, scale=scale, c=cc)
+  p2 = AMP.plotKDECircular(GG, scale=scale, c=cc, legend=legend, title=title)
 
   # deal with overlay
 
@@ -857,7 +858,7 @@ function plotTrailingPoses(pt::Pose2,
                            scale::Real=0.2,
                            circlen::Int=5)
 
-ran = axis == nothing ? getKDERange(pp) : axis
+ran = axis === nothing ? getKDERange(pp) : axis
 
 cc=["red"; ["pink" for i in 1:100]]
 
