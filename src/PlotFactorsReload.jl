@@ -36,7 +36,8 @@ end
 function reportFactors(dfg::AbstractDFG,
                        T::PlotTypesPose2,
                        fcts::Vector{Symbol}=ls(dfg, T);
-                       filepath=joinpath(getSolverParams(dfg).logpath, getTimeEasy()*"_$T.pdf"),
+                       prefix::AbstractString="",
+                       filepath=joinpath(getSolverParams(dfg).logpath, "$prefix"*getTimeEasy()*"_$T.pdf"),
                        show::Bool=true,
                        pdfWidth=20cm,
                        pdfHeight=30cm)

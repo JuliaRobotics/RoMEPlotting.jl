@@ -40,12 +40,14 @@ KernelDensityEstimate = "0.5"
 KernelDensityEstimatePlotting = "0.1.6"
 Reexport = "0.2"
 Requires = "1.0"
-RoME = "0.7, 0.8"
+RoME = "0.7, 0.8, 0.9"
 StatsBase = "0.30, 0.31, 0.32, 0.33"
 julia = "1.4"
 
 [extras]
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Test", "Flux", "ImageMagick"]
