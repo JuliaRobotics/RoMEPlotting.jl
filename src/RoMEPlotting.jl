@@ -32,7 +32,6 @@ export
   # Associated with IncrementalInference
   investigateMultidimKDE,
   drawHorDens, # from KDEPlotting
-  spyCliqMat,
   plotKDE,
   plotVariable2D,
   plotKDEofnc,
@@ -102,18 +101,14 @@ include("SolverVisualization.jl")
 include("RobotViz.jl")
 include("PlotHexUtils.jl")
 include("PlotFactors.jl")
+include("PlotVariables.jl")
 include("PlotFactorsReload.jl")
 include("Deprecated.jl")
 include("NeedsFixing.jl")
 
 function __init__()
-  @require Flux="587475ba-b771-5e3f-ad9e-33799f191a9c" begin
-    @info "RoMEPlotting is adding Flux related functionality."
-    include("FluxSpecificFeatures.jl")
-    # rerun since a few functions need to be reloaded with Flux
-    include("PlotFactorsReload.jl")
-  end
-  #
+  @require Flux="587475ba-b771-5e3f-ad9e-33799f191a9c" include("FluxSpecificFeatures.jl")
+  @require ImageMagick="6218d12a-5da1-5696-b52f-db25d2ecc6d1" include("imagemagick.jl")
 end
 
 end

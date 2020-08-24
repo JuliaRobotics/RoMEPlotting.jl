@@ -2,7 +2,7 @@ name = "RoMEPlotting"
 uuid = "238d586b-a4bf-555c-9891-eda6fc5e55a2"
 keywords = ["mm-iSAM", "SLAM", "plotting", "2D", "robotics", "navigation"]
 desc = "Visualization tools for the RoME.jl package."
-version = "0.4.0"
+version = "0.4.1"
 
 [deps]
 ApproxManifoldProducts = "9bbbb610-88a1-53cd-9763-118ce10c1f89"
@@ -30,22 +30,24 @@ ApproxManifoldProducts = "0.1"
 Cairo = "0.6, 0.7, 0.8, 1"
 Colors = "0.9.4, 0.10, 0.11, 0.12"
 Compose = "0.8, 0.9"
-DistributedFactorGraphs = "0.8, 0.9"
+DistributedFactorGraphs = "0.9, 0.10"
 DocStringExtensions = "0.7, 0.8, 0.9, 1"
 Fontconfig = "0.2, 0.3, 0.4, 0.5"
 Gadfly = "1"
 Graphs = "0.10.2"
-IncrementalInference = "0.13, 0.14"
+IncrementalInference = "0.14.1, 0.15"
 KernelDensityEstimate = "0.5"
 KernelDensityEstimatePlotting = "0.1.6"
 Reexport = "0.2"
 Requires = "1.0"
-RoME = "0.7, 0.8"
+RoME = "0.7, 0.8, 0.9"
 StatsBase = "0.30, 0.31, 0.32, 0.33"
 julia = "1.4"
 
 [extras]
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Test", "Flux", "ImageMagick"]
