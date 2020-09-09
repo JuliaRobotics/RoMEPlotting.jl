@@ -386,7 +386,7 @@ function plotHorBeliefsList(fgl::G,
     nhor = round(Int,sqrt(len))
   end
   vlen = ceil(Int, len/nhor)
-  vv = Array{Gadfly.Compose.Context,1}(vlen)
+  vv = Array{Gadfly.Compose.Context,1}(undef, vlen)
   conslb = deepcopy(lbls)
   vidx = 0
   for i in 1:nhor:len
