@@ -140,3 +140,47 @@ export drawComicStrip
 
 
 #
+## =============================================================================
+## Old Functions -- Possibly Deprecated
+## =============================================================================
+function plotHorBeliefsList(fgl::G,
+                            lbls::Array{Symbol,1};
+                            nhor::Int=-1,
+                            gt=nothing,
+                            N::Int=200,
+                            extend=0.1  ) where G <: AbstractDFG
+  #
+  len = length(lbls)
+  pDens = BallTreeDensity[]
+  for lb in lbls
+    ptkde = getKDE(getVariable(fgl,lb))
+    push!(pDens, ptkde )
+  end
+
+  if nhor<1
+    nhor = round(Int,sqrt(len))
+  end
+  vlen = ceil(Int, len/nhor)
+  vv = Array{Gadfly.Compose.Context,1}(undef, vlen)
+  conslb = deepcopy(lbls)
+  vidx = 0
+  for i in 1:nhor:len
+    pH = BallTreeDensity[]
+    gtvals = Dict{Int,Array{Float64,2}}()
+    labels = String[]
+    for j in 0:(nhor-1)
+      if i+j <= len
+        push!(pH, pDens[i+j])
+        push!(labels, string(lbls[i+j]))
+        if gt != nothing gtvals[j+1] = gt[lbls[i+j]]  end
+      end
+    end
+    vidx+=1
+    if gt !=nothing
+      vv[vidx] = KernelDensityEstimatePlotting.drawHorDens(pH, N=N, gt=gtvals, lbls=labels, extend=extend)
+    else
+      vv[vidx] = KernelDensityEstimatePlotting.drawHorDens(pH, N=N, lbls=labels, extend=extend)
+    end
+  end
+  vv
+end
