@@ -451,9 +451,13 @@ plotFactorBeliefs(fgl::G, flbl::T) where {G <: AbstractDFG, T <: AbstractString}
 
 Plot the proposal belief from neighboring factors to `lbl` in the factor graph (ignoring Bayes tree representation),
 and show with new product approximation for reference.
+
+DevNotes
+- TODO, standardize around ::MIME="image/svg", see JuliaRobotics/DistributedFactorGraphs.jl#640
 """
-function plotLocalProduct(fgl::G,
+function plotLocalProduct(fgl::AbstractDFG,
                           lbl::Symbol;
+                          solveKey::Symbol=:default,
                           N::Int=100,
                           dims::Vector{Int}=Int[],
                           levels::Int=1,
@@ -461,15 +465,15 @@ function plotLocalProduct(fgl::G,
                           dirpath="/tmp/",
                           mimetype::AbstractString="svg",
                           sidelength=20cm,
-                          title::String="Local product, "  ) where G <: AbstractDFG
+                          title::String="Local product ($solveKey), "  )
   #
   @warn "not showing partial constraints, but included in the product"
   arr = Array{BallTreeDensity,1}()
   lbls = String[]
-  push!(arr, getKDE(getVariable(fgl, lbl)))
+  push!(arr, getBelief(getVariable(fgl, lbl), solveKey))
   push!(lbls, "curr")
   pl = nothing
-  pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N)
+  pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N, solveKey=solveKey)
 
   # helper functions
   function plotDirectProducts()
@@ -495,7 +499,7 @@ function plotLocalProduct(fgl::G,
         vals = partials[dimn]
         proddim = marginal(pp, [dimn])
         colors = getColorsByLength(length(vals)+2)
-        pl = plotKDE([proddim;getKDE(getVariable(fgl, lbl));vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
+        pl = plotKDE([proddim;getBelief(getVariable(fgl, lbl),solveKey);vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
         push!(PL, pl)
       end
       Gadfly.vstack(PL...)
