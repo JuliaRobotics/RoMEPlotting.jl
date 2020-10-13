@@ -367,49 +367,6 @@ function predCurrFactorBeliefs(fgl::G,
   return prjcurvals, collect(keys(prjcurvals))
 end
 
-
-function plotHorBeliefsList(fgl::G,
-                            lbls::Array{Symbol,1};
-                            nhor::Int=-1,
-                            gt=nothing,
-                            N::Int=200,
-                            extend=0.1  ) where G <: AbstractDFG
-  #
-  len = length(lbls)
-  pDens = BallTreeDensity[]
-  for lb in lbls
-    ptkde = getKDE(getVariable(fgl,lb))
-    push!(pDens, ptkde )
-  end
-
-  if nhor<1
-    nhor = round(Int,sqrt(len))
-  end
-  vlen = ceil(Int, len/nhor)
-  vv = Array{Gadfly.Compose.Context,1}(vlen)
-  conslb = deepcopy(lbls)
-  vidx = 0
-  for i in 1:nhor:len
-    pH = BallTreeDensity[]
-    gtvals = Dict{Int,Array{Float64,2}}()
-    labels = String[]
-    for j in 0:(nhor-1)
-      if i+j <= len
-        push!(pH, pDens[i+j])
-        push!(labels, string(lbls[i+j]))
-        if gt != nothing gtvals[j+1] = gt[lbls[i+j]]  end
-      end
-    end
-    vidx+=1
-    if gt !=nothing
-      vv[vidx] = KernelDensityEstimatePlotting.drawHorDens(pH, N=N, gt=gtvals, lbls=labels, extend=extend)
-    else
-      vv[vidx] = KernelDensityEstimatePlotting.drawHorDens(pH, N=N, lbls=labels, extend=extend)
-    end
-  end
-  vv
-end
-
 function plotFactorBeliefs(fgl::G,
                            flbl::Symbol ) where G <: AbstractDFG
   #
@@ -451,9 +408,13 @@ plotFactorBeliefs(fgl::G, flbl::T) where {G <: AbstractDFG, T <: AbstractString}
 
 Plot the proposal belief from neighboring factors to `lbl` in the factor graph (ignoring Bayes tree representation),
 and show with new product approximation for reference.
+
+DevNotes
+- TODO, standardize around ::MIME="image/svg", see JuliaRobotics/DistributedFactorGraphs.jl#640
 """
-function plotLocalProduct(fgl::G,
+function plotLocalProduct(fgl::AbstractDFG,
                           lbl::Symbol;
+                          solveKey::Symbol=:default,
                           N::Int=100,
                           dims::Vector{Int}=Int[],
                           levels::Int=1,
@@ -461,15 +422,15 @@ function plotLocalProduct(fgl::G,
                           dirpath="/tmp/",
                           mimetype::AbstractString="svg",
                           sidelength=20cm,
-                          title::String="Local product, "  ) where G <: AbstractDFG
+                          title::String="Local product ($solveKey), "  )
   #
   @warn "not showing partial constraints, but included in the product"
   arr = Array{BallTreeDensity,1}()
   lbls = String[]
-  push!(arr, getKDE(getVariable(fgl, lbl)))
+  push!(arr, getBelief(getVariable(fgl, lbl), solveKey))
   push!(lbls, "curr")
   pl = nothing
-  pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N)
+  pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N, solveKey=solveKey)
 
   # helper functions
   function plotDirectProducts()
@@ -495,7 +456,7 @@ function plotLocalProduct(fgl::G,
         vals = partials[dimn]
         proddim = marginal(pp, [dimn])
         colors = getColorsByLength(length(vals)+2)
-        pl = plotKDE([proddim;getKDE(getVariable(fgl, lbl));vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
+        pl = plotKDE([proddim;getBelief(getVariable(fgl, lbl),solveKey);vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
         push!(PL, pl)
       end
       Gadfly.vstack(PL...)
@@ -617,14 +578,14 @@ function plotTreeProductUp(fgl::G,
                            dims::Vector{Int}=Int[]  ) where G <: AbstractDFG
   #
   # build a subgraph copy of clique
-  cliq = whichCliq(treel, cliqsym)
+  cliq = getClique(treel, cliqsym)
   syms = getCliqAllVarIds(cliq)
-  subfg = buildSubgraphFromLabels!(fgl, syms)
+  subfg = buildSubgraph(fgl, syms)
 
   # add upward messages to subgraph
-  msgs = getCliqChildMsgsUp(treel,cliq, BallTreeDensity)
+  msgs = fetchMsgsUpChildren(treel,cliq, TreeBelief)
   # @show typeof(msgs)
-  addMsgFactors!(subfg, msgs)
+  addMsgFactors!.(subfg, msgs, IIF.UpwardPass)
 
   # predictBelief
   # stuff = treeProductUp(fgl, treel, cliqsym, varsym)
