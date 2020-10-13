@@ -583,7 +583,7 @@ function plotTreeProductUp(fgl::G,
   subfg = buildSubgraph(fgl, syms)
 
   # add upward messages to subgraph
-  msgs = getMsgsUpChildren(treel,cliq, TreeBelief)
+  msgs = fetchMsgsUpChildren(treel,cliq, TreeBelief)
   # @show typeof(msgs)
   addMsgFactors!.(subfg, msgs, IIF.UpwardPass)
 
