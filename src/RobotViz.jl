@@ -290,9 +290,9 @@ function plotSLAM2DPoses( fg::AbstractDFG;
                           contour::Bool=true, levels::Int=1,
                           line_width=1pt,
                           drawPoints::Bool=true,
-                          ellipseColor::AbstractString="gray30",
                           pointsColor::AbstractString="gray30",
                           drawEllipse::Bool=false,
+                          ellipseColor::AbstractString="gray30",
                           manualColor=nothing  )
     #
     # deprecations
@@ -375,9 +375,9 @@ function plotSLAM2DLandmarks( fg::AbstractDFG;
                               MM::Dict{Int,T}=Dict{Int,Int}(),
                               point_size=1pt,
                               drawPoints::Bool=true,
-                              ellipseColor::AbstractString="gray30",
                               pointsColor::AbstractString="gray30",
                               drawEllipse::Bool=false,
+                              ellipseColor::AbstractString="gray30",
                               resampleGaussianFit::Int=0  ) where T
     #
     if meanmax != :null
@@ -462,7 +462,8 @@ plotSLAM2D(fg)
 """
 function plotSLAM2D(fgl::AbstractDFG;
                     solveKey::Symbol=:default,
-                    from::Int64=0, to::Int64=99999999, minnei::Int64=0,
+                    from::Int64=0, to::Int64=99999999, 
+                    minnei::Int64=0,
                     meanmax=:null,
                     posesPPE=:suggested,
                     landmsPPE=:suggested,
@@ -482,9 +483,9 @@ function plotSLAM2D(fgl::AbstractDFG;
                     regexPoses=r"x",
                     manualColor=nothing,
                     drawPoints::Bool=true,
-                    ellipseColor::AbstractString="gray30",
                     pointsColor::AbstractString="gray30",
                     drawEllipse::Bool=false,
+                    ellipseColor::AbstractString="gray30",
                     title::AbstractString=""  ) where {T}
   #
   # deprecations
