@@ -245,11 +245,6 @@ function addXYLineLayers!(pl, Xpp, Ypp, Thpp; l::Real=1.0, manualColor::Union{No
     nothing
 end
 
-# function lblsFromTo(from,to)
-#   lbls=String[]
-#   [push!(lbls, "$(i)") for i in from:to]
-#   return lbls
-# end
 
 
 """
@@ -261,7 +256,7 @@ function calcDyadScaleAdaptive( Xpp::AbstractVector{<:Real},
                                 scaling::Real=0.25)
 
   dists = diff(Xpp).^2 + diff(Ypp).^2 |> vec .|> sqrt
- scaling*Statistics.mean(dists)
+  scaling*Statistics.mean(dists)
 end
 
 
@@ -458,6 +453,13 @@ Examples:
 ```julia
 fg = generateCanonicalFG_Hexagonal()
 plotSLAM2D(fg)
+plotSLAM2D(fg, drawPoints=false)
+plotSLAM2D(fg, contour=false, drawEllipse=true)
+plotSLAM2D(fg, contour=false, title="SLAM result 1")
+
+# of load a factor graph
+fg_ = loadDFG("somwhere.tzr.gz")
+plotSLAM2D(fg_)
 ```
 """
 function plotSLAM2D(fgl::AbstractDFG;
