@@ -127,13 +127,13 @@ Related
 
 covEllipseParameterized, plotSLAM2DPosesLandms
 """
-function plotCovEllipseLayer(dfg::AbstractDFG,
-                             vsym::Symbol;
-                             solveKey::Symbol=:default,
-                             points::Bool=true,
-                             ellipseColor::AbstractString="gray30",
-                             pointsColor::AbstractString="gray30",
-                             drawEllipse::Bool=true  )
+function plotCovEllipseLayer( dfg::AbstractDFG,
+                              vsym::Symbol;
+                              solveKey::Symbol=:default,
+                              points::Bool=true,
+                              ellipseColor::AbstractString="gray30",
+                              pointsColor::AbstractString="gray30",
+                              drawEllipse::Bool=true  )
   #
   PL = []
 
@@ -251,9 +251,9 @@ end
     $SIGNATURES
 Adaptively size the `dyadScale` value for plotSLAM2DPose.
 """
-function calcDyadScaleAdaptive(Xpp::AbstractVector{<:Real},
-                               Ypp::AbstractVector{<:Real};
-                               scaling::Real=0.25)
+function calcDyadScaleAdaptive( Xpp::AbstractVector{<:Real},
+                                Ypp::AbstractVector{<:Real};
+                                scaling::Real=0.25)
 
   dists = diff(Xpp).^2 + diff(Ypp).^2 |> vec .|> sqrt
  scaling*Statistics.mean(dists)
@@ -269,41 +269,45 @@ end
 Future:
 - Relax to user defined pose labeling scheme, for example `:p1, :p2, ...`
 """
-function plotSLAM2DPoses(fg::AbstractDFG;
-                         solveKey::Symbol=:default,
-                         from::Int64=0,
-                         to::Int64=99999999,
-                         meanmax=:null,
-                         ppe=:suggested,
-                         lbls=true,
-                         drawhist=false,
-                         spscale::Union{Nothing, <:Real}=nothing,
-                         dyadScale::Union{Nothing, <:Real}=nothing,
-                         drawTriads::Bool=true,
-                         contour::Bool=true, levels::Int=1,
-                         regexPoses=r"x\d",
-                         line_width=1pt,
-                         manualColor=nothing  )
+function plotSLAM2DPoses( fg::AbstractDFG;
+                          solveKey::Symbol=:default,
+                          regexPoses=r"x\d",
+                          from::Int64=0,
+                          to::Int64=99999999,
+                          variableList::AbstractVector{Symbol}=getVariablesLabelsWithinRange(fg, regexPoses, from=from, to=to),
+                          meanmax=:null,
+                          ppe=:suggested,
+                          lbls=true,
+                          drawhist=false,
+                          spscale::Union{Nothing, <:Real}=nothing,
+                          dyadScale::Union{Nothing, <:Real}=nothing,
+                          drawTriads::Bool=true,
+                          contour::Bool=true, levels::Int=1,
+                          line_width=1pt,
+                          points::Bool=true,
+                          ellipseColor::AbstractString="gray30",
+                          pointsColor::AbstractString="gray30",
+                          drawEllipse::Bool=false,
+                          manualColor=nothing  )
     #
     # deprecations
     if meanmax != :null
-      @warn "plotSLAM2DPoses meanmax keyword is deprecated, use ppe instead."
+      @warn "plotSLAM2DPoses meanmax keyword is deprecated, use ppe=:suggested instead."
       ppe = meanmax
     end
     !(spscale isa Nothing) ? (dyadScale=spscale; @warn("keyword spscale is deprecated, use dyadScale instead")) : nothing
 
     ## Use PPE.suggested
-    vsyms = getVariablesLabelsWithinRange(fg, regexPoses, from=from, to=to)
 
-    Ppes = map(x->calcVariablePPE(fg, x, solveKey=solveKey), vsyms)
-    mask = Ppes .!= nothing
-    vsyms = vsyms[mask]
+    Ppes = map(x->calcVariablePPE(fg, x, solveKey=solveKey), variableList)
+    mask = Ppes .!== nothing
+    variableList = variableList[mask]
     suggPpes = (x->getfield(x,ppe)).(Ppes[mask])
 
     Xpp  = (x->x[1]).(suggPpes)
     Ypp  = (x->x[2]).(suggPpes)
     Thpp = (x->x[3]).(suggPpes)
-    LBLS = string.(vsyms)
+    LBLS = string.(variableList)
 
     # adaptively scale dyad size
     dyadScale = dyadScale isa Nothing ? calcDyadScaleAdaptive(Xpp, Ypp) : dyadScale
@@ -322,19 +326,24 @@ function plotSLAM2DPoses(fg::AbstractDFG;
         Coord.cartesian(fixed=true)
       )
     end
-	# return psplt
+    # return psplt
     drawTriads && addXYLineLayers!(psplt, Xpp, Ypp, Thpp, l=dyadScale, manualColor=manualColor)
     if drawhist
       Xp,Yp = get2DPoseSamples(fg, from=from, to=to)
       push!(psplt.layers,  Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)[1] )#(xbincount=100, ybincount=100))
     end
     # add contours to pose estimates
+      # varsyms = Symbol.(LBLS)
     if contour
-      varsyms = Symbol.(LBLS)
-      for vsym in varsyms
+      for vsym in variableList
         pln = plotKDE(fg, vsym, solveKey=solveKey, dims=[1;2], levels=levels, c=[(manualColor === nothing ? "gray90" : manualColor);])
         union!(psplt.layers, pln.layers)
       end
+    end
+    # drawEllipse
+    for vsym in variableList
+      pln = plotCovEllipseLayer(fg, vsym, solveKey=solveKey, drawEllipse=drawEllipse,points=points,ellipseColor=ellipseColor,pointsColor=pointsColor)
+      union!(psplt.layers, pln)
     end
     return psplt
 end
@@ -346,20 +355,25 @@ end
 
 2D plot of landmarks, assuming `:l1, :l2, ... :ln`.  Use `from` and `to` to control the range of landmarks `n` to include.
 """
-function plotSLAM2DLandmarks(fg::AbstractDFG;
-                             solveKey::Symbol=:default,
-                             from::Int64=0, to::Int64=99999999,
-                             minnei::Int64=0,
-                             meanmax=:null,
-                             ppe::Symbol=:suggested,
-                             lbls=true,showmm=false,drawhist=true,
-                             contour::Bool=true, levels::Int=1,
-                             manualColor=nothing,
-                             c= manualColor==nothing ? "red" : manualColor,
-                             MM::Dict{Int,T}=Dict{Int,Int}(),
-                             point_size=1pt,
-                             regexLandmark::Regex=r"l",
-                             resampleGaussianFit::Int=0  ) where T
+function plotSLAM2DLandmarks( fg::AbstractDFG;
+                              solveKey::Symbol=:default,
+                              regexLandmark::Regex=r"l",
+                              from::Int64=0, to::Int64=99999999,
+                              minnei::Int64=0,
+                              variableList::AbstractVector{Symbol}=getVariablesLabelsWithinRange(fg, regexLandmark, from=from, to=to),
+                              meanmax=:null,
+                              ppe::Symbol=:suggested,
+                              lbls=true,showmm=false,drawhist=true,
+                              contour::Bool=true, levels::Int=1,
+                              manualColor=nothing,
+                              c= manualColor==nothing ? "red" : manualColor,
+                              MM::Dict{Int,T}=Dict{Int,Int}(),
+                              point_size=1pt,
+                              points::Bool=true,
+                              ellipseColor::AbstractString="gray30",
+                              pointsColor::AbstractString="gray30",
+                              drawEllipse::Bool=false,
+                              resampleGaussianFit::Int=0  ) where T
     #
     if meanmax != :null
       @warn "plotSLAM2DPoses meanmax keyword is deprecated, use ppe instead."
@@ -367,16 +381,15 @@ function plotSLAM2DLandmarks(fg::AbstractDFG;
     end
 
     ## Use PPE.suggested
-    vsyms = getVariablesLabelsWithinRange(fg, regexLandmark, from=from, to=to)
 
-    Ppes = map(x->calcVariablePPE(fg, x, solveKey=solveKey), vsyms)
-    mask = Ppes .!= nothing
-    vsyms = vsyms[mask]
+    Ppes = map(x->calcVariablePPE(fg, x, solveKey=solveKey), variableList)
+    mask = Ppes .!== nothing
+    variableList = variableList[mask]
     suggPpes = (x->getfield(x,ppe)).(Ppes[mask])
 
     Xpp  = (x->x[1]).(suggPpes)
     Ypp  = (x->x[2]).(suggPpes)
-    lbltags = string.(vsyms)
+    lbltags = string.(variableList)
 
     # Xp,Yp = get2DLandmSamples(fg, from=from, to=to)
     # Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; lblstags=String[];
@@ -415,6 +428,12 @@ function plotSLAM2DLandmarks(fg::AbstractDFG;
         pln = plotKDE(fg, vsym, solveKey=solveKey, dims=[1;2], levels=levels, c=[(manualColor==nothing ? "gray90" : manualColor);])
         union!(psplt.layers, pln.layers)
       end
+    end
+
+    # if drawEllipse
+    for vsym in variableList
+      pln = plotCovEllipseLayer(fg, vsym, solveKey=solveKey, drawEllipse=drawEllipse,points=points,ellipseColor=ellipseColor,pointsColor=pointsColor)
+      union!(psplt.layers, pln)
     end
 
     psplt
@@ -457,6 +476,10 @@ function plotSLAM2D(fgl::AbstractDFG;
                     regexLandmark=r"l",
                     regexPoses=r"x",
                     manualColor=nothing,
+                    points::Bool=true,
+                    ellipseColor::AbstractString="gray30",
+                    pointsColor::AbstractString="gray30",
+                    drawEllipse::Bool=false,
                     title::AbstractString=""  ) where {T}
   #
   # deprecations
@@ -470,9 +493,42 @@ function plotSLAM2D(fgl::AbstractDFG;
   xmin != nothing && xmax != nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
   ymin != nothing && ymax != nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
   ll = listVariables(fgl, regexLandmark)
-  p = plotSLAM2DPoses(fgl, solveKey=solveKey, from=from,to=to,ppe=posesPPE,lbls=lbls,drawhist=drawhist, dyadScale=dyadScale, contour=contour, drawTriads=drawTriads, manualColor=manualColor, line_width=line_width)
+  p = plotSLAM2DPoses(fgl,
+                      solveKey=solveKey,
+                      from=from,
+                      to=to,
+                      ppe=posesPPE,
+                      lbls=lbls,
+                      drawhist=drawhist,
+                      dyadScale=dyadScale,
+                      contour=contour,
+                      drawTriads=drawTriads,
+                      manualColor=manualColor,
+                      line_width=line_width,
+                      points=points,
+                      ellipseColor=ellipseColor,
+                      pointsColor=pointsColor,
+                      drawEllipse=drawEllipse  )
+  #
   if length(ll) > 0
-    pl = plotSLAM2DLandmarks(fgl, solveKey=solveKey, from=from, to=to, ppe=landmsPPE, minnei=minnei,lbls=lbls,drawhist=drawhist, MM=MM, showmm=showmm, point_size=point_size, contour=contour, manualColor=manualColor)
+    pl = plotSLAM2DLandmarks( fgl,
+                              solveKey=solveKey,
+                              from=from,
+                              to=to,
+                              ppe=landmsPPE,
+                              minnei=minnei,
+                              lbls=lbls,
+                              drawhist=drawhist,
+                              MM=MM,
+                              showmm=showmm,
+                              point_size=point_size,
+                              contour=contour,
+                              manualColor=manualColor,
+                              points=points,
+                              ellipseColor=ellipseColor,
+                              pointsColor=pointsColor,
+                              drawEllipse=drawEllipse  )
+    #
     for l in pl.layers
       push!(p.layers, l)
     end
@@ -491,10 +547,10 @@ function plotSLAM2D(fgl::AbstractDFG;
 end
 
 
-function plotSLAM2DSubmaps(fgl::G, fromto::Array{Int,2};
-                     m1hist=false, m2hist=false, m3hist=false,
-                     showmm=false, MM::Dict{Int,T} = Dict{Int,Any}(),
-                     xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {G <: AbstractDFG, T}
+function plotSLAM2DSubmaps( fgl::AbstractDFG, fromto::Array{Int,2};
+                            m1hist=false, m2hist=false, m3hist=false,
+                            showmm=false, MM::Dict{Int,T} = Dict{Int,Any}(),
+                            xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where T
   #
   p = plotSLAM2DLandmarks(fgl, from=fromto[1,1], to=fromto[1,2], drawhist=m1hist, showmm=showmm, MM=MM)
   if size(fromto,1) >1
