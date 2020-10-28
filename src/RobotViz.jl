@@ -130,7 +130,7 @@ covEllipseParameterized, plotSLAM2DPosesLandms
 function plotCovEllipseLayer( dfg::AbstractDFG,
                               vsym::Symbol;
                               solveKey::Symbol=:default,
-                              points::Bool=true,
+                              drawPoints::Bool=true,
                               ellipseColor::AbstractString="gray30",
                               pointsColor::AbstractString="gray30",
                               drawEllipse::Bool=true  )
@@ -155,8 +155,13 @@ function plotCovEllipseLayer( dfg::AbstractDFG,
   end
 
   # add the points layer if needed
-  if points
-    plelX1 = Gadfly.layer(x=pp[1,:], y=pp[2,:], Geom.point, Theme(default_color=parse(Colorant, pointsColor), point_size=1pt))
+  if drawPoints
+    plelX1 = Gadfly.layer(x=pp[1,:],
+                          y=pp[2,:],
+                          Geom.point,
+                          Theme(default_color=parse(Colorant, pointsColor), 
+                          point_size=1pt))
+    #
     push!(PL, plelX1[1])
   end
 
@@ -284,7 +289,7 @@ function plotSLAM2DPoses( fg::AbstractDFG;
                           drawTriads::Bool=true,
                           contour::Bool=true, levels::Int=1,
                           line_width=1pt,
-                          points::Bool=true,
+                          drawPoints::Bool=true,
                           ellipseColor::AbstractString="gray30",
                           pointsColor::AbstractString="gray30",
                           drawEllipse::Bool=false,
@@ -342,7 +347,7 @@ function plotSLAM2DPoses( fg::AbstractDFG;
     end
     # drawEllipse
     for vsym in variableList
-      pln = plotCovEllipseLayer(fg, vsym, solveKey=solveKey, drawEllipse=drawEllipse,points=points,ellipseColor=ellipseColor,pointsColor=pointsColor)
+      pln = plotCovEllipseLayer(fg, vsym, solveKey=solveKey, drawEllipse=drawEllipse,drawPoints=drawPoints,ellipseColor=ellipseColor,pointsColor=pointsColor)
       union!(psplt.layers, pln)
     end
     return psplt
@@ -369,7 +374,7 @@ function plotSLAM2DLandmarks( fg::AbstractDFG;
                               c= manualColor==nothing ? "red" : manualColor,
                               MM::Dict{Int,T}=Dict{Int,Int}(),
                               point_size=1pt,
-                              points::Bool=true,
+                              drawPoints::Bool=true,
                               ellipseColor::AbstractString="gray30",
                               pointsColor::AbstractString="gray30",
                               drawEllipse::Bool=false,
@@ -432,7 +437,7 @@ function plotSLAM2DLandmarks( fg::AbstractDFG;
 
     # if drawEllipse
     for vsym in variableList
-      pln = plotCovEllipseLayer(fg, vsym, solveKey=solveKey, drawEllipse=drawEllipse,points=points,ellipseColor=ellipseColor,pointsColor=pointsColor)
+      pln = plotCovEllipseLayer(fg, vsym, solveKey=solveKey, drawEllipse=drawEllipse,drawPoints=drawPoints,ellipseColor=ellipseColor,pointsColor=pointsColor)
       union!(psplt.layers, pln)
     end
 
@@ -476,7 +481,7 @@ function plotSLAM2D(fgl::AbstractDFG;
                     regexLandmark=r"l",
                     regexPoses=r"x",
                     manualColor=nothing,
-                    points::Bool=true,
+                    drawPoints::Bool=true,
                     ellipseColor::AbstractString="gray30",
                     pointsColor::AbstractString="gray30",
                     drawEllipse::Bool=false,
@@ -505,7 +510,7 @@ function plotSLAM2D(fgl::AbstractDFG;
                       drawTriads=drawTriads,
                       manualColor=manualColor,
                       line_width=line_width,
-                      points=points,
+                      drawPoints=drawPoints,
                       ellipseColor=ellipseColor,
                       pointsColor=pointsColor,
                       drawEllipse=drawEllipse  )
@@ -524,7 +529,7 @@ function plotSLAM2D(fgl::AbstractDFG;
                               point_size=point_size,
                               contour=contour,
                               manualColor=manualColor,
-                              points=points,
+                              drawPoints=drawPoints,
                               ellipseColor=ellipseColor,
                               pointsColor=pointsColor,
                               drawEllipse=drawEllipse  )
@@ -570,10 +575,10 @@ function plotSLAM2DSubmaps( fgl::AbstractDFG, fromto::Array{Int,2};
   return p
 end
 
-function plotSLAM2DSubmaps(fgl::G, fromto::Array{Int,1}; spread::Int=25,
-                     m1hist=false, m2hist=false, m3hist=false,
-                     showmm=false, MM::Dict{Int,T}=Dict{Int,Any}(),
-                     xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {G <: AbstractDFG, T}
+function plotSLAM2DSubmaps( fgl::G, fromto::Array{Int,1}; spread::Int=25,
+                            m1hist=false, m2hist=false, m3hist=false,
+                            showmm=false, MM::Dict{Int,T}=Dict{Int,Any}(),
+                            xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing ) where {G <: AbstractDFG, T}
   #
   ft = zeros(Int,length(fromto),2)
   for i in 1:length(fromto)
