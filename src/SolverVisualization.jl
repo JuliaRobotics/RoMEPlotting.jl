@@ -1051,18 +1051,18 @@ function plotCliqDownMsgs(tree::BayesTree,
                           dims=nothing,
                           existing=nothing  )
   #
-  cliq = getCliq(tree,frnt)
-  msgs = getDwnMsgs(cliq)
+  cliq = getClique(tree,frnt)
+  msgs = IIF.getMessageBuffer(cliq).downRx.belief
 
   PL = []
 
   for (key, beldim) in msgs
-    npl = plotKDE(beldim[1], levels=levels, title="dwn msg $key", dims=dims)
-    existing == nothing ? nothing : union!(npl.layers, existing.layers)
+    npl = plotKDE(kde!(beldim.val), levels=levels, title="dwn msg $key", dims=dims)
+    existing === nothing ? nothing : union!(npl.layers, existing.layers)
     push!(PL, npl)
   end
 
-  existing == nothing ? nothing : push!(PL, existing)
+  existing === nothing ? nothing : push!(PL, existing)
   pl = vstack(PL...)
 
   folderpath = "/tmp/caesar/random/"
