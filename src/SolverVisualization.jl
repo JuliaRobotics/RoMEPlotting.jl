@@ -360,7 +360,7 @@ function predCurrFactorBeliefs(fgl::G,
   # TODO update to use ls and lsv functions
   prjcurvals = Dict{String, Array{BallTreeDensity,1}}()
   for v in getNeighbors(fgl, fc)
-    pred = kde!(evalFactor2(fgl, fc, v.index))
+    pred = kde!(evalFactor(fgl, fc, v.index))
     curr = kde!(getVal(v))
     prjcurvals[v.attributes["label"]] = [curr; pred]
   end
