@@ -1057,7 +1057,7 @@ function plotCliqDownMsgs(tree::BayesTree,
   PL = []
 
   for (key, beldim) in msgs
-    npl = plotKDE(kde!(beldim.val), levels=levels, title="dwn msg $key", dims=dims)
+    npl = plotKDE(manikde!(beldim.val, beldim.softtype), levels=levels, title="dwn msg $key", dims=dims)
     existing === nothing ? nothing : union!(npl.layers, existing.layers)
     push!(PL, npl)
   end
