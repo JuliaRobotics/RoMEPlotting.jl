@@ -363,10 +363,10 @@ function plotSLAM2DLandmarks( fg::AbstractDFG;
                               variableList::AbstractVector{Symbol}=getVariablesLabelsWithinRange(fg, regexLandmark, from=from, to=to),
                               meanmax=:null,
                               ppe::Symbol=:suggested,
-                              lbls=true,showmm=false,drawhist=true,
+                              lbls=true,showmm=false,drawhist=false,
                               contour::Bool=true, levels::Int=1,
                               manualColor=nothing,
-                              c= manualColor==nothing ? "red" : manualColor,
+                              c= manualColor===nothing ? "red" : manualColor,
                               MM::Dict{Int,T}=Dict{Int,Int}(),
                               point_size=1pt,
                               drawPoints::Bool=true,
@@ -400,21 +400,21 @@ function plotSLAM2DLandmarks( fg::AbstractDFG;
     #   Xpp,Ypp, t, lbltags = get2DLandmMax(fg, from=from, to=to,showmm=showmm,MM=MM, regexLandmark=regexLandmark)
     # end
 
-    if lbls
-      psplt = Gadfly.plot(
+    psplt = if lbls
+      Gadfly.plot(
         Gadfly.layer(x=Xpp,y=Ypp, label=lbltags, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=point_size), Geom.label),
         Coord.cartesian(fixed=true)
         # ,Gadfly.layer(x=Xp, y=Yp, Geom.histogram2d)#(xbincount=100, ybincount=100)
       )
     else
-      psplt = Gadfly.plot(
-        Gadfly.layer(x=Xpp,y=Ypp, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=1pt)),
+      Gadfly.plot(
+        Gadfly.layer(x=Xpp,y=Ypp, Geom.point, Theme(line_width=1pt, default_color=parse(Colorant,c), point_size=point_size)),
         Coord.cartesian(fixed=true)
       )
     end
 
     if drawhist
-      push!(psplt.layers, Gadfly.layer(x=Xpp, y=Ypp, Geom.histogram2d)[1])#(xbincount=100, ybincount=100)
+      push!(psplt.layers, Gadfly.layer(x=Xpp, y=Ypp, Geom.histogram2d)[1]) #(xbincount=100, ybincount=100)
     end
 
 
@@ -425,7 +425,7 @@ function plotSLAM2DLandmarks( fg::AbstractDFG;
       end
       varsyms = Symbol.(lbltags)
       for vsym in varsyms
-        pln = plotKDE(fg, vsym, solveKey=solveKey, dims=[1;2], levels=levels, c=[(manualColor==nothing ? "gray90" : manualColor);])
+        pln = plotKDE(fg, vsym, solveKey=solveKey, dims=[1;2], levels=levels, c=[(manualColor===nothing ? "gray90" : manualColor);])
         union!(psplt.layers, pln.layers)
       end
     end
@@ -511,8 +511,8 @@ function plotSLAM2D(fgl::AbstractDFG;
   end
   !(spscale isa Nothing) ? (dyadScale=spscale; @warn("keyword spscale is deprecated, use dyadScale instead")) : nothing
   #
-  xmin != nothing && xmax != nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
-  ymin != nothing && ymax != nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
+  xmin !== nothing && xmax !== nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
+  ymin !== nothing && ymax !== nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
   ll = listVariables(fgl, regexLandmark)
   p = plotSLAM2DPoses(fgl,
                       solveKey=solveKey,
@@ -554,7 +554,7 @@ function plotSLAM2D(fgl::AbstractDFG;
       push!(p.layers, l)
     end
   end
-  if window != nothing
+  if window !== nothing
     focusX = getKDEMax( getKDE(getVariable(fgl,window[1]),solveKey) )
     pwind = window[2]
     p.coord = Coord.cartesian(xmin=focusX[1]-pwind,xmax=focusX[1]+pwind,ymin=focusX[2]-pwind,ymax=focusX[2]+pwind)
