@@ -19,16 +19,16 @@ plotKDE([p;q], dims=[1;2], levels=3)
 plotKDE([p;q], dims=[1])
 ```
 """
-function plotKDE(fgl::AbstractDFG,
-                 sym::Symbol;
-                 solveKey::Symbol=:default,
-                 dims=nothing,
-                 title="",
-                 levels::Int=5,
-                 fill::Bool=false,
-                 layers::Bool=false,
-                 c=nothing,
-                 overlay=nothing  )
+function plotKDE( fgl::AbstractDFG,
+                  sym::Symbol;
+                  solveKey::Symbol=:default,
+                  dims=nothing,
+                  title="",
+                  levels::Int=5,
+                  fill::Bool=false,
+                  layers::Bool=false,
+                  c=nothing,
+                  overlay=nothing  )
   #
   p = getKDE(getVariable(fgl,sym), solveKey)
   # mmarg = length(marg) > 0 ? marg : collect(1:Ndim(p))
