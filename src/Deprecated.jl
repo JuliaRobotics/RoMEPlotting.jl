@@ -1,4 +1,164 @@
 
+
+
+# function predCurrFactorBeliefs(fgl::G,
+#                                fc::Graphs.ExVertex  ) where G <: AbstractDFG
+#   #
+#   # TODO update to use ls and lsv functions
+#   prjcurvals = Dict{String, Array{BallTreeDensity,1}}()
+#   for v in getNeighbors(fgl, fc)
+#     pred = kde!(evalFactor(fgl, fc, v.index))
+#     curr = kde!(getVal(v))
+#     prjcurvals[v.attributes["label"]] = [curr; pred]
+#   end
+#   return prjcurvals, collect(keys(prjcurvals))
+# end
+
+# function plotFactorBeliefs(fgl::G,
+#                            flbl::Symbol ) where G <: AbstractDFG
+#   #
+#   if !haskey(fgl.fIDs, flbl)
+#     println("no key $(flbl)")
+#     return nothing
+#   end
+#   # for fc in fgl.f
+#     # if fc[2].attributes["label"] == flbl
+
+#     fc = fgl.g.vertices[fgl.fIDs[flbl]]  # fc = fgl.f[fgl.fIDs[flbl]]
+#       prjcurvals, lbls = predCurrFactorBeliefs(fgl, fc)
+#       if length(lbls) == 3
+#         return vstack(
+#         plotKDE(prjcurvals[lbls[1]]),
+#         plotKDE(prjcurvals[lbls[2]]),
+#         plotKDE(prjcurvals[lbls[3]]),
+#         )
+#       elseif length(lbls) == 2
+#         return vstack(
+#         plotKDE(prjcurvals[lbls[1]]),
+#         plotKDE(prjcurvals[lbls[2]]),
+#         )
+#       elseif length(lbls) == 1
+#         return plotKDE(prjcurvals[lbls[1]])
+#       end
+
+#     # end
+#   # end
+#   nothing
+# end
+# plotFactorBeliefs(fgl::G, flbl::T) where {G <: AbstractDFG, T <: AbstractString} = plotFactorBeliefs(fgl, Symbol(flbl))
+
+
+# function whosWith(cliq::Graphs.ExVertex)
+#   println("$(cliq.attributes["label"])")
+#   for pot in cliq.attributes["data"].potentials
+#       println("$(pot)")
+#   end
+#   nothing
+# end
+
+# function whosWith(bt::BayesTree, frt::String)
+#     whosWith(whichCliq(bt,frt))
+# end
+
+
+# function plotUpMsgAtCliq(fg::G,
+#                          cliq::Graphs.ExVertex  ) where G <: AbstractDFG
+#   #
+#   for id in keys(cliq.attributes["data"].debug.outmsg.p)
+#       print("$(getVariable(fg,id).label), ") #fg.v[id].
+#   end
+#   println("")
+#   sleep(0.1)
+#   potens = getData(cliq).debug.outmsg.p
+#   vArrPotentials(potens)
+# end
+
+# function plotUpMsgAtCliq(fg::G,
+#                          bt::BayesTree,
+#                          lbl::Union{String,Symbol}  ) where G <: AbstractDFG
+#   #
+#   plotUpMsgAtCliq(fg, whichCliq(bt, Symbol(lbl)) )
+# end
+
+
+# function dwnMsgsAtCliq(fg::G,
+#                        cliq::Graphs.ExVertex  ) where G <: AbstractDFG
+#   #
+#   for id in keys(cliq.attributes["data"].debugDwn.outmsg.p)
+#       print("$(getVariable(fg,id).label), ") # fg.v[id].
+#   end
+#   println("")
+#   sleep(0.1)
+#   potens = cliq.attributes["data"].debugDwn.outmsg.p
+#   potens
+# end
+
+# function dwnMsgsAtCliq(fg::G,
+#                        bt::BayesTree,
+#                        lbl::Union{String,Symbol}  ) where G <: AbstractDFG
+#   #
+#   dwnMsgsAtCliq(fg, whichCliq(bt, Symbol(lbl)) )
+# end
+
+# function plotPose2DMC!(plots::Array{Gadfly.Compose.Context,1},
+#                        cliqMC::CliqGibbsMC )
+#   #
+#   for prod in cliqMC.prods
+#     prodVal = kde!(prod.product, "lcv") #cliqMC.prods[1]
+#     push!(plots, plotKDE([prodVal;prod.potentials]) )
+#   end
+#   vstackedPlots(plots)
+# end
+
+# function mcmcPose2D!(plots::Array{Gadfly.Compose.Context,1},
+#                      cliqDbg::DebugCliqMCMC,
+#                      iter::Int=1  )
+#     # for mc in cliqDbg.mcmc
+#     mc = cliqDbg.mcmc[iter]
+#     v = plotPose2DMC!(plots, mc)
+#     # end
+#     return v
+# end
+
+# function plotUpMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
+#                            cliq::Graphs.ExVertex,
+#                            iter::Int=1 )
+#   #
+#   whosWith(cliq)
+#   cliqDbg = cliq.attributes["data"].debug
+#   sleep(0.1)
+#   mcmcPose2D!(plots, cliqDbg, iter)
+# end
+
+# function plotUpMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
+#                            bt::BayesTree,
+#                            frt::String,
+#                            iter::Int=1 )
+#   #
+#   drawUpMCMCPose2D!(plots, whichCliq(bt,frt), iter)
+# end
+
+# function plotDwnMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
+#                             cliq::Graphs.ExVertex,
+#                             iter::Int=1  )
+#   #
+#   whosWith(cliq)
+#   cliqDbg = cliq.attributes["data"].debugDwn
+#   sleep(0.1)
+#   mcmcPose2D!(plots, cliqDbg, iter)
+# end
+
+# function plotDwnMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
+#                             bt::BayesTree,
+#                             frt::String,
+#                             iter::Int=1 )
+#   #
+#   drawDwnMCMCPose2D!(plots, whichCliq(bt,frt), iter)
+# end
+
+
+
+
 ## =============================================================================
 ## Delete end v0.3.x
 ## =============================================================================
