@@ -898,17 +898,17 @@ function plotCliqDownMsgs(tree::AbstractBayesTree,
                           existing=nothing  )
   #
   cliq = getClique(tree,frnt)
-  msgs = getDwnMsgs(cliq)
+  msgs = IIF.getMessageBuffer(cliq).downRx.belief
 
   PL = []
 
   for (key, beldim) in msgs
-    npl = plotKDE(beldim[1], levels=levels, title="dwn msg $key", dims=dims)
-    existing == nothing ? nothing : union!(npl.layers, existing.layers)
+    npl = plotKDE(manikde!(beldim.val, beldim.softtype), levels=levels, title="dwn msg $key", dims=dims)
+    existing === nothing ? nothing : union!(npl.layers, existing.layers)
     push!(PL, npl)
   end
 
-  existing == nothing ? nothing : push!(PL, existing)
+  existing === nothing ? nothing : push!(PL, existing)
   pl = vstack(PL...)
 
   folderpath = "/tmp/caesar/random/"
