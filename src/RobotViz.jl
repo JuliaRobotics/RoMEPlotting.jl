@@ -774,9 +774,10 @@ end
 
 # import RoMEPlotting: drawMarginalContour
 
-function plotMarginalContour(fgl::AbstractDFG, lbl::String;
-                             solveKey::Symbol=:default,
-                             xmin=-150,xmax=150,ymin=-150,ymax=150,n=200 )
+function plotMarginalContour( fgl::AbstractDFG, lbl::String;
+                              solveKey::Symbol=:default,
+                              xmin=-150,xmax=150,ymin=-150,ymax=150,
+                              n::Int=200 )
   #
   p = getKDE(getVariable(fgl,Symbol(lbl)), solveKey)  # p = getKDE(getVert(fgl,lbl))
   Gadfly.plot(z=(x,y)->evaluateDualTree(p,vectoarr2([x,y]))[1],
