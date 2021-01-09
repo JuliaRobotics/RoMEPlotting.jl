@@ -4,7 +4,7 @@
 --------------|--------------|-----|---------------|--------------
 [![build-0-4]][travis-url] | [![build-0-5]][travis-url] | [![Build Status](https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl.svg?branch=master)](https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl) | [![codecov.io](https://codecov.io/github/JuliaRobotics/RoMEPlotting.jl/coverage.svg?branch=master)](https://codecov.io/github/JuliaRobotics/RoMEPlotting.jl?branch=master) | [![docs][docs-shield]][caesar-docs]
 
-[travis-url]: https://travis-ci.org/JuliaRobotics/IncrementalInference.jl
+[travis-url]: https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl
 [build-0-4]: https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl.svg?branch=release/v0.4
 [build-0-5]: https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl.svg?branch=release/v0.5
 
