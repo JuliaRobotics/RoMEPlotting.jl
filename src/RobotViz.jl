@@ -282,7 +282,8 @@ function plotSLAM2DPoses( fg::AbstractDFG;
                           spscale::Union{Nothing, <:Real}=nothing,
                           dyadScale::Union{Nothing, <:Real}=nothing,
                           drawTriads::Bool=true,
-                          contour::Bool=true, levels::Int=1,
+                          drawContour::Bool=true, levels::Int=1,
+                          contour::Union{Nothing, Bool}=nothing,
                           line_width=1pt,
                           drawPoints::Bool=true,
                           pointsColor::AbstractString="gray30",
@@ -296,6 +297,7 @@ function plotSLAM2DPoses( fg::AbstractDFG;
       ppe = meanmax
     end
     !(spscale isa Nothing) ? (dyadScale=spscale; @warn("keyword spscale is deprecated, use dyadScale instead")) : nothing
+    !(contour isa Nothing) ? (drawContour=contour; @warn("keyword contour is being deprecated, use drawContour instead")) : nothing
 
     ## Use PPE.suggested
 
@@ -334,7 +336,7 @@ function plotSLAM2DPoses( fg::AbstractDFG;
     end
     # add contours to pose estimates
       # varsyms = Symbol.(LBLS)
-    if contour
+    if drawContour
       for vsym in variableList
         pln = plotKDE(fg, vsym, solveKey=solveKey, dims=[1;2], levels=levels, c=[(manualColor === nothing ? "gray90" : manualColor);])
         union!(psplt.layers, pln.layers)
@@ -364,7 +366,8 @@ function plotSLAM2DLandmarks( fg::AbstractDFG;
                               meanmax=:null,
                               ppe::Symbol=:suggested,
                               lbls=true,showmm=false,drawhist=false,
-                              contour::Bool=true, levels::Int=1,
+                              drawContour::Bool=true, levels::Int=1,
+                              contour::Union{Nothing, Bool}=nothing,
                               manualColor=nothing,
                               c= manualColor===nothing ? "red" : manualColor,
                               MM::Dict{Int,T}=Dict{Int,Int}(),
@@ -379,6 +382,8 @@ function plotSLAM2DLandmarks( fg::AbstractDFG;
       @warn "plotSLAM2DPoses meanmax keyword is deprecated, use ppe instead."
       ppe = meanmax
     end
+
+    !(contour isa Nothing) ? (drawContour=contour; @warn("keyword contour is being deprecated, use drawContour instead")) : nothing
 
     ## Use PPE.suggested
 
@@ -418,7 +423,7 @@ function plotSLAM2DLandmarks( fg::AbstractDFG;
     end
 
 
-    if contour
+    if drawContour
       # make pretty near Gaussian contours?
       if resampleGaussianFit != 0
         #
@@ -486,7 +491,6 @@ function plotSLAM2D(fgl::AbstractDFG;
                     drawTriads::Bool=true,
                     spscale::Union{Nothing, <:Real}=nothing,
                     dyadScale::Union{Nothing, <:Real}=nothing,
-                    contour::Bool=true,
                     levels::Int=1,
                     drawhist=false, MM::Dict{Int,T}=Dict{Int,Int}(),
                     xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing,
@@ -499,8 +503,10 @@ function plotSLAM2D(fgl::AbstractDFG;
                     manualColor=nothing,
                     drawPoints::Bool=true,
                     pointsColor::AbstractString="gray30",
+                    drawContour::Bool=true,
                     drawEllipse::Bool=false,
                     ellipseColor::AbstractString="gray30",
+                    contour::Union{Nothing,Bool}=nothing,
                     title::AbstractString=""  ) where {T}
   #
   # deprecations
@@ -509,7 +515,9 @@ function plotSLAM2D(fgl::AbstractDFG;
     posesPPE = meanmax
     landmsPPE = meanmax
   end
-  !(spscale isa Nothing) ? (dyadScale=spscale; @warn("keyword spscale is deprecated, use dyadScale instead")) : nothing
+  !(spscale isa Nothing) ? (dyadScale=spscale; @warn("keyword spscale is being deprecated, use dyadScale instead")) : nothing
+  !(contour isa Nothing) ? (drawContour=contour; @warn("keyword contour is being deprecated, use drawContour instead")) : nothing
+
   #
   xmin !== nothing && xmax !== nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
   ymin !== nothing && ymax !== nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
@@ -522,7 +530,7 @@ function plotSLAM2D(fgl::AbstractDFG;
                       lbls=lbls,
                       drawhist=drawhist,
                       dyadScale=dyadScale,
-                      contour=contour,
+                      drawContour=drawContour,
                       drawTriads=drawTriads,
                       manualColor=manualColor,
                       line_width=line_width,
@@ -543,7 +551,7 @@ function plotSLAM2D(fgl::AbstractDFG;
                               MM=MM,
                               showmm=showmm,
                               point_size=point_size,
-                              contour=contour,
+                              drawContour=drawContour,
                               manualColor=manualColor,
                               drawPoints=drawPoints,
                               ellipseColor=ellipseColor,
@@ -774,9 +782,10 @@ end
 
 # import RoMEPlotting: drawMarginalContour
 
-function plotMarginalContour(fgl::AbstractDFG, lbl::String;
-                             solveKey::Symbol=:default,
-                             xmin=-150,xmax=150,ymin=-150,ymax=150,n=200 )
+function plotMarginalContour( fgl::AbstractDFG, lbl::String;
+                              solveKey::Symbol=:default,
+                              xmin=-150,xmax=150,ymin=-150,ymax=150,
+                              n::Int=200 )
   #
   p = getKDE(getVariable(fgl,Symbol(lbl)), solveKey)  # p = getKDE(getVert(fgl,lbl))
   Gadfly.plot(z=(x,y)->evaluateDualTree(p,vectoarr2([x,y]))[1],
