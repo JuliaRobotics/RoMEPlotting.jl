@@ -808,9 +808,9 @@ function plotCliqUpMsgs(fg::G,
   # vectorize beliefs
   beliefs = BallTreeDensity[Xs;]
   lbls = String["curr,-1";]
-  for (frt,dep,bel,infd) in sckmsgs[sym]
-    push!(beliefs, bel)
-    push!(lbls, "$frt,$dep")
+  for msg in sckmsgs[sym]
+    push!(beliefs, msg.belief)
+    push!(lbls, "$(msg.clidId),$(msg.depth)")
   end
 
   # ignoring legend and color information
