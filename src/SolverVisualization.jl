@@ -810,7 +810,7 @@ function plotCliqUpMsgs(fg::G,
   lbls = String["curr,-1";]
   for msg in sckmsgs[sym]
     push!(beliefs, msg.belief)
-    push!(lbls, "$(msg.clidId),$(msg.depth)")
+    push!(lbls, "$(msg.cliqId),$(msg.depth)")
   end
 
   # ignoring legend and color information
