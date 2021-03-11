@@ -30,10 +30,11 @@ function plotKDE( fgl::AbstractDFG,
                   c=nothing,
                   overlay=nothing  )
   #
-  p = getKDE(getVariable(fgl,sym), solveKey)
+  p = getBelief(getVariable(fgl,sym), solveKey)
   # mmarg = length(marg) > 0 ? marg : collect(1:Ndim(p))
   # mp = marginal(p,mmarg)
-  plotKDE(p, levels=levels, dims=dims, title=string(sym, "  ", title), fill=fill, layers=layers, c=c, overlay=overlay )
+  bel = p isa BallTreeDensity ? p : p.belief
+  plotKDE(bel, levels=levels, dims=dims, title=string(sym, "  ", title), fill=fill, layers=layers, c=c, overlay=overlay )
 end
 function plotKDE( fgl::AbstractDFG,
                   syms::Vector{Symbol};
@@ -57,7 +58,11 @@ function plotKDE( fgl::AbstractDFG,
     p = getBelief(getVariable(fgl,sym), solveKey)
     # mmarg = length(marg) > 0 ? marg : collect(1:Ndim(p))
     # mp = marginal(p,mmarg)
-    push!(MP, p)
+    if p isa BallTreeDensity
+      push!(MP, p)
+    else
+      push!(MP, p.belief)
+    end
     push!(LEG, string(sym))
   end
   for p in addt
