@@ -38,7 +38,7 @@ KernelDensityEstimate = "0.5"
 KernelDensityEstimatePlotting = "0.1.6"
 Reexport = "0.2, 1.0"
 Requires = "1.0"
-RoME = "0.13"
+RoME = "0.13, 0.14"
 StatsBase = "0.30, 0.31, 0.32, 0.33"
 julia = "1.4"
 
