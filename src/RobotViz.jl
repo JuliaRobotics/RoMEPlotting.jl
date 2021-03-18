@@ -114,7 +114,7 @@ function covEllipseParameterized(distr::MvNormal; meanOffset::Bool=true)
 end
 
 covEllipseParameterized(pts::Array{Float64,2}; meanOffset::Bool=true) = covEllipseParameterized( fit(MvNormal, pts), meanOffset=meanOffset )
-covEllipseParameterized(X::BallTreeDensity; meanOffset::Bool=true) = covEllipseParameterized( getPoints(X), meanOffset=meanOffset )
+covEllipseParameterized(X::Union{<:BallTreeDensity,<:ManifoldKernelDensity}; meanOffset::Bool=true) = covEllipseParameterized( getPoints(X), meanOffset=meanOffset )
 covEllipseParameterized(dfg::AbstractDFG, sym::Symbol; meanOffset::Bool=true, solveKey::Symbol=:default) = covEllipseParameterized( getKDE(dfg, sym, solveKey), meanOffset=meanOffset, solveKey=solveKey )
 
 
@@ -669,7 +669,7 @@ end
 
 
 function plotPose(pt::Pose2,
-                  pp::BallTreeDensity,
+                  pp::Union{<:BallTreeDensity,<:ManifoldKernelDensity},
                   title="plotPose2";
                   levels=3,
                   c=nothing,
@@ -683,7 +683,7 @@ end
 
 
 function plotPose(::DynPose2,
-                  bels::Vector{BallTreeDensity},
+                  bels::Union{<:AbstractVector{<:BallTreeDensity},<:AbstractVector{<:ManifoldKernelDensity}},
                   title;
                   levels::Int=5,
                   c=nothing,
@@ -705,7 +705,7 @@ end
 # import RoMEPlotting: plotPose
 
 function plotPose(::Pose3,
-                  bels::Vector{BallTreeDensity},
+                  bels::Union{<:AbstractVector{<:BallTreeDensity},<:AbstractVector{<:ManifoldKernelDensity}},
                   title;
                   levels::Int=5,
                   c=nothing,
@@ -765,16 +765,16 @@ function plotPose(fgl::AbstractDFG,
   return pl
 end
 
-function plotPose(fgl::G,
+function plotPose(fgl::AbstractDFG,
                   sym::Symbol;
                   levels::Int=5,
                   c=nothing,
                   axis=nothing,
                   scale::Real=0.2,
                   show::Bool=false,
-                  filepath::AS="/tmp/tempposeplot.svg",
-                  app::AS="eog",
-                  hdl=[]  ) where {G <: AbstractDFG, AS <: AbstractString}
+                  filepath::AbstractString="/tmp/tempposeplot.svg",
+                  app::AbstractString="eog",
+                  hdl=[]  )
   #
   plotPose(fgl, [sym;], levels=levels, axis=axis, show=show, filepath=filepath, app=app, hdl=hdl )
 end
@@ -813,197 +813,5 @@ function accumulateMarginalContours(fgl, order;
 end
 
 
-
-
-# Victoria Park Plotting functions
-
-
-function progressExamplePlot(dOdo, lsrFeats; toT=Inf)
-    len = length(dOdo)
-    pose = SE2(zeros(3))
-    lastpose = zeros(3)
-    idx = 1
-    T = dOdo[idx][4]
-    lstlaseridx = 1
-    WFTSX = Array{Float64,1}()
-    WFTSY = Array{Float64,1}()
-    WLBLS = ASCIIString[]
-
-    lastX = Array{Float64,1}()
-    lastY = Array{Float64,1}()
-
-    while T < toT && idx <= len
-
-      lastX = Array{Float64,1}()
-      lastY = Array{Float64,1}()
-      pose = pose*SE2(dOdo[idx][1:3]) # todo -- replace with inferred latest pose
-      #@show idx, T, vec(pose[1:2,3])
-      lastpose = vec(se2vee(pose))
-
-      # lstlaseridx, Ta = getFeatsAtT(lsrFeats, T, prev=lstlaseridx)
-      # bfts = lsrFeats[lstlaseridx].feats
-      fe = lsrFeats[idx]
-      if length(lsrFeats[idx]) > 0
-        bfts = zeros(3,length(fe))
-        lbls = ASCIIString[]
-        k = collect(keys(fe))
-        for i in 1:length(fe)
-          bfts[1:length(fe[k[i]]),i] = fe[k[i]]
-          push!(lbls, "l$(k[i])")
-        end
-
-
-        if bfts[1,1] != 0.0 && bfts[2,1] != 0.0 && bfts[3,1] != 0.0
-          wfts = rotateFeatsToWorld(bfts, pose)
-          for i in 1:size(wfts,2)
-              push!(WFTSX, wfts[1,i])
-              push!(WFTSY, wfts[2,i])
-              push!(WLBLS, lbls[i])
-              push!(lastX, wfts[1,i])
-              push!(lastY, wfts[2,i])
-          end
-        end
-      end
-      idx += 1
-      if idx <= len
-        T = dOdo[idx][4]
-      end
-    end
-
-    p = plotPoseDict(dOdo,to=idx-1)
-    if length(WFTSX) > 0
-      l = Gadfly.layer(x=WFTSX, y=WFTSY, label=WLBLS, Geom.label, Geom.point, Gadfly.Theme(default_color=colorant"red"))
-      push!(p.layers, l[1])
-      l2 = Gadfly.layer(x=WFTSX, y=WFTSY, Geom.point, Gadfly.Theme(default_color=colorant"red"))
-      push!(p.layers, l2[1])
-      for i in 1:length(lastX)
-        push!(p.layers, Gadfly.layer(x=[lastpose[1];lastX[i]], y=[lastpose[2];lastY[i]], Geom.line, Gadfly.Theme(default_color=colorant"magenta"))[1])
-      end
-    end
-    p
-end
-
-
-function plotTrckStep(DBG, i, fid, m)
-  @show keys(DBG[i])
-  pf = DBG[i][fid]
-  arr = Array{BallTreeDensity,1}()
-  for j in 1:3
-    push!(arr, marginal(pf[j],[m]))
-  end
-  plotKDE(arr, c=["red";"green";"black"])
-end
-
-
-
-function plotPose3Pairs(fgl::AbstractDFG, sym::Symbol; fill::Bool=true)
-  p1= plotKDE(fgl, sym, dims=[1;2], fill=fill)
-  p2 = plotKDE(fgl, sym, dims=[6;3], fill=fill)
-  p3 = plotKDE(fgl, sym, dims=[4;5], fill=fill)
-  Gadfly.draw(PDF("/tmp/RoMEvstackPose3.pdf",15cm, 20cm), vstack(p1,p2,p3) )
-  @async run(`evince /tmp/RoMEvstackPose3.pdf`)
-  nothing
-end
-
-
-
-
-"""
-    $SIGNATURES
-
-Convenience function to plot one Point2 or Pose2 location along with reference data if desired.
-"""
-function plotVariable2D(dfg::AbstractDFG,
-                        varsym::Symbol;
-                        refs::Vector=[],
-                        levels::Int=10 )
-  #
-  # make sure variable is in the right family
-  var = getVariable(dfg, varsym)
-  @assert isa(getSofttype(var), Union{Pose2, Point2})
-  pl = plotKDE(dfg, varsym, levels=levels)
-  if 0 < length(refs)
-    XX, YY = zeros(0), zeros(0)
-    for dict in refs
-        push!(XX,dict[varsym][1])
-        push!(YY,dict[varsym][2])
-    end
-    p2 = Gadfly.plot(x=XX,
-                     y=YY,
-                     Geom.point,
-                     Guide.Theme(default_color=colorant"red", point_size=5pt))
-    union!(p2.layers, pl.layers)
-    pl = p2
-  end
-  return pl
-end
-# pl = plotKDE(dfg, varsym, levels=levels)
-# pl = Gadfly.plot(x=[landmarks_design[:l1][1]; landmarks_real[:l1][1]],
-# y=[landmarks_design[:l1][2]; landmarks_real[:l1][2]],
-# Geom.point,
-# Guide.Theme(default_color=colorant"red", point_size=5pt))
-# p2 = plotKDE(fg, :l1, levels=20)
-# union!(pl.layers, p2.layers)
-
-
-
-function plotTrailingPoses(pt::Pose2,
-                           pp::Vector{BallTreeDensity},
-                           title="";
-                           levels=2,
-                           c=nothing,
-                           axis=nothing,
-                           scale::Real=0.2,
-                           circlen::Int=5)
-
-ran = axis === nothing ? getKDERange(pp) : axis
-
-cc=["red"; ["pink" for i in 1:100]]
-
-p1 = plotKDE(pp, dims=[1;2], levels=levels, c=cc, title=title, axis=ran )
-
-GG = BallTreeDensity[]
-for ppc in pp
-  gg = marginal(ppc,[3])
-  # gg = (x)->pc(reshape([x], :,1))[1]
-  push!(GG, gg)
-end
-p2 = AMP.plotKDECircular(GG[(end-circlen):end], scale=scale, c=cc)
-
-p2,p1
-end
-
-
-
-function plotTrailingPoses(fg::AbstractDFG,
-                           pp::Vector{Symbol},
-                           title="";
-                           solveKey::Symbol=:default,
-                           levels=2,
-                           c=nothing,
-                           axis=nothing,
-                           scale::Real=0.2,
-                           circlen::Int=5)
-  #
-  plotTrailingPoses(Pose2(), map(x->getKDE(fg,x, solveKey),pp), scale=scale, title=title, circlen=circlen)
-end
-
-# gg = (x)->plotTrailingPoses(fg, [Symbol("x$i") for i in (x+60):-5:x],circlen=3)
-#
-# for i in 5:5:290
-#  g1,g2 = gg(i)
-#
-#  g1 |> SVG("/tmp/trailingimgs/g1_$(i).svg")
-#  g1 |> SVG("/tmp/trailingimgs/g1_$(i+1).svg")
-#  g1 |> SVG("/tmp/trailingimgs/g1_$(i+2).svg")
-#  g1 |> SVG("/tmp/trailingimgs/g1_$(i+3).svg")
-#  g1 |> SVG("/tmp/trailingimgs/g1_$(i+4).svg")
-#
-#  g2 |> SVG("/tmp/trailingimgs/g2_$(i).svg")
-#  g2 |> SVG("/tmp/trailingimgs/g2_$(i+1).svg")
-#  g2 |> SVG("/tmp/trailingimgs/g2_$(i+2).svg")
-#  g2 |> SVG("/tmp/trailingimgs/g2_$(i+3).svg")
-#  g2 |> SVG("/tmp/trailingimgs/g2_$(i+4).svg")
-# end
 
 #
