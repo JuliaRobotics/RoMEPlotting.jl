@@ -172,20 +172,6 @@ end
 #   # return "$(tmpfilepath)/$(string(lbll))mcmc.gif"
 # end
 
-# function plotOneMC!(cliqMC::CliqGibbsMC, minmax, mcmc=0; offs=2.0)
-
-#     if mcmc>minmax[4]
-#       minmax[4]=mcmc
-#     end
-
-#     i = 0.0
-#     for prod in cliqMC.prods
-#         prodVal = kde!(prod.product,"lcv")
-#         plotKDEProd!([prodVal;prod.potentials],minmax, h=-i*offs, mcmc=mcmc)
-#         i += 1.0
-#     end
-
-# end
 
 # function plotMCMCDebug(cliq; offs=2.0)
 #     println("$(cliq.attributes["label"])")

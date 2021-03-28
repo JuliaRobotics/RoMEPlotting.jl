@@ -1,4 +1,8 @@
 
+import KernelDensityEstimatePlotting: plotKDE
+
+KernelDensityEstimatePlotting.plotKDE(mkd::ManifoldKernelDensity,w...;kw...) = plotKDE(mkd.belief, w...;kw...)
+KernelDensityEstimatePlotting.plotKDE(arr::AbstractVector{<:ManifoldKernelDensity},w...;kw...) = plotKDE((x->x.belief).(arr), w...;kw...)
 
 """
     $(SIGNATURES)
@@ -19,7 +23,8 @@ plotKDE([p;q], dims=[1;2], levels=3)
 plotKDE([p;q], dims=[1])
 ```
 """
-function plotKDE( fgl::AbstractDFG,
+function KernelDensityEstimatePlotting.plotKDE( 
+                  fgl::AbstractDFG,
                   sym::Symbol;
                   solveKey::Symbol=:default,
                   dims=nothing,
@@ -36,10 +41,11 @@ function plotKDE( fgl::AbstractDFG,
   bel = p isa BallTreeDensity ? p : p.belief
   plotKDE(bel, levels=levels, dims=dims, title=string(sym, "  ", title), fill=fill, layers=layers, c=c, overlay=overlay )
 end
-function plotKDE( fgl::AbstractDFG,
+function KernelDensityEstimatePlotting.plotKDE( 
+                  fgl::AbstractDFG,
                   syms::Vector{Symbol};
                   solveKey::Symbol=:default,
-                  addt::Vector{BallTreeDensity}=BallTreeDensity[],
+                  addt::Union{<:AbstractVector{<:BallTreeDensity},AbstractVector{<:ManifoldKernelDensity}}=BallTreeDensity[],
                   dims=nothing,
                   title=nothing,
                   levels=3,
@@ -164,7 +170,7 @@ function plotLocalProduct(fgl::AbstractDFG,
   push!(arr, getBelief(getVariable(fgl, lbl), solveKey))
   push!(lbls, "curr")
   pl = nothing
-  pp, parr, partials, lb = IncrementalInference.localProduct(fgl, lbl, N=N, solveKey=solveKey)
+  pp, parr, partials, lb = IIF.localProduct(fgl, lbl, N=N, solveKey=solveKey)
 
   # helper functions
   function plotDirectProducts()
@@ -190,12 +196,15 @@ function plotLocalProduct(fgl::AbstractDFG,
         vals = partials[dimn]
         proddim = marginal(pp, [dimn])
         colors = getColorsByLength(length(vals)+2)
-        pl = plotKDE([proddim;getBelief(getVariable(fgl, lbl),solveKey);vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
+        newbel_ = getBelief(getVariable(fgl, lbl),solveKey)
+        newbel = newbel_ isa ManifoldKernelDensity ? newbel_.belief : newbel_
+        pl = plotKDE( [proddim;newbel;vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
         push!(PL, pl)
       end
       Gadfly.vstack(PL...)
   end
 
+  @show length(parr), length(partials)
   if length(parr) > 0 && length(partials) == 0
     pl = plotDirectProducts()
   elseif length(parr) == 0 && length(partials) > 0
@@ -293,7 +302,7 @@ end
 Plot the proposal belief from neighboring factors to `lbl` in the factor graph (ignoring Bayes tree representation),
 and show with new product approximation for reference. String version is obsolete and will be deprecated.
 """
-plotLocalProduct(fgl::G, lbl::T; N::Int=100, dims::Vector{Int}=Int[]) where {G <: AbstractDFG, T <: AbstractString} = plotLocalProduct(fgl, Symbol(lbl), N=N, dims=dims)
+plotLocalProduct(fgl::AbstractDFG, lbl::AbstractString; N::Int=100, dims::Vector{Int}=Int[] ) = plotLocalProduct(fgl, Symbol(lbl), N=N, dims=dims)
 
 """
     $SIGNATURES

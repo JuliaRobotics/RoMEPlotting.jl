@@ -4,8 +4,7 @@ os:
   - linux
 
 julia:
-  - 1.4
-  - 1.5
+  - 1.6
   - nightly
 
 notifications:
@@ -16,7 +15,7 @@ jobs:
 
 jobs:
   include:
-    - julia: 1.4
+    - julia: 1.6
       os: osx
   fast_finish: true
   allow_failures:
@@ -27,10 +26,6 @@ addons:
   apt:
     packages:
       - hdf5-tools
-
-# script:
-#   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-#   - julia --check-bounds=yes -e 'using Pkg; Pkg.develop("Compose"); Pkg.clone(pwd()); Pkg.build("RoMEPlotting"); Pkg.test("RoMEPlotting"; coverage=true)'
 
 after_success:
   - julia -e 'using Pkg; cd(Pkg.dir("RoMEPlotting")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'

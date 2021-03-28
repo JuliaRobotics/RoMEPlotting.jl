@@ -100,61 +100,7 @@
 #   dwnMsgsAtCliq(fg, whichCliq(bt, Symbol(lbl)) )
 # end
 
-# function plotPose2DMC!(plots::Array{Gadfly.Compose.Context,1},
-#                        cliqMC::CliqGibbsMC )
-#   #
-#   for prod in cliqMC.prods
-#     prodVal = kde!(prod.product, "lcv") #cliqMC.prods[1]
-#     push!(plots, plotKDE([prodVal;prod.potentials]) )
-#   end
-#   vstackedPlots(plots)
-# end
 
-# function mcmcPose2D!(plots::Array{Gadfly.Compose.Context,1},
-#                      cliqDbg::DebugCliqMCMC,
-#                      iter::Int=1  )
-#     # for mc in cliqDbg.mcmc
-#     mc = cliqDbg.mcmc[iter]
-#     v = plotPose2DMC!(plots, mc)
-#     # end
-#     return v
-# end
-
-# function plotUpMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
-#                            cliq::Graphs.ExVertex,
-#                            iter::Int=1 )
-#   #
-#   whosWith(cliq)
-#   cliqDbg = cliq.attributes["data"].debug
-#   sleep(0.1)
-#   mcmcPose2D!(plots, cliqDbg, iter)
-# end
-
-# function plotUpMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
-#                            bt::BayesTree,
-#                            frt::String,
-#                            iter::Int=1 )
-#   #
-#   drawUpMCMCPose2D!(plots, whichCliq(bt,frt), iter)
-# end
-
-# function plotDwnMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
-#                             cliq::Graphs.ExVertex,
-#                             iter::Int=1  )
-#   #
-#   whosWith(cliq)
-#   cliqDbg = cliq.attributes["data"].debugDwn
-#   sleep(0.1)
-#   mcmcPose2D!(plots, cliqDbg, iter)
-# end
-
-# function plotDwnMCMCPose2D!(plots::Array{Gadfly.Compose.Context,1},
-#                             bt::BayesTree,
-#                             frt::String,
-#                             iter::Int=1 )
-#   #
-#   drawDwnMCMCPose2D!(plots, whichCliq(bt,frt), iter)
-# end
 
 
 

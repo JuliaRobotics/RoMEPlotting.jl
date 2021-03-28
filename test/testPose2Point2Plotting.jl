@@ -10,8 +10,11 @@ using Test
 using Gadfly
 using Cairo
 
+##
 
 @testset "Prepare a 2D factor graph with poses and points..." begin
+
+##
 
 N = 100
 fg = initfg()
@@ -69,10 +72,10 @@ plotSLAM2DPoses(fg);
 plotSLAM2DLandmarks(fg);
 plotSLAM2D(fg);
 
-p1 = getKDE(fg, :l1)
+p1 = getBelief(fg, :l1)
 # pts = getVal(fg, :l1)
 # p1= kde!(pts)
-p1c = getKDE(fg, :x0)
+p1c = getBelief(fg, :x0)
 
 plotKDE( p1 , dimLbls=["x";"y";"z"]) # |> PDF("/tmp/test.pdf")
 
@@ -81,7 +84,7 @@ plotKDE( [p1c;p1] , dimLbls=["x";"y";"z"],c=["red";"black"],levels=3, dims=[1;2]
 # plotKDE( [marginal(p1c,[1;2]);marginal(p1,[1;2])] , dimLbls=["x";"y";"z"],c=["red";"black"],levels=3, dims=[1;2])
 p1c = deepcopy(p1)
 
-plotKDE( marginal(getKDE(getVariable(fg, :x2)),[1;2]) , dimLbls=["x";"y";"z"])
+plotKDE( marginal(getBelief(getVariable(fg, :x2)),[1;2]) , dimLbls=["x";"y";"z"])
 
 axis = [[1.5;3.5]';[-1.25;1.25]';[-1.0;1.0]']
 
@@ -90,6 +93,8 @@ plotKDE( p1, dimLbls=["x";"y";"z"], axis=axis) |> PDF("/tmp/test.pdf",30cm,20cm)
 
 #
 Base.rm("/tmp/test.pdf")
+
+##
 
 end
 
