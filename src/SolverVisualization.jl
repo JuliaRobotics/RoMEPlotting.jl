@@ -1,6 +1,7 @@
 
 import KernelDensityEstimatePlotting: plotKDE
 
+KernelDensityEstimatePlotting.plotKDE(mkd::ManifoldKernelDensity,w...;kw...) = plotKDE(mkd.belief, w...;kw...)
 KernelDensityEstimatePlotting.plotKDE(arr::AbstractVector{<:ManifoldKernelDensity},w...;kw...) = plotKDE((x->x.belief).(arr), w...;kw...)
 
 """
