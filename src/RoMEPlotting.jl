@@ -22,7 +22,6 @@ import Gadfly: plot
 import KernelDensityEstimatePlotting: plot, drawHorDens, plotKDE
 import KernelDensityEstimatePlotting: getColorsByLength
 
-import IncrementalInference: CliqGibbsMC, DebugCliqMCMC
 
 # assuming this is a good size for everybody
 @info "Assuming plot size, Gadfly.set_default_plot_size(30cm,20cm)"
@@ -99,6 +98,7 @@ ExtendedPose2Pose2Types = Pose2Pose2
 
 include("SolverVisualization.jl")
 include("RobotViz.jl")
+include("CurrentlyUnmaintained.jl")
 include("PlotHexUtils.jl")
 include("PlotFactors.jl")
 include("PlotVariables.jl")
