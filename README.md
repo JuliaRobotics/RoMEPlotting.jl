@@ -1,12 +1,12 @@
 # RoMEPlotting.jl
 
- Release v0.5 | Release v0.6 | Dev | Test Coverage | Caesar Docs
+ Release v0.6 | Release v0.7 | Dev | Test Coverage | Caesar Docs
 --------------|--------------|-----|---------------|--------------
-[![build-0-5]][travis-url] | [![build-0-6]][travis-url] | [![Build Status](https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl.svg?branch=master)](https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl) | [![codecov.io](https://codecov.io/github/JuliaRobotics/RoMEPlotting.jl/coverage.svg?branch=master)](https://codecov.io/github/JuliaRobotics/RoMEPlotting.jl?branch=master) | [![docs][docs-shield]][caesar-docs]
+[![build-0-6]][travis-url] | [![build-0-7]][travis-url] | [![Build Status](https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl.svg?branch=master)](https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl) | [![codecov.io](https://codecov.io/github/JuliaRobotics/RoMEPlotting.jl/coverage.svg?branch=master)](https://codecov.io/github/JuliaRobotics/RoMEPlotting.jl?branch=master) | [![docs][docs-shield]][caesar-docs]
 
 [travis-url]: https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl
 [build-0-6]: https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl.svg?branch=release/v0.6
-[build-0-5]: https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl.svg?branch=release/v0.5
+[build-0-7]: https://travis-ci.org/JuliaRobotics/RoMEPlotting.jl.svg?branch=release/v0.7
 
 
 2D plotting functionality for the RoME.jl package (presently only using Gadfly).  This package is part of the [Caesar.jl](http://www.github.com/JuliaRobotics/Caesar.jl) suite of tools.  This package contains all the plotting functions relating to the [IncrementalInference.jl](http://www.github.com/JuliaRobotics/IncrementalInference.jl) and [RoME.jl](http://www.github.com/JuliaRobotics/RoME.jl) packages.
