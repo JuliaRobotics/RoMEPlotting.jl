@@ -306,9 +306,9 @@ function plotSLAM2DPoses( fg::AbstractDFG;
     variableList = variableList[mask]
     suggPpes = (x->getfield(x,ppe)).(Ppes[mask])
 
-    Xpp  = (x->x[1]).(suggPpes)
-    Ypp  = (x->x[2]).(suggPpes)
-    Thpp = (x->x[3]).(suggPpes)
+    Xpp::Vector{Float64}  = Float64.( (x->x[1]).(suggPpes) )
+    Ypp::Vector{Float64}  = Float64.( (x->x[2]).(suggPpes) )
+    Thpp::Vector{Float64} = Float64.( (x->x[3]).(suggPpes) )
     LBLS = string.(variableList)
 
     # adaptively scale dyad size
