@@ -21,7 +21,7 @@ pkg> add RoMEPlotting
 
 # Usage Example
 
-Documentation for this package will be covered in [Caesar.jl Docs]([caesar-docs])
+Documentation for this package will be covered in the plotting section of [Caesar.jl Docs](https://juliarobotics.org/Caesar.jl/latest/)
 
 
 [docs-shield]: https://img.shields.io/badge/docs-latest-blue.svg
