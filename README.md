@@ -25,4 +25,4 @@ Documentation for this package will be covered in [Caesar.jl Docs]([caesar-docs]
 
 
 [docs-shield]: https://img.shields.io/badge/docs-latest-blue.svg
-[caesar-docs]: http://juliarobotics.github.io/Caesar.jl/latest/
+[caesar-docs]: https://juliarobotics.org/Caesar.jl/latest/
