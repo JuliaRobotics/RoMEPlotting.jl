@@ -137,6 +137,10 @@ function plotCovEllipseLayer( dfg::AbstractDFG,
   #
   PL = []
 
+  if !(drawEllipse || drawPoints)
+    return PL
+  end
+
   # points to work from
   pp = getPoints(getKDE(dfg, vsym, solveKey))
 
@@ -277,6 +281,7 @@ function plotSLAM2DPoses( fg::AbstractDFG;
                           variableList::AbstractVector{Symbol}=getVariablesLabelsWithinRange(fg, regexPoses, from=from, to=to),
                           meanmax=:null,
                           ppe=:suggested,
+                          recalcPPEs::Bool=false,
                           lbls=true,
                           drawhist=false,
                           spscale::Union{Nothing, <:Real}=nothing,
@@ -301,7 +306,11 @@ function plotSLAM2DPoses( fg::AbstractDFG;
 
     ## Use PPE.suggested
 
-    Ppes = map(x->calcVariablePPE(fg, x, solveKey=solveKey), variableList)
+    Ppes = if recalcPPEs
+      map(x->calcVariablePPE(fg, x, solveKey=solveKey), variableList)
+    else
+      getPPE.(fg, variableList, solveKey)
+    end
     mask = Ppes .!== nothing
     variableList = variableList[mask]
     suggPpes = (x->getfield(x,ppe)).(Ppes[mask])
@@ -365,6 +374,7 @@ function plotSLAM2DLandmarks( fg::AbstractDFG;
                               variableList::AbstractVector{Symbol}=getVariablesLabelsWithinRange(fg, regexLandmark, from=from, to=to),
                               meanmax=:null,
                               ppe::Symbol=:suggested,
+                              recalcPPEs::Bool=false,
                               lbls=true,showmm=false,drawhist=false,
                               drawContour::Bool=true, levels::Int=1,
                               contour::Union{Nothing, Bool}=nothing,
@@ -387,7 +397,11 @@ function plotSLAM2DLandmarks( fg::AbstractDFG;
 
     ## Use PPE.suggested
 
-    Ppes = map(x->calcVariablePPE(fg, x, solveKey=solveKey), variableList)
+    Ppes = if recalcPPEs
+      map(x->calcVariablePPE(fg, x, solveKey=solveKey), variableList)
+    else
+      getPPE.(fg, variableList, solveKey)
+    end
     mask = Ppes .!== nothing
     variableList = variableList[mask]
     suggPpes = (x->getfield(x,ppe)).(Ppes[mask])
@@ -487,6 +501,7 @@ function plotSLAM2D(fgl::AbstractDFG;
                     meanmax=:null,
                     posesPPE=:suggested,
                     landmsPPE=:suggested,
+                    recalcPPEs::Bool=false,
                     lbls=true,
                     drawTriads::Bool=true,
                     spscale::Union{Nothing, <:Real}=nothing,
@@ -507,7 +522,7 @@ function plotSLAM2D(fgl::AbstractDFG;
                     drawEllipse::Bool=false,
                     ellipseColor::AbstractString="gray30",
                     contour::Union{Nothing,Bool}=nothing,
-                    title::AbstractString=""  ) where {T}
+                    title::AbstractString=""  ) where T
   #
   # deprecations
   if meanmax != :null
@@ -537,7 +552,8 @@ function plotSLAM2D(fgl::AbstractDFG;
                       drawPoints=drawPoints,
                       ellipseColor=ellipseColor,
                       pointsColor=pointsColor,
-                      drawEllipse=drawEllipse  )
+                      drawEllipse=drawEllipse,
+                      recalcPPEs=recalcPPEs  )
   #
   if length(ll) > 0
     pl = plotSLAM2DLandmarks( fgl,
@@ -556,14 +572,15 @@ function plotSLAM2D(fgl::AbstractDFG;
                               drawPoints=drawPoints,
                               ellipseColor=ellipseColor,
                               pointsColor=pointsColor,
-                              drawEllipse=drawEllipse  )
+                              drawEllipse=drawEllipse,
+                              recalcPPEs=recalcPPEs  )
     #
     for l in pl.layers
       push!(p.layers, l)
     end
   end
   if window !== nothing
-    focusX = getKDEMax( getKDE(getVariable(fgl,window[1]),solveKey) )
+    focusX = getPPE(fgl, window[1], solveKey).max # getKDEMax( getBelief(getVariable(fgl,window[1]),solveKey) )
     pwind = window[2]
     p.coord = Coord.cartesian(xmin=focusX[1]-pwind,xmax=focusX[1]+pwind,ymin=focusX[2]-pwind,ymax=focusX[2]+pwind)
   end
