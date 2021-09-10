@@ -185,8 +185,8 @@ function plotFactor(dfg::AbstractDFG,
   lp = getKDEMax(getKDE(dfg,poin))
 
   # convolve the yaw angle with bearing rotation model
-  pX = marginal(getKDE(dfg, pose), [3])
-  pts = approxConvCircular(pX, fct.bearing)
+  pX = marginal(getBelief(dfg, pose), [3])
+  pts = approxConvCircular(pX, fct.bearing) # TODO fix by using approxConvBelief instead
 
   # draw plots
   measest = manikde!(pts, Sphere1)

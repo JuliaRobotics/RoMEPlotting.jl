@@ -38,7 +38,7 @@ pts = approxConv(fg, :x0x1f1, :x1)
 
 
 # perform inference
-tree, smt, hist = solveTree!(fg)
+tree = solveTree!(fg)
 
 
 # check that yaw is working
@@ -61,7 +61,7 @@ pp2 = PriorPoint2(MvNormal([10.0;0.0], Matrix(Diagonal([1.0;1.0]))))
 f5 = addFactor!(fg,[:l1], pp2)
 
 # do inference
-tree, smt, hist = solveTree!(fg)
+tree = solveTree!(fg)
 # ensureAllInitialized!(fg)
 # tree = wipeBuildNewTree!(fg)
 # [inferOverTree!(fg, tree, N=N) for i in 1:2]
