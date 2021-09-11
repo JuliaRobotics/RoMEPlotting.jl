@@ -283,6 +283,9 @@ function plotSLAM2DPoses( fg::AbstractDFG;
                           ppe=:suggested,
                           recalcPPEs::Bool=false,
                           lbls=true,
+                          scale::Real=1,
+                          x_off::Real=0,
+                          y_off::Real=0,
                           drawhist=false,
                           spscale::Union{Nothing, <:Real}=nothing,
                           dyadScale::Union{Nothing, <:Real}=nothing,
@@ -319,6 +322,12 @@ function plotSLAM2DPoses( fg::AbstractDFG;
     Ypp::Vector{Float64}  = Float64.( (x->x[2]).(suggPpes) )
     Thpp::Vector{Float64} = Float64.( (x->x[3]).(suggPpes) )
     LBLS = string.(variableList)
+
+    Xpp .+= x_off
+    Ypp .+= y_off
+
+    Xpp .*= scale
+    Ypp .*= scale
 
     # adaptively scale dyad size
     dyadScale = dyadScale isa Nothing ? calcDyadScaleAdaptive(Xpp, Ypp) : dyadScale
@@ -375,7 +384,11 @@ function plotSLAM2DLandmarks( fg::AbstractDFG;
                               meanmax=:null,
                               ppe::Symbol=:suggested,
                               recalcPPEs::Bool=false,
-                              lbls=true,showmm=false,drawhist=false,
+                              lbls=true,showmm=false,
+                              scale::Real=1,
+                              x_off::Real=0,
+                              y_off::Real=0,
+                              drawhist=false,
                               drawContour::Bool=true, levels::Int=1,
                               contour::Union{Nothing, Bool}=nothing,
                               manualColor=nothing,
@@ -409,6 +422,12 @@ function plotSLAM2DLandmarks( fg::AbstractDFG;
     Xpp  = (x->x[1]).(suggPpes)
     Ypp  = (x->x[2]).(suggPpes)
     lbltags = string.(variableList)
+
+    Xpp .+= x_off
+    Ypp .+= y_off
+
+    Xpp .*= scale
+    Ypp .*= scale
 
     # Xp,Yp = get2DLandmSamples(fg, from=from, to=to)
     # Xpp = Float64[]; Ypp=Float64[]; Thpp=Float64[]; lblstags=String[];
@@ -503,6 +522,9 @@ function plotSLAM2D(fgl::AbstractDFG;
                     landmsPPE=:suggested,
                     recalcPPEs::Bool=false,
                     lbls=true,
+                    scale::Real=1,
+                    x_off::Real=0,
+                    y_off::Real=0,
                     drawTriads::Bool=true,
                     spscale::Union{Nothing, <:Real}=nothing,
                     dyadScale::Union{Nothing, <:Real}=nothing,
@@ -544,6 +566,9 @@ function plotSLAM2D(fgl::AbstractDFG;
                       regexPoses=regexPoses,
                       ppe=posesPPE,
                       lbls=lbls,
+                      scale=scale,
+                      x_off=x_off,
+                      y_off=y_off,
                       drawhist=drawhist,
                       dyadScale=dyadScale,
                       drawContour=drawContour,
@@ -564,6 +589,9 @@ function plotSLAM2D(fgl::AbstractDFG;
                               ppe=landmsPPE,
                               minnei=minnei,
                               lbls=lbls,
+                              scale=scale,
+                              x_off=x_off,
+                              y_off=y_off,
                               drawhist=drawhist,
                               MM=MM,
                               showmm=showmm,
