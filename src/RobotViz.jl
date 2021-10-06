@@ -2,7 +2,7 @@
 
 export calcDyadScaleAdaptive
 export covEllipseParameterized, plotCovEllipseLayer
-
+export plotSLAM2D_KeyAndRef
 
 ## Src
 
