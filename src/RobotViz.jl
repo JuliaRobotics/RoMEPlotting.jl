@@ -706,7 +706,6 @@ function plotPose(pt::Pose2,
 
   # deal with overlay
 
-
   push!(hdl, p1)
   push!(hdl, p2)
 
