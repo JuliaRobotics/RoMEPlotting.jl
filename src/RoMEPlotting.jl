@@ -98,6 +98,7 @@ ExtendedPose2Pose2Types = Pose2Pose2
 
 include("SolverVisualization.jl")
 include("RobotViz.jl")
+include("services/PlotPose.jl")
 include("CurrentlyUnmaintained.jl")
 include("PlotHexUtils.jl")
 include("PlotFactors.jl")
