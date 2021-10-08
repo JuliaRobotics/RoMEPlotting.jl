@@ -162,7 +162,8 @@ function plotLocalProduct(fgl::AbstractDFG,
                           dirpath="/tmp/",
                           mimetype::AbstractString="svg",
                           sidelength=20cm,
-                          title::String="Local product ($solveKey), "  )
+                          title::String="Local product ($solveKey), ",
+                          xmin=nothing, xmax=nothing, ymin=nothing, ymax=nothing  )
   #
   @warn "not showing partial constraints, but included in the product"
   arr = Array{BallTreeDensity,1}()
@@ -170,7 +171,13 @@ function plotLocalProduct(fgl::AbstractDFG,
   push!(arr, getBelief(getVariable(fgl, lbl), solveKey))
   push!(lbls, "curr")
   pl = nothing
-  pp, parr, partials, lb = IIF.localProduct(fgl, lbl, N=N, solveKey=solveKey)
+  pp, parr, lb, sinfd = IIF.localProduct(fgl, lbl, N=N, solveKey=solveKey)
+
+  partials = []
+
+  # another sanity check
+  xmin !== nothing && xmax !== nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
+  ymin !== nothing && ymax !== nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
 
   # helper functions
   function plotDirectProducts()
@@ -212,6 +219,10 @@ function plotLocalProduct(fgl::AbstractDFG,
   else
     return error("plotLocalProduct not built for lengths parr, partials = $(length(parr)), $(length(partials)) yet.")
   end
+
+  # set coordinates accordingly
+  co = Coord.Cartesian(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
+  pl.coord = co
 
   # now let's export:
   backend = getfield(Gadfly, Symbol(uppercase(mimetype)))
@@ -452,8 +463,8 @@ function plotVariableGivenFactor(dfg::G,
                                  dims=nothing  ) where G <: AbstractDFG
   #
   pts = approxConv(dfg,fct,towards)
-  mani = getManifolds(dfg, towards)
-  res = manikde!(pts,mani)
+  mani = getManifold(dfg, towards)
+  res = manikde!(mani, pts)
 
   lie = ls(dfg, fct)
   setdiff!(lie, [towards])

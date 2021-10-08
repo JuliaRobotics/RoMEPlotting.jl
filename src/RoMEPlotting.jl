@@ -15,6 +15,7 @@ using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
 using DocStringExtensions
 using ApproxManifoldProducts
+using TensorCast
 using Requires
 # import ApproxManifoldProducts: mmd! # future dependency
 
@@ -98,6 +99,7 @@ ExtendedPose2Pose2Types = Pose2Pose2
 
 include("SolverVisualization.jl")
 include("RobotViz.jl")
+include("services/PlotPose.jl")
 include("CurrentlyUnmaintained.jl")
 include("PlotHexUtils.jl")
 include("PlotFactors.jl")
