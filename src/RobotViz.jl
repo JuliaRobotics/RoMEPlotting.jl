@@ -142,7 +142,17 @@ function plotCovEllipseLayer( dfg::AbstractDFG,
   end
 
   # points to work from
-  pp = getPoints(getKDE(dfg, vsym, solveKey))
+  bel = getBelief(dfg, vsym, solveKey)
+  pp__ = getPoints(bel)
+  pp_ = if bel.manifold isa SpecialEuclidean
+    # assume Pose2
+    (x->x.parts[1]).(pp__)
+  else
+    # assume Point2
+    pp__
+  end
+
+  @cast pp[i,j] := pp_[j][i]
 
   if drawEllipse
     # get ellipse function

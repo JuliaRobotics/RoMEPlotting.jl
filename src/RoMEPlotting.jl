@@ -15,6 +15,7 @@ using KernelDensityEstimate, KernelDensityEstimatePlotting
 using IncrementalInference, RoME
 using DocStringExtensions
 using ApproxManifoldProducts
+using TensorCast
 using Requires
 # import ApproxManifoldProducts: mmd! # future dependency
 
