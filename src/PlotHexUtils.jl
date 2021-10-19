@@ -45,7 +45,7 @@ end
 
 Plot first ring (ground truth) of beehive example.
 """
-function plotBeehive_6(fgl::G; from::Int64=0, to::Int64=99999999, meanmax::Symbol=:max) where G <: AbstractDFG
+function plotBeehive_6(fgl::G; from::Int=0, to::Int=(2^(Sys.WORD_SIZE-1)-1), meanmax::Symbol=:max) where G <: AbstractDFG
   pl = plotHex_6()
   pl2 = drawPosesLandms(fgl, from=from, to=to, meanmax=meanmax)
 
