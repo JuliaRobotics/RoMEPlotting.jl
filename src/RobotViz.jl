@@ -286,8 +286,8 @@ Future:
 function plotSLAM2DPoses( fg::AbstractDFG;
                           solveKey::Symbol=:default,
                           regexPoses=r"x\d",
-                          from::Int64=0,
-                          to::Int64=99999999,
+                          from::Int=0,
+                          to::Int=(2^(Sys.WORD_SIZE-1)-1),
                           variableList::AbstractVector{Symbol}=getVariablesLabelsWithinRange(fg, regexPoses, from=from, to=to),
                           meanmax=:null,
                           ppe=:suggested,
@@ -388,8 +388,8 @@ end
 function plotSLAM2DLandmarks( fg::AbstractDFG;
                               solveKey::Symbol=:default,
                               regexLandmark::Regex=r"l",
-                              from::Int64=0, to::Int64=99999999,
-                              minnei::Int64=0,
+                              from::Int=0, to::Int=(2^(Sys.WORD_SIZE-1)-1),
+                              minnei::Int=0,
                               variableList::AbstractVector{Symbol}=getVariablesLabelsWithinRange(fg, regexLandmark, from=from, to=to),
                               meanmax=:null,
                               ppe::Symbol=:suggested,
@@ -525,8 +525,8 @@ Related
 """
 function plotSLAM2D(fgl::AbstractDFG;
                     solveKey::Symbol=:default,
-                    from::Int64=0, to::Int64=99999999, 
-                    minnei::Int64=0,
+                    from::Int=0, to::Int=(2^(Sys.WORD_SIZE-1)-1), 
+                    minnei::Int=0,
                     meanmax=:null,
                     posesPPE=:suggested,
                     landmsPPE=:suggested,
