@@ -25,8 +25,8 @@ import KernelDensityEstimatePlotting: getColorsByLength
 
 
 # assuming this is a good size for everybody
-@info "Assuming plot size, Gadfly.set_default_plot_size(30cm,20cm)"
-Gadfly.set_default_plot_size(30cm,20cm)
+@info "For larger plots when using a browswer, run Gadfly.set_default_plot_size(30cm,20cm)"
+# Gadfly.set_default_plot_size(30cm,20cm)
 
 export
   # Associated with IncrementalInference
