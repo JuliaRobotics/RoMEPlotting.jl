@@ -220,9 +220,9 @@ function plotLocalProduct(fgl::AbstractDFG,
     return error("plotLocalProduct not built for lengths parr, partials = $(length(parr)), $(length(partials)) yet.")
   end
 
-  # set coordinates accordingly
-  co = Coord.Cartesian(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
-  pl.coord = co
+  # # set coordinates accordingly
+  # co = Coord.Cartesian(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
+  # pl.coord = co
 
   # now let's export:
   backend = getfield(Gadfly, Symbol(uppercase(mimetype)))
