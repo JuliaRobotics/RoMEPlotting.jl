@@ -554,7 +554,8 @@ function plotSLAM2D(fgl::AbstractDFG;
                     drawEllipse::Bool=false,
                     ellipseColor::AbstractString="gray30",
                     contour::Union{Nothing,Bool}=nothing,
-                    title::AbstractString=""  ) where T
+                    title::AbstractString="",
+                    aspect_ratio::Real=1  ) where T
   #
   # deprecations
   if meanmax != :null
@@ -623,7 +624,7 @@ function plotSLAM2D(fgl::AbstractDFG;
     pwind = window[2]
     p.coord = Coord.cartesian(xmin=focusX[1]-pwind,xmax=focusX[1]+pwind,ymin=focusX[2]-pwind,ymax=focusX[2]+pwind)
   end
-  co = Coord.Cartesian(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
+  co = Coord.Cartesian(;xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,aspect_ratio=aspect_ratio)
   p.coord = co
   if title != ""
     push!(p.guides, Guide.title(title))
