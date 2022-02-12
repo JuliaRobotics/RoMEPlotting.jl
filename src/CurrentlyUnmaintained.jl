@@ -173,7 +173,7 @@ function plotTrailingPoses(fg::AbstractDFG,
                            scale::Real=0.2,
                            circlen::Int=5)
   #
-  plotTrailingPoses(Pose2(), map(x->getKDE(fg,x, solveKey),pp), scale=scale, title=title, circlen=circlen)
+  plotTrailingPoses(Pose2(), map(x->getBelief(fg,x, solveKey),pp), scale=scale, title=title, circlen=circlen)
 end
 
 # gg = (x)->plotTrailingPoses(fg, [Symbol("x$i") for i in (x+60):-5:x],circlen=3)
@@ -249,7 +249,7 @@ end
 
 
 function plotLbl(fgl::G, lbl::Symbol) where G <: AbstractDFG
-  plotKDE(getKDE(getVariable(fgl,lbl)))
+  plotKDE(getBelief(getVariable(fgl,lbl)))
 end
 drawLbl(fgl::G, lbl::T) where {G <: AbstractDFG, T <: AbstractString} = drawLbl(fgl, Symbol(lbl))
 
@@ -276,7 +276,7 @@ function plotFrontalDens( fg::AbstractDFG,
 
         for frid in cliq[2].attributes["data"].frontalIDs
             j+=1
-            p[j] = getKDE(getVariable(fg, frid)) # getKDE(fg.v[frid])
+            p[j] = getBelief(getVariable(fg, frid)) # getBelief(fg.v[frid])
             # p[j] = kde!(fg.v[frid].attributes["val"])
 
             #pvals[j] = fg.v[frid].attributes["val"]
@@ -395,7 +395,7 @@ function asyncAnalyzeSolution(fgl::G, sym::Symbol) where G <: AbstractDFG
   lbl = string(sym)
   pp, arr, partials = IncrementalInference.localProduct(fgl, lbl)
   lpm = getKDEMax(pp)
-  em = getKDEMax(getKDE(getVariable(fgl,lbl)))
+  em = getKDEMax(getBelief(getVariable(fgl,lbl)))
   err1 = norm(lpm[1:2]-em[1:2])
   err2 = 0.0
   if lbl[1]=='x'
@@ -463,7 +463,7 @@ end
 function getAllFGsKDEs(fgD::Array{<: AbstractDFG,1}, vertsym::Symbol)
   ret = Array{BallTreeDensity,1}()
   for i in 1:length(fgD)
-    push!(ret, getKDE(getVariable(fgD[i],vertsym)) )
+    push!(ret, getBelief(getVariable(fgD[i],vertsym)) )
   end
   return ret
 end
@@ -612,7 +612,7 @@ end
 
 
 function plotPose2Vels(fgl::G, sym::Symbol; coord=nothing) where G <: AbstractDFG
-  X = getKDE(getVariable(fgl, sym))
+  X = getBelief(getVariable(fgl, sym))
   px = plotKDE(X, dims=[4], title="Velx")
   coord != nothing ? (px.coord = coord) : nothing
   py = plotKDE(X, dims=[5], title="Vely")
@@ -632,7 +632,7 @@ function plotProductVsKDE(fgl::G,
                           levels::Int=3,
                           c::Vector{String}=["red";"black"] ) where  G <: AbstractDFG
     #
-    plotKDE([IIF.localProduct(fgl, sym)[1], getKDE(getVariable(fgl, sym))], levels=3, c=c)
+    plotKDE([IIF.localProduct(fgl, sym)[1], getBelief(getVariable(fgl, sym))], levels=3, c=c)
 end
 
 

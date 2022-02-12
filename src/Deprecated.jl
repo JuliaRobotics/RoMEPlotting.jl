@@ -227,7 +227,7 @@ export drawComicStrip
 #                  overlay=nothing  ) where {T <: AbstractString}
 #   #
 #   @warn "plotKDE for FactorGraph is deprecated, use DistributedFactorGraphs objects instead."
-#   verts = map((x)->getKDE(getVariable(fgl, x)), vsym)
+#   verts = map((x)->getBelief(getVariable(fgl, x)), vsym)
 #   plotKDE(verts, dims=dims, c=c, axis=axis, levels=levels, title=title, overlay=overlay )
 # end
 #
@@ -259,7 +259,7 @@ function plotHorBeliefsList(fgl::G,
   len = length(lbls)
   pDens = BallTreeDensity[]
   for lb in lbls
-    ptkde = getKDE(getVariable(fgl,lb))
+    ptkde = getBelief(getVariable(fgl,lb))
     push!(pDens, ptkde )
   end
 

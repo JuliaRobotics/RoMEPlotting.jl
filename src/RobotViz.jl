@@ -115,7 +115,7 @@ end
 
 covEllipseParameterized(pts::Array{Float64,2}; meanOffset::Bool=true) = covEllipseParameterized( fit(MvNormal, pts), meanOffset=meanOffset )
 covEllipseParameterized(X::Union{<:BallTreeDensity,<:ManifoldKernelDensity}; meanOffset::Bool=true) = covEllipseParameterized( getPoints(X), meanOffset=meanOffset )
-covEllipseParameterized(dfg::AbstractDFG, sym::Symbol; meanOffset::Bool=true, solveKey::Symbol=:default) = covEllipseParameterized( getKDE(dfg, sym, solveKey), meanOffset=meanOffset, solveKey=solveKey )
+covEllipseParameterized(dfg::AbstractDFG, sym::Symbol; meanOffset::Bool=true, solveKey::Symbol=:default) = covEllipseParameterized( getBelief(dfg, sym, solveKey), meanOffset=meanOffset, solveKey=solveKey )
 
 
 """
@@ -687,7 +687,7 @@ function plotMarginalContour( fgl::AbstractDFG, lbl::String;
                               xmin=-150,xmax=150,ymin=-150,ymax=150,
                               n::Int=200 )
   #
-  p = getKDE(getVariable(fgl,Symbol(lbl)), solveKey)  # p = getKDE(getVert(fgl,lbl))
+  p = getBelief(getVariable(fgl,Symbol(lbl)), solveKey)  # p = getBelief(getVert(fgl,lbl))
   Gadfly.plot(z=(x,y)->evaluateDualTree(p,vectoarr2([x,y]))[1],
     x=collect(range(xmin,stop=xmax,length=n)),
     y=collect(range(ymin,stop=ymax,length=n)),

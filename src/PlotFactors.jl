@@ -14,13 +14,13 @@ function plotFactorValues(asMeasured::AbstractMatrix{<:Real},
                           hdl=[],
                           dist::Vector{Float64}=zeros(1) ) where {T <: FunctorInferenceType}
   #
-  PPg = manikde!(asMeasured[1:2,:], Point2)
-  PP  = manikde!(asPredicted[1:2,:], Point2)
+  PPg = manikde!(Point2, asMeasured[1:2,:])
+  PP  = manikde!(Point2, asPredicted[1:2,:])
   # dist[1] = minimum(abs.([kld(PPg, PP)[1]; kld(PP, PPg)[1]]))
   mmd!(dist, asPredicted, asMeasured, SE2_Manifold)
   pt = plotKDE([PPg;PP], c=["blue";"red"], legend=["meas";"pred";], levels=3, title="$title $fctsym,\nmmd(..)=$(round(dist[1],digits=6))")
 
-  pc = plotKDECircular([manikde!(asMeasured[3:3,:], Sphere1);manikde!(asPredicted[3:3,:], Sphere1);], c=["blue";"red";], legend=["meas";"pred";], title="$title $fctsym,\n$(T)")
+  pc = plotKDECircular([manikde!(Sphere1, asMeasured[3:3,:]);manikde!(Sphere1, asPredicted[3:3,:]);], c=["blue";"red";], legend=["meas";"pred";], title="$title $fctsym,\n$(T)")
 
   push!(hdl, pt)
   push!(hdl, pc)
@@ -53,9 +53,9 @@ function plotFactorMeasurements(dfg::AbstractDFG,
   #
   asMeas, asPred = solveFactorMeasurements(dfg, fctsym)
 
-  pc = plotKDECircular([manikde!(asPred[1:1,:], Sphere1);manikde!(asMeas[1:1,:], Sphere1)], c=["blue";"red";], legend=["meas";"pred";], title="inv. solve, $fctsym,\nPose2Point2BearingRange")
-  pcl = plotKDE([manikde!(asPred[1:1,:], ContinuousScalar);manikde!(asMeas[1:1,:], ContinuousScalar)], c=["blue";"red";], legend=["meas";"pred";], title="unwrapped rotation, should be [-pi,pi)")
-  pl = plotKDE([manikde!(asPred[2:2,:], ContinuousScalar);manikde!(asMeas[2:2,:], ContinuousScalar)], c=["blue";"red";], legend=["meas";"pred";])
+  pc = plotKDECircular([manikde!(Sphere1, asPred[1:1,:]);manikde!(Sphere1, asMeas[1:1,:])], c=["blue";"red";], legend=["meas";"pred";], title="inv. solve, $fctsym,\nPose2Point2BearingRange")
+  pcl = plotKDE([manikde!(ContinuousScalar, asPred[1:1,:]);manikde!(ContinuousScalar, asMeas[1:1,:])], c=["blue";"red";], legend=["meas";"pred";], title="unwrapped rotation, should be [-pi,pi)")
+  pl = plotKDE([ manikde!(ContinuousScalar, asPred[2:2,:]);manikde!(ContinuousScalar, asMeas[2:2,:])], c=["blue";"red";], legend=["meas";"pred";])
 
   push!(hdl, pc)
   push!(hdl, pcl)
@@ -92,7 +92,7 @@ function plotFactor(dfg::AbstractDFG,
   poin = intersect(vars, ls(dfg, Point2))[1]
 
   # calculate predicted range (inverse solve)
-  ptss = map(x->getPoints(getKDE(dfg, x)), vars)
+  ptss = map(x->getPoints(getBelief(dfg, x)), vars)
   dpts = (ptss[1][1:2,:] - ptss[2][1:2,:]).^2
   pred = sqrt.(sum(dpts, dims=1))
   plpr = Gadfly.plot(x=pred, Geom.histogram(density=true), Theme(default_color=colorant"deepskyblue"), Guide.title("predicted"))
@@ -103,8 +103,8 @@ function plotFactor(dfg::AbstractDFG,
   plme = Gadfly.plot(x=smps, Geom.histogram(density=true), Theme(default_color=colorant"magenta"), Guide.title("measured"))
 
   # measure kl divergence
-  PP = manikde!(smps, ContinuousScalar)
-  PPg = manikde!(pred, ContinuousScalar)
+  PP = manikde!(ContinuousScalar, smps)
+  PPg = manikde!(ContinuousScalar, pred)
   dist[1] = minimum(abs.([kld(PPg, PP)[1]; kld(PP, PPg)[1]]))
 
   modl = Gadfly.plot(
@@ -115,17 +115,17 @@ function plotFactor(dfg::AbstractDFG,
     Guide.xlabel("range")
   )
 
-  plxy = plotKDE(map(x->getKDE(dfg, x), vars), dims=[1;2], legend=string.(vars), title="Pose2Point2Range: XY plane")
-  # plx = plotKDE([getKDE(dfg, vars[1]);], dims=[1;2], legend=[string(vars[1]);], title="Pose2Point2Range: XY plane")
-  # ply = plotKDE([getKDE(dfg, vars[2]);], dims=[1;2], legend=[string(vars[2]);], title="Pose2Point2Range: XY plane")
+  plxy = plotKDE(map(x->getBelief(dfg, x), vars), dims=[1;2], legend=string.(vars), title="Pose2Point2Range: XY plane")
+  # plx = plotKDE([getBelief(dfg, vars[1]);], dims=[1;2], legend=[string(vars[1]);], title="Pose2Point2Range: XY plane")
+  # ply = plotKDE([getBelief(dfg, vars[2]);], dims=[1;2], legend=[string(vars[2]);], title="Pose2Point2Range: XY plane")
 
   # mock projection
   tfg = initfg()
   addVariable!(tfg, pose, Pose2)
   addVariable!(tfg, poin, Point2)
   addFactor!(tfg, [pose;poin], fct, autoinit=false)
-  manualinit!(tfg, pose, getKDE(dfg,pose))
-  manualinit!(tfg, poin, getKDE(dfg,poin))
+  manualinit!(tfg, pose, getBelief(dfg,pose))
+  manualinit!(tfg, poin, getBelief(dfg,poin))
   apts=Array{Float64,2}(undef, 2, 0)
   loop =true
   while loop
@@ -140,12 +140,12 @@ function plotFactor(dfg::AbstractDFG,
   spc = mean(smps)
   plt = drawPosesLandms(tfg, point_size=5pt, spscale=0.2*spc)
   union!(plhist2.layers, plt.layers)
-  pla = plotKDE(manikde!(apts, Point2().manifolds),levels=3,c=["gray50"])
+  pla = plotKDE(manikde!(Point2, apts),levels=3,c=["gray50"])
 
   # plot pose by itself
   # poseplot = plotPose(dfg, pose)
   posepl1 = plotKDE(dfg, pose, dims=[1;2], c=["green"])
-  posepl2 = plotKDECircular(marginal(getKDE(dfg, pose), [3]))
+  posepl2 = plotKDECircular(marginal(getBelief(dfg, pose), [3]))
   landmpl = plotKDE(dfg, poin, c=["red"])
 
   # plot handles
@@ -181,37 +181,37 @@ function plotFactor(dfg::AbstractDFG,
   poin = intersect(vars, ls(dfg, Point2))[1]
 
   # basic max estimates
-  xp = getKDEMax(getKDE(dfg,pose))
-  lp = getKDEMax(getKDE(dfg,poin))
+  xp = getKDEMax(getBelief(dfg,pose))
+  lp = getKDEMax(getBelief(dfg,poin))
 
   # convolve the yaw angle with bearing rotation model
   pX = marginal(getBelief(dfg, pose), [3])
   pts = approxConvCircular(pX, fct.bearing) # TODO fix by using approxConvBelief instead
 
   # draw plots
-  measest = manikde!(pts, Sphere1)
+  measest = manikde!(Sphere1, pts)
 
   # inverse solve for predicted bearing
-  dx = getPoints(getKDE(dfg, poin))[1,:] - getPoints(getKDE(dfg, pose))[1,:]
-  dy = getPoints(getKDE(dfg, poin))[2,:] - getPoints(getKDE(dfg, pose))[2,:]
+  dx = getPoints(getBelief(dfg, poin))[1,:] - getPoints(getBelief(dfg, pose))[1,:]
+  dy = getPoints(getBelief(dfg, poin))[2,:] - getPoints(getBelief(dfg, pose))[2,:]
   pred = reshape(atan.(dy,dx), 1,:)
 
-  ppX = manikde!(pred, Sphere1)
+  ppX = manikde!(Sphere1, pred)
 
   scal = 0.2*norm(xp[1:2]-lp)
   plcl = plotKDECircular( [measest; ppX], logpdf=true, legend=["Meas. Est.";"Predicted"], radix=scal, scale=0.2*scal, rVo=[xp[1:2];0.0] )
 
   # plot pose and point by itself
   posepl1 = plotKDE(dfg, pose, dims=[1;2], c=["green"])
-  posepl2 = plotKDECircular(marginal(getKDE(dfg, pose), [3]))
+  posepl2 = plotKDECircular(marginal(getBelief(dfg, pose), [3]))
   landmpl = plotKDE(dfg, poin, c=["red"])
 
   tfg = initfg()
   addVariable!(tfg, pose, Pose2)
   addVariable!(tfg, poin, Point2)
   addFactor!(tfg, [pose;poin], fct, autoinit=false)
-  manualinit!(tfg, pose, getKDE(dfg,pose))
-  manualinit!(tfg, poin, getKDE(dfg,poin))
+  manualinit!(tfg, pose, getBelief(dfg,pose))
+  manualinit!(tfg, poin, getBelief(dfg,poin))
   plt = drawPosesLandms(tfg, point_size=5pt)
 
   union!(plt.layers, plcl.layers)
@@ -274,8 +274,8 @@ function plotFactor(dfg::AbstractDFG,
 
     # plot a prediction of landmark
     predpoints = approxConv(dfg, fctsym, poin)
-    PP = manikde!(predpoints, Point2)
-    PPg= getKDE(dfg, poin)
+    PP = manikde!(Point2, predpoints)
+    PPg= getBelief(dfg, poin)
     dist[1] = minimum(abs.([kld(PPg, PP)[1]; kld(PP, PPg)[1]]))
     predLandm = plotKDE([PPg; PP], levels=2, c=["red"; "deepskyblue"], legend=["landmark";"predicted"], title="min(|kld...|)=$(round(dist[1],digits=3))")
 
