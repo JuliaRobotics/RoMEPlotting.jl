@@ -134,7 +134,7 @@ function plotPose(fgl::AbstractDFG,
   #
   typ = getSolverData(getVariable(fgl, syms[1]), solveKey).softtype
   pt = string(string.(syms)...)
-  getvertsgg = (sym) -> getKDE(getVariable(fgl, sym), solveKey)
+  getvertsgg = (sym) -> getBelief(getVariable(fgl, sym), solveKey)
   pl = plotPose(typ, getvertsgg.(syms), pt, levels=levels, c=c, axis=axis, scale=scale, hdl=hdl )
 
   if length(filepath) > 0
