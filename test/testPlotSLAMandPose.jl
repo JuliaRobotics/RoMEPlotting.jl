@@ -47,6 +47,8 @@ end
 @testset "test CJL Docs example with plotSLAM2DPoses" begin
 ##
 
+fg = generateGraph_Hexagonal()
+
 # Draw the (x,y) marginal estimated belief contour for :x0, :x2, and Lx4
 pl = plotKDE(fg, [:x0; :x2; :x4], c=["red";"green";"blue"], levels=2, dims=[1;2])
 
