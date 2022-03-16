@@ -2,7 +2,7 @@ name = "RoMEPlotting"
 uuid = "238d586b-a4bf-555c-9891-eda6fc5e55a2"
 keywords = ["mm-iSAM", "SLAM", "plotting", "2D", "robotics", "navigation"]
 desc = "Visualization tools for the RoME.jl package."
-version = "0.8.1"
+version = "0.8.2"
 
 [deps]
 ApproxManifoldProducts = "9bbbb610-88a1-53cd-9763-118ce10c1f89"
