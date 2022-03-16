@@ -60,14 +60,9 @@ plotPose(pt::IIF.InstanceType{Pose2}, bds::AbstractVector{<:ManifoldKernelDensit
 function plotPose(pt::IIF.InstanceType{Pose2},
                   pp::Union{<:BallTreeDensity,<:ManifoldKernelDensity},
                   title="plotPose2";
-                  levels=3,
-                  c=nothing,
-                  axis=nothing,
-                  scale::Real=0.2,
-                  overlay=nothing,
-                  hdl=[]  )
+                  kw... )
   #
-  plotPose(pt, [pp;],title,levels=levels,c=c,axis=axis,scale=scale, overlay=overlay, hdl=hdl )
+  plotPose(pt, [pp;],title; kw... )
 end
 
 
