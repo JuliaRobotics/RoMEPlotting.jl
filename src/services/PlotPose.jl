@@ -18,8 +18,8 @@ Related
 
 [`plotSLAM2D`](@ref), [`plotSLAM2DPoses`](@ref), [`plotKDE`](@ref), `plotKDECircular`
 """
-function plotPose(pt::Pose2,
-                  pp::Vector{BallTreeDensity},
+function plotPose(::IIF.InstanceType{Pose2},
+                  pp::AbstractVector{<:BallTreeDensity},
                   title="plotPose2";
                   levels=3,
                   c=nothing,
@@ -55,8 +55,9 @@ function plotPose(pt::Pose2,
   Gadfly.hstack(p1,p2)
 end
 
+plotPose(pt::IIF.InstanceType{Pose2}, bds::AbstractVector{<:ManifoldKernelDensity}, w...;kw...) = plotPose(pt, (s->s.belief).(bds), w...; kw...)
 
-function plotPose(pt::Pose2,
+function plotPose(pt::IIF.InstanceType{Pose2},
                   pp::Union{<:BallTreeDensity,<:ManifoldKernelDensity},
                   title="plotPose2";
                   levels=3,
@@ -132,7 +133,7 @@ function plotPose(fgl::AbstractDFG,
                   app::AbstractString="eog",
                   hdl=[]  )
   #
-  typ = getSolverData(getVariable(fgl, syms[1]), solveKey).softtype
+  typ = getSolverData(getVariable(fgl, syms[1]), solveKey).variableType
   pt = string(string.(syms)...)
   getvertsgg = (sym) -> getBelief(getVariable(fgl, sym), solveKey)
   pl = plotPose(typ, getvertsgg.(syms), pt, levels=levels, c=c, axis=axis, scale=scale, hdl=hdl )
