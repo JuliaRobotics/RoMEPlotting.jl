@@ -62,9 +62,6 @@ f5 = addFactor!(fg,[:l1], pp2)
 
 # do inference
 tree = solveTree!(fg)
-# ensureAllInitialized!(fg)
-# tree = wipeBuildNewTree!(fg)
-# [inferOverTree!(fg, tree, N=N) for i in 1:2]
 
 println("test Pose2D plotting")
 

@@ -254,7 +254,7 @@ function plotLocalProductCylinder(fgl::G,
   arr = Array{BallTreeDensity,1}()
   carr = Array{BallTreeDensity,1}()
   lbls = String[]
-  push!(arr, getKDE(getVariable(fgl, lbl)))
+  push!(arr, getBelief(getVariable(fgl, lbl)))
   push!(lbls, "curr")
   pl = nothing
   plc = nothing
@@ -285,10 +285,10 @@ function plotLocalProductCylinder(fgl::G,
       proddim = marginal(pp, [dimn])
       colors = getColorsByLength(length(vals)+2)
       if dimn == 1
-        pll = plotKDE([proddim;getKDE(getVariable(fgl, lbl));vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
+        pll = plotKDE([proddim;getBelief(getVariable(fgl, lbl));vals], dims=[1;], levels=levels, c=colors, title=string("Local product, dim=$(dimn), ",lbl))
         push!(PL, pl)
       else
-        plc = AMP.plotKDECircular([proddim; marginal(getKDE(getVariable(fgl, lbl)),[2]);vals], c=colors, scale=scale)
+        plc = AMP.plotKDECircular([proddim; marginal(getBelief(getVariable(fgl, lbl)),[2]);vals], c=colors, scale=scale)
         push!(PLC, plc)
       end
     end
@@ -342,8 +342,6 @@ function plotTreeProductUp(fgl::G,
   addMsgFactors!.(subfg, msgs, IIF.UpwardPass)
 
   # predictBelief
-  # stuff = treeProductUp(fgl, treel, cliqsym, varsym)
-  # plotKDE(manikde!(stuff[1], getManifolds(fgl, varsym)))
   cllbl = cliq.attributes["label"]
   return plotLocalProduct(subfg, varsym, title="Tree Up $(cllbl) | ", levels=levels, dims=dims)
 end
@@ -365,8 +363,6 @@ function plotTreeProductDown( fgl::AbstractDFG,
   addMsgFactors!(subfg, msgs)
 
   # predictBelief
-  # stuff = treeProductUp(fgl, treel, cliqsym, varsym)
-  # plotKDE(manikde!(stuff[1], getManifolds(fgl, varsym)))
   cllbl = cliq.attributes["label"]
   return plotLocalProduct(subfg, varsym, title="Tree Dwn $(cllbl) | ", levels=levels)
 end
@@ -440,8 +436,8 @@ function plotPairPose2(dfg1::G1,
                            levels::Int=3,
                            title::String="") where {G1 <: AbstractDFG, G2 <: AbstractDFG}
   #
-  X1 = getKDE(dfg1, sym)
-  X2 = getKDE(dfg2, sym)
+  X1 = getBelief(dfg1, sym)
+  X2 = getBelief(dfg2, sym)
 
   plotPose(Pose2(), [X1;X2], title*" $sym", c=["black";"red"], levels=levels)
   # , legend=["dfg1";"dfg2"]
@@ -469,7 +465,7 @@ function plotVariableGivenFactor(dfg::G,
   lie = ls(dfg, fct)
   setdiff!(lie, [towards])
 
-  otr = map(x->getKDE(dfg,x),lie)
+  otr = map(x->getBelief(dfg,x),lie)
   lbls = string.([towards;lie])
 
   pl = plotKDE([res;otr],dims=dims,levels=levels,legend=lbls)
@@ -496,7 +492,7 @@ function plotCliqDownMsgs(tree::AbstractBayesTree,
   PL = []
 
   for (key, beldim) in msgs
-    npl = plotKDE(manikde!(beldim.val, beldim.softtype), levels=levels, title="dwn msg $key", dims=dims)
+    npl = plotKDE(manikde!(beldim.varType, beldim.val), levels=levels, title="dwn msg $key", dims=dims)
     existing === nothing ? nothing : union!(npl.layers, existing.layers)
     push!(PL, npl)
   end

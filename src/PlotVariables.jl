@@ -11,8 +11,8 @@ export plotSLAM2DSolveKeys
 #                       plotVarHack::Function=plotPose  )
 #   #
 #   pts, fctT = deconvSolveKey(dfg, refSym, refKey, tstSym, tstKey)
-#   Xref = manikde!(pts[2],fctT)
-#   Xtst = manikde!(pts[1],fctT)
+#   Xref = manikde!(fctT, pts[2])
+#   Xtst = manikde!(fctT, pts[1])
 #   mmdDist = mmd(Xref, Xtst, fctT, bw=bw)
 
 #   # FIXME not all variables are Poses, so this is really hacky 

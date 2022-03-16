@@ -4,6 +4,26 @@ using IncrementalInference
 using RoME
 using RoMEPlotting
 
+##
+
+
+include("testPose2Point2Plotting.jl")
+include("testPlotKDE.jl")
+include("testPlotSLAMandPose.jl")
+
+# @warn "plotMCMC needs ImageMagick on osx, not running test yet."
+# plotMCMC(tree, :x1, show=false)
+# println("Success")
+
+
+
+# test ellipse function
+# Z = MvNormal([0.0;0],[9.0 5; 5 4])
+# eX = covEllipseParameterized(Z)
+
+
+## legacy
+
 
 # println("[TEST] with local Graphs.jl dictionary and arrays only (multicore)...")
 # include(joinpath(dirname(@__FILE__),"..","..","IncrementalInference","test","fourdoortest.jl"))
@@ -19,16 +39,3 @@ using RoMEPlotting
 # # Gadfly.draw(PDF("/tmp/test.pdf",15cm,30cm),pl)
 # println("Success")
 
-include("testPose2Point2Plotting.jl")
-
-include("testPlotKDE.jl")
-
-# @warn "plotMCMC needs ImageMagick on osx, not running test yet."
-# plotMCMC(tree, :x1, show=false)
-# println("Success")
-
-
-
-# test ellipse function
-# Z = MvNormal([0.0;0],[9.0 5; 5 4])
-# eX = covEllipseParameterized(Z)

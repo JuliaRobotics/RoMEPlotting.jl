@@ -16,7 +16,7 @@ addVariable!(fg, :x1, ContinuousScalar)
 addFactor!(fg, [:x0], Prior(Normal()))
 addFactor!(fg, [:x0;:x1], LinearRelative(Normal()))
 
-ensureAllInitialized!(fg)
+initAll!(fg)
 
 plotKDE(fg, ls(fg))
 
