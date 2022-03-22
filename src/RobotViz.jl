@@ -185,7 +185,7 @@ function plotSLAM2DLandmarks( fg::AbstractDFG;
                               resampleGaussianFit::Int=0  ) where T
     #
     if meanmax != :null
-      @warn "plotSLAM2DPoses meanmax keyword is deprecated, use ppe instead."
+      @error "plotSLAM2DPoses meanmax keyword is deprecated, use ppe instead."
       ppe = meanmax
     end
 
@@ -321,6 +321,7 @@ function plotSLAM2D(fgl::AbstractDFG;
                     line_width=1pt,
                     regexLandmark=r"l\d+",
                     regexPoses=r"x\d+",
+                    variableList::AbstractVector{Symbol}=union(getVariablesLabelsWithinRange(fgl, regexPoses, from=from, to=to), getVariablesLabelsWithinRange(fgl, regexLandmark, from=from, to=to)),
                     manualColor=nothing,
                     drawPoints::Bool=true,
                     pointsColor::AbstractString="gray30",
@@ -337,58 +338,64 @@ function plotSLAM2D(fgl::AbstractDFG;
     posesPPE = meanmax
     landmsPPE = meanmax
   end
-  !(spscale isa Nothing) ? (dyadScale=spscale; @warn("keyword spscale is being deprecated, use dyadScale instead")) : nothing
-  !(contour isa Nothing) ? (drawContour=contour; @warn("keyword contour is being deprecated, use drawContour instead")) : nothing
+  !(spscale isa Nothing) ? (dyadScale=spscale; @error("keyword spscale is being deprecated, use dyadScale instead")) : nothing
+  !(contour isa Nothing) ? (drawContour=contour; @error("keyword contour is being deprecated, use drawContour instead")) : nothing
 
   #
   xmin !== nothing && xmax !== nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
   ymin !== nothing && ymax !== nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
-  ll = listVariables(fgl, regexLandmark)
+  
   p = plotSLAM2DPoses(fgl;
-                      solveKey=solveKey,
-                      from=from,
-                      to=to,
-                      regexPoses=regexPoses,
+                      solveKey,
+                      from,
+                      to,
+                      regexPoses,
+                      variableList=intersect(variableList, getVariablesLabelsWithinRange(fgl, regexPoses; from, to)),
                       ppe=posesPPE,
-                      lbls=lbls,
-                      scale=scale,
-                      x_off=x_off,
-                      y_off=y_off,
-                      drawhist=drawhist,
-                      dyadScale=dyadScale,
-                      drawContour=drawContour,
-                      drawTriads=drawTriads,
-                      manualColor=manualColor,
-                      line_width=line_width,
-                      drawPoints=drawPoints,
-                      ellipseColor=ellipseColor,
-                      pointsColor=pointsColor,
-                      drawEllipse=drawEllipse,
-                      recalcPPEs=recalcPPEs  )
+                      lbls,
+                      scale,
+                      x_off,
+                      y_off,
+                      drawhist,
+                      dyadScale,
+                      drawContour,
+                      drawTriads,
+                      manualColor,
+                      line_width,
+                      drawPoints,
+                      ellipseColor,
+                      pointsColor,
+                      drawEllipse,
+                      recalcPPEs  )
   #
+
+  ll = listVariables(fgl, regexLandmark)
   if length(ll) > 0
-    pl = plotSLAM2DLandmarks( fgl,
-                              solveKey=solveKey,
-                              from=from,
-                              to=to,
+    pl = plotSLAM2DLandmarks( fgl;
+                              solveKey,
+                              from,
+                              to,
+                              regexLandmark,
+                              variableList=intersect(variableList, getVariablesLabelsWithinRange(fgl, regexLandmark; from, to)),
                               ppe=landmsPPE,
-                              minnei=minnei,
-                              lbls=lbls,
-                              scale=scale,
-                              x_off=x_off,
-                              y_off=y_off,
-                              drawhist=drawhist,
-                              MM=MM,
-                              showmm=showmm,
-                              point_size=point_size,
-                              drawContour=drawContour,
-                              manualColor=manualColor,
-                              drawPoints=drawPoints,
-                              ellipseColor=ellipseColor,
-                              pointsColor=pointsColor,
-                              drawEllipse=drawEllipse,
-                              recalcPPEs=recalcPPEs  )
+                              minnei,
+                              lbls,
+                              scale,
+                              x_off,
+                              y_off,
+                              drawhist,
+                              MM,
+                              showmm,
+                              point_size,
+                              drawContour,
+                              manualColor,
+                              drawPoints,
+                              ellipseColor,
+                              pointsColor,
+                              drawEllipse,
+                              recalcPPEs  )
     #
+
     for l in pl.layers
       push!(p.layers, l)
     end
@@ -398,7 +405,7 @@ function plotSLAM2D(fgl::AbstractDFG;
     pwind = window[2]
     p.coord = Coord.cartesian(xmin=focusX[1]-pwind,xmax=focusX[1]+pwind,ymin=focusX[2]-pwind,ymax=focusX[2]+pwind)
   end
-  co = Coord.Cartesian(;xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,aspect_ratio=aspect_ratio)
+  co = Coord.Cartesian(;xmin,xmax,ymin,ymax,aspect_ratio)
   p.coord = co
   if title != ""
     push!(p.guides, Guide.title(title))
