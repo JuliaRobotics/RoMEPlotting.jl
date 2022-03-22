@@ -9,14 +9,14 @@ Plot pose belief as contour information on visually sensible manifolds.
 Example:
 
 ```julia
-fg = generateCanonicalFG_Hexagonal()
-solveTree!(fg);
-plotPose(fg, :x6)
+fg = generateGraph_ZeroPose()
+initAll!(fg);
+plotPose(fg, :x0)
 ```
 
 Related
 
-[`plotSLAM2D`](@ref), [`plotSLAM2DPoses`](@ref), [`plotKDE`](@ref), `plotKDECircular`
+[`plotSLAM2D`](@ref), [`plotSLAM2DPoses`](@ref), [`plotBelief`](@ref), `plotKDECircular`
 """
 function plotPose(::IIF.InstanceType{Pose2},
                   pp::AbstractVector{<:BallTreeDensity},

@@ -6,234 +6,7 @@ export plotSLAM2D_KeyAndRef
 
 ## Src
 
-global DISABLESTBPRTLINES = false
 
-function togglePrtStbLines()
-  global DISABLESTBPRTLINES
-  DISABLESTBPRTLINES = !DISABLESTBPRTLINES
-end
-
-function plotLsrScanFeats(br::Array{Float64,2})
-  Cart = zeros(size(br))
-  Cart[:,1] = br[:,2].*cos(br[:,1])
-  Cart[:,2] = br[:,2].*sin(br[:,1])
-  plot(x=Cart[:,1],y=Cart[:,2],Geom.point,
-  Guide.xticks(ticks=collect(-60:10:60)),
-  Guide.yticks(ticks=collect(0:10:80)))
-end
-
-function plotFeatTrackers(trkrs::Dict{Int64,Feature}, bfts::Array{Float64,2})
-  musX = Float64[]
-  varX = Float64[]
-  musY = Float64[]
-  varY = Float64[]
-  allPtsX = Float64[]
-  allPtsY = Float64[]
-
-  for ftr in trkrs
-    pts = getPoints(ftr[2].bel)
-    allPtsX = [allPtsX; vec(pts[1,:])]
-    allPtsY = [allPtsY; vec(pts[2,:])]
-
-    push!(musX, Statistics.mean(vec(pts[1,:])))
-    push!(varX, Statistics.std(vec(pts[1,:])))
-    push!(musY, Statistics.mean(vec(pts[2,:])))
-    push!(varY, Statistics.std(vec(pts[2,:])))
-  end
-
-  X = Float64[]
-  Y = Float64[]
-
-  if size(bfts,2) > 0
-    if bfts[1,1] != 0.0 && bfts[2,1] != 0.0 && bfts[3,1] != 0.0
-      for i in 1:size(bfts,2)
-          u, R = p2c(vec(bfts[:,i]))
-          push!(X, u[1])
-          push!(Y, u[2])
-      end
-    end
-  end
-
-  # Guide.yticks(ticks=collect(-60:10:60)),
-  # Guide.xticks(ticks=collect(0:10:80))
-  p = plot(layer(x=musX, y=musY, Geom.point, Theme(default_color=colorant"red")),
-  layer(x=allPtsX, y=allPtsY, Geom.histogram2d),
-  Guide.yticks(ticks=collect(-70:10:70)),
-  Guide.xticks(ticks=collect(-40:10:80)))
-  for i in 1:length(X)
-    push!(p.layers, Gadfly.layer(x=[0.0;X[i]], y=[0.0;Y[i]], Geom.line, Gadfly.Theme(default_color=colorant"magenta"))[1])
-  end
-  p
-end
-
-
-function saveImgSeq(d::Dict{Int64,Array{Float64,2}}; from::Int=1,to::Int=10,step::Int=1)
-  for i in from:step:to
-    p = plotLsrScanFeats(lsrBR(d[i]));
-    Gadfly.draw(PNG(string("imgs/img",i,".png"),25cm,25cm),p)
-  end
-  nothing
-end
-
-
-"""
-    $SIGNATURES
-
-Calculate the ellipse from covariance matrix and return as lambda function.
-
-Notes
-- https://cookierobotics.com/007/
-
-Related
-
-plotCovEllipseLayer
-"""
-function covEllipseParameterized(distr::MvNormal; meanOffset::Bool=true)
-  println(round.(cov(distr), digits=3) )
-  a = cov(distr)[1,1]
-  b = cov(distr)[1,2] + cov(distr)[2,1]
-  b *= 0.5
-  c = cov(distr)[2,2]
-
-  λ1 = 0.5*(a+c) + sqrt(0.25*(a-c)^2 + b^2)
-  λ2 = 0.5*(a+c) - sqrt(0.25*(a-c)^2 + b^2)
-  θ = if b ≈ 0 && a >= c
-    0
-  elseif b ≈ 0 && a < c
-    pi/2
-  else
-    atan(λ1-a, b)
-  end
-  sλ1 = sqrt(λ1)
-  sλ2 = sqrt(λ2)
-  sθ =  sin(θ)
-  cθ =  cos(θ)
-  ox = meanOffset ? distr.μ[1] : 0
-  oy = meanOffset ? distr.μ[2] : 0
-  (t) -> [sλ1*cθ*cos(t)-sλ2*sθ*sin(t)+ox; sλ1*sθ*cos(t)+sλ2*cθ*sin(t)+oy]
-end
-
-covEllipseParameterized(pts::Array{Float64,2}; meanOffset::Bool=true) = covEllipseParameterized( fit(MvNormal, pts), meanOffset=meanOffset )
-covEllipseParameterized(X::Union{<:BallTreeDensity,<:ManifoldKernelDensity}; meanOffset::Bool=true) = covEllipseParameterized( getPoints(X), meanOffset=meanOffset )
-covEllipseParameterized(dfg::AbstractDFG, sym::Symbol; meanOffset::Bool=true, solveKey::Symbol=:default) = covEllipseParameterized( getBelief(dfg, sym, solveKey), meanOffset=meanOffset, solveKey=solveKey )
-
-
-"""
-    $SIGNATURES
-
-Plotting tool to draw Gadfly layers of ellipses of 2D covariance fitted to the belief of factor graph variable nonparametric points.
-
-Related
-
-covEllipseParameterized, plotSLAM2DPosesLandms
-"""
-function plotCovEllipseLayer( dfg::AbstractDFG,
-                              vsym::Symbol;
-                              solveKey::Symbol=:default,
-                              drawPoints::Bool=true,
-                              ellipseColor::AbstractString="gray30",
-                              pointsColor::AbstractString="gray30",
-                              drawEllipse::Bool=true  )
-  #
-  PL = []
-
-  if !(drawEllipse || drawPoints)
-    return PL
-  end
-
-  # points to work from
-  bel = getBelief(dfg, vsym, solveKey)
-  pp__ = getPoints(bel)
-  pp_ = if bel.manifold isa SpecialEuclidean
-    # assume Pose2
-    (x->x.parts[1]).(pp__)
-  else
-    # assume Point2
-    pp__
-  end
-
-  @cast pp[i,j] := pp_[j][i]
-
-  if drawEllipse
-    # get ellipse function
-    eX = covEllipseParameterized(pp[1:2,:], meanOffset=false)
-    vEl = eX.(0:0.02:2pi)
-    el = [(x->x[1]).(vEl) (x->x[2]).(vEl)]
-    # add suggested PPE mean offset
-    el[:,1] .+= getVariablePPE(dfg, vsym, solveKey).suggested[1]
-    el[:,2] .+= getVariablePPE(dfg, vsym, solveKey).suggested[2]
-
-    # add the ellipse layers
-    plelX2 = Gadfly.layer(x=el[:,1], y=el[:,2], Geom.path, Theme(default_color=parse(Colorant, ellipseColor)))
-    push!(PL, plelX2[1])
-  end
-
-  # add the points layer if needed
-  if drawPoints
-    plelX1 = Gadfly.layer(x=pp[1,:],
-                          y=pp[2,:],
-                          Geom.point,
-                          Theme(default_color=parse(Colorant, pointsColor), 
-                          point_size=1pt))
-    #
-    push!(PL, plelX1[1])
-  end
-
-  return PL
-end
-
-
-"""
-    $SIGNATURES
-
-Plot trajectory of Array{,2} with rows as consecutive entries and columns as x,y,theta.
-"""
-function plotTrajectoryArrayPose2(arr::AbstractMatrix__{<:Real};
-                                  spscale::Real=0.5,
-                                  triadStride::Int=50)
-  #
-  @assert size(arr,2)==3
-  trajPlt = Gadfly.plot(x=arr[:,1], y=arr[:,2], Geom.path, Coord.cartesian(fixed=true, aspect_ratio=1))
-
-  if triadStride != -1
-    Xpp = arr[1:triadStride:end,1]
-    Ypp = arr[1:triadStride:end,2]
-    Thpp = arr[1:triadStride:end,3]
-    addXYLineLayers!(trajPlt, Xpp, Ypp, Thpp, l=spscale)
-  end
-  return trajPlt
-end
-
-
-
-## TODO -- you were here with port starboard lines
-function stbPrtLineLayers!(pl, Xpp, Ypp, Thpp; l::Real=5.0)
-    if DISABLESTBPRTLINES
-      return nothing
-    end
-
-
-    lnstpr = [0.0;l;0.0]
-    lnstpg = [0.0;-l;0.0]
-
-    Rd  =SE2(lnstpr)
-    Gr = SE2(lnstpg)
-
-    for i in 1:length(Xpp)
-      lnstt = [Xpp[i];Ypp[i];Thpp[i]]
-      Ps = SE2(lnstt)
-      lnr = se2vee(Ps*Rd)
-      lng = se2vee(Ps*Gr)
-      xsr = [Xpp[i];lnr[1]]
-      ysr = [Ypp[i];lnr[2]]
-      xsg = [Xpp[i];lng[1]]
-      ysg = [Ypp[i];lng[2]]
-
-      push!(pl.layers, layer(x=xsr, y=ysr, Geom.path(), Gadfly.Theme(default_color=colorant"red", line_width=1.5pt))[1] )
-      push!(pl.layers, layer(x=xsg, y=ysg, Geom.path(), Gadfly.Theme(default_color=colorant"green", line_width=1.5pt))[1] )
-    end
-    nothing
-end
 
 # draw the reference frame as a red-green dyad
 function addXYLineLayers!(pl, Xpp, Ypp, Thpp; l::Real=1.0, manualColor::Union{Nothing, AbstractString}=nothing  )
@@ -416,6 +189,7 @@ function plotSLAM2DLandmarks( fg::AbstractDFG;
       ppe = meanmax
     end
 
+    # remove before v0.10
     !(contour isa Nothing) ? (drawContour=contour; @warn("keyword contour is being deprecated, use drawContour instead")) : nothing
 
     ## Use PPE.suggested
@@ -521,7 +295,7 @@ plotSLAM2D(fg_)
 
 Related
 
-[`plotSLAM2DPoses`](@ref), [`plotSLAM2DLandmarks`](@ref), [`plotPose`](@ref), [`plotKDE`](@ref) 
+[`plotSLAM2DPoses`](@ref), [`plotSLAM2DLandmarks`](@ref), [`plotPose`](@ref), [`plotBelief`](@ref) 
 """
 function plotSLAM2D(fgl::AbstractDFG;
                     solveKey::Symbol=:default,
@@ -570,7 +344,7 @@ function plotSLAM2D(fgl::AbstractDFG;
   xmin !== nothing && xmax !== nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
   ymin !== nothing && ymax !== nothing && ymin == ymax ? error("ymin must be less than ymax") : nothing
   ll = listVariables(fgl, regexLandmark)
-  p = plotSLAM2DPoses(fgl,
+  p = plotSLAM2DPoses(fgl;
                       solveKey=solveKey,
                       from=from,
                       to=to,
@@ -696,6 +470,9 @@ function plotMarginalContour( fgl::AbstractDFG, lbl::String;
     Guide.title(lbl)
   )
 end
+# ┌ Warning: `Scale.color_none` to be deprecated. Instead use e.g. `plot(..., Geom.contour, color=[colorant"black"])`
+# └ @ Gadfly.Scale ~/.julia/packages/Gadfly/B5yQc/src/scale.jl:446
+
 
 function accumulateMarginalContours(fgl, order;
                                     solveKey::Symbol=:default,
