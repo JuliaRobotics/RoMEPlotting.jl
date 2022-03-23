@@ -27,6 +27,7 @@ plotSLAM2D(fg, drawhist=true, drawPoints=true, drawContour=false, drawEllipse=tr
 plotSLAM2D(fg, drawhist=true, drawPoints=true, drawContour=true, drawEllipse=false)
 plotSLAM2D(fg, drawhist=true, drawPoints=true, drawContour=true, drawEllipse=true)
 
+plotSLAM2D(fg; variableList=[:x1;:x5;:l1])
 
 # plot runs but doesnt draw the levels at time of wrting the test.  Good to test the API regardless.
 plotSLAM2D(fg, drawhist=false, drawPoints=true, drawContour=true, drawEllipse=false, levels=5)

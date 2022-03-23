@@ -1,147 +1,4 @@
 
-import KernelDensityEstimatePlotting: plotKDE
-
-KernelDensityEstimatePlotting.plotKDE(mkd::ManifoldKernelDensity,w...;kw...) = plotKDE(mkd.belief, w...;kw...)
-KernelDensityEstimatePlotting.plotKDE(arr::AbstractVector{<:ManifoldKernelDensity},w...;kw...) = plotKDE((x->x.belief).(arr), w...;kw...)
-
-"""
-    $(SIGNATURES)
-
-A peneric KDE plotting function that allows marginals of higher dimensional beliefs and various keyword options.
-
-Example:
-```julia
-p = kde!(randn(3,100))
-
-plotKDE(p)
-plotKDE(p, dims=[1;2], levels=3)
-plotKDE(p, dims=[1])
-
-q = kde!(5*randn(3,100))
-plotKDE([p;q])
-plotKDE([p;q], dims=[1;2], levels=3)
-plotKDE([p;q], dims=[1])
-```
-"""
-function KernelDensityEstimatePlotting.plotKDE( 
-                  fgl::AbstractDFG,
-                  sym::Symbol;
-                  solveKey::Symbol=:default,
-                  dims=nothing,
-                  title="",
-                  levels::Int=5,
-                  fill::Bool=false,
-                  layers::Bool=false,
-                  c=nothing,
-                  overlay=nothing  )
-  #
-  p = getBelief(getVariable(fgl,sym), solveKey)
-  # mmarg = length(marg) > 0 ? marg : collect(1:Ndim(p))
-  # mp = marginal(p,mmarg)
-  bel = p isa BallTreeDensity ? p : p.belief
-  plotKDE(bel, levels=levels, dims=dims, title=string(sym, "  ", title), fill=fill, layers=layers, c=c, overlay=overlay )
-end
-function KernelDensityEstimatePlotting.plotKDE( 
-                  fgl::AbstractDFG,
-                  syms::Vector{Symbol};
-                  solveKey::Symbol=:default,
-                  addt::Union{<:AbstractVector{<:BallTreeDensity},AbstractVector{<:ManifoldKernelDensity}}=BallTreeDensity[],
-                  dims=nothing,
-                  title=nothing,
-                  levels=3,
-                  layers::Bool=false,
-                  c=getColorsByLength(length(addt)),
-                  overlay=nothing  )
-  #
-  # TODO -- consider automated rotisary of color
-  # colors = ["black";"red";"green";"blue";"cyan";"deepskyblue"; "yellow"]
-  # COLORS = repmat(colors, 10)
-  # COLORS = getColorsByLength(length(syms))
-  MP = BallTreeDensity[]
-  LEG = String[]
-  # mmarg = Int[]
-  for sym in syms
-    p = getBelief(getVariable(fgl,sym), solveKey)
-    # mmarg = length(marg) > 0 ? marg : collect(1:Ndim(p))
-    # mp = marginal(p,mmarg)
-    if p isa BallTreeDensity
-      push!(MP, p)
-    else
-      push!(MP, p.belief)
-    end
-    push!(LEG, string(sym))
-  end
-  for p in addt
-    # mp = marginal(p,mmarg)
-    push!(MP, p)
-    push!(LEG, "add")
-  end
-  plotKDE(MP, c=c, levels=levels, dims=dims, legend=LEG, title=title, layers=layers, overlay=overlay)
-end
-
-
-
-"""
-    $(SIGNATURES)
-
-Draw the upward belief from clique `cllb::Symbol` message on variable `lb::Symbol`.
-
-Example:
-
-```julia
-plotUpMsgsAtCliq(tree, :x2, :x1)
-```
-
-Related
-
-plotKDE, getUpMsgs
-"""
-function plotUpMsgsAtCliq(treel::AbstractBayesTree,
-                          cllb::Symbol,
-                          lb::Symbol;
-                          show::Bool=true,
-                          w=20cm, h=15cm,
-                          levels::Int=1,
-                          dims::Union{Vector{Int}, Nothing}=nothing )
-  #
-
-  cliq = getClique(treel, cllb)
-  cliqoutmsg = getUpMsgs(cliq)
-  bel = convert(BallTreeDensity, cliqoutmsg.belief[lb])
-  plotKDE(bel, dims=dims)
-end
-
-
-function plotTreeUpwardMsgs(fgl::G,
-                            bt::AbstractBayesTree;
-                            N=300 ) where G <: AbstractDFG
-  #
-  len = length(bt.cliques)-1
-  vv = Array{Gadfly.Compose.Context,1}(undef, len)
-  #r = Array{RemoteRef,1}(len)
-  i = 0
-  for cliq in bt.cliques
-      if cliq[1] == 1 println("No upward msgs from root."); continue; end
-      @show cliq[2].attributes["label"]
-      i+=1
-      vv[i] = drawHorDens(fgl, cliq[2].attributes["debug"].outmsg.p, N)
-  end
-  vv
-end
-
-
-# for some reason we still need msgPlots of right size in the global for these functions to work.
-# precall drawTreeUpwardMsgs or drawFrontalDens to make this work properly TODO
-function vstackedDensities(msgPlots)
-    #msgPlots = f(fg, bt) # drawTreeUpwardMsgs
-    evalstr = ""
-    for i in 1:length(msgPlots)
-        evalstr = string(evalstr, ",msgPlots[$(i)]")
-    end
-    eval(parse(string("vstack(",evalstr[2:end],")")))
-end
-
-
 
 """
     $(SIGNATURES)
@@ -315,99 +172,6 @@ and show with new product approximation for reference. String version is obsolet
 """
 plotLocalProduct(fgl::AbstractDFG, lbl::AbstractString; N::Int=100, dims::Vector{Int}=Int[] ) = plotLocalProduct(fgl, Symbol(lbl), N=N, dims=dims)
 
-"""
-    $SIGNATURES
-
-Project (convolve) to and take product of variable in Bayes/Junction tree.
-
-Notes
-- assume cliq and var sym the same, unless both specified.
-- `cliqsym` defines a frontal variable of a clique.
-"""
-function plotTreeProductUp(fgl::G,
-                           treel::AbstractBayesTree,
-                           cliqsym::Symbol,
-                           varsym::Symbol=cliqsym;
-                           levels::Int=1,
-                           dims::Vector{Int}=Int[]  ) where G <: AbstractDFG
-  #
-  # build a subgraph copy of clique
-  cliq = getClique(treel, cliqsym)
-  syms = getCliqAllVarIds(cliq)
-  subfg = buildSubgraph(fgl, syms)
-
-  # add upward messages to subgraph
-  msgs = fetchMsgsUpChildren(treel,cliq, TreeBelief)
-  # @show typeof(msgs)
-  addMsgFactors!.(subfg, msgs, IIF.UpwardPass)
-
-  # predictBelief
-  cllbl = cliq.attributes["label"]
-  return plotLocalProduct(subfg, varsym, title="Tree Up $(cllbl) | ", levels=levels, dims=dims)
-end
-
-
-function plotTreeProductDown( fgl::AbstractDFG,
-                              treel::AbstractBayesTree,
-                              cliqsym::Symbol,
-                              varsym::Symbol=cliqsym;
-                              levels::Int=1  )
-  #
-  # build a subgraph copy of clique
-  cliq = whichCliq(treel, cliqsym)
-  syms = getCliqAllVarIds(cliq)
-  subfg = buildSubgraphFromLabels!(fgl,syms)
-
-  # add upward messages to subgraph
-  msgs = getCliqParentMsgDown(treel,cliq)
-  addMsgFactors!(subfg, msgs)
-
-  # predictBelief
-  cllbl = cliq.attributes["label"]
-  return plotLocalProduct(subfg, varsym, title="Tree Dwn $(cllbl) | ", levels=levels)
-end
-
-
-"""
-    $SIGNATURES
-
-Overlay plot all upward messages from cliques.
-"""
-function plotCliqUpMsgs(fg::G,
-                        tree::AbstractBayesTree,
-                        sym::Symbol;
-                        show::Bool=true,
-                        dims::Vector{Int}=Int[],
-                        levels::Int=1,
-                        c=nothing,
-                        title="up msgs on $(sym)"    ) where G <: AbstractDFG
-  #
-  # get all msgs
-  allmsgs = getTreeCliqUpMsgsAll(tree)
-  # stack messages by variable
-  sckmsgs = stackCliqUpMsgsByVariable(tree, allmsgs)
-
-  if !haskey(sckmsgs, sym)
-    @warn "plotCliqUpMsgs -- tree does not have up messages for $sym."
-    return nothing
-  end
-
-  # prepend current estimate too
-  Xs = getBelief(fg, sym)
-  # vectorize beliefs
-  beliefs = BallTreeDensity[Xs;]
-  lbls = String["curr,-1";]
-  for msg in sckmsgs[sym]
-    push!(beliefs, msg.belief)
-    push!(lbls, "$(msg.cliqId),$(msg.depth)")
-  end
-
-  # ignoring legend and color information
-  cc = c === nothing ? getColorsByLength(length(beliefs)) : c
-
-  # plot and return
-  plotKDE(beliefs, levels=levels, c=cc, title=title, legend=lbls)
-end
 
 
 """
@@ -416,11 +180,11 @@ end
 Development function to plot the same variable from both factor graphs together.
 """
 function plotPairVariables(dfg1::G1,
-                           dfg2::G2,
-                           sym::Symbol;
-                           dims=nothing,
-                           levels::Int=3,
-                           title::String="") where {G1 <: AbstractDFG, G2 <: AbstractDFG}
+                          dfg2::G2,
+                          sym::Symbol;
+                          dims=nothing,
+                          levels::Int=3,
+                          title::String="") where {G1 <: AbstractDFG, G2 <: AbstractDFG}
   #
   X1 = getBelief(dfg1, sym)
   X2 = getBelief(dfg2, sym)
@@ -430,11 +194,11 @@ end
 
 
 function plotPairPose2(dfg1::G1,
-                           dfg2::G2,
-                           sym::Symbol;
-                           dims=nothing,
-                           levels::Int=3,
-                           title::String="") where {G1 <: AbstractDFG, G2 <: AbstractDFG}
+                          dfg2::G2,
+                          sym::Symbol;
+                          dims=nothing,
+                          levels::Int=3,
+                          title::String="") where {G1 <: AbstractDFG, G2 <: AbstractDFG}
   #
   X1 = getBelief(dfg1, sym)
   X2 = getBelief(dfg2, sym)
@@ -453,10 +217,10 @@ Notes
 - Plot other variables in factor on 2nd to m colors.
 """
 function plotVariableGivenFactor(dfg::G,
-                                 fct::Symbol,
-                                 towards::Symbol;
-                                 levels::Int=2,
-                                 dims=nothing  ) where G <: AbstractDFG
+                                fct::Symbol,
+                                towards::Symbol;
+                                levels::Int=2,
+                                dims=nothing  ) where G <: AbstractDFG
   #
   pts = approxConv(dfg,fct,towards)
   mani = getManifold(dfg, towards)
@@ -474,36 +238,4 @@ function plotVariableGivenFactor(dfg::G,
 end
 
 
-"""
-    $SIGNATURES
-
-Plot the downward messages currently stored in a clique.
-"""
-function plotCliqDownMsgs(tree::AbstractBayesTree,
-                          frnt::Symbol;
-                          show::Bool=true,
-                          levels::Int=2,
-                          dims=nothing,
-                          existing=nothing  )
-  #
-  cliq = getClique(tree,frnt)
-  msgs = IIF.getMessageBuffer(cliq).downRx.belief
-
-  PL = []
-
-  for (key, beldim) in msgs
-    npl = plotKDE(manikde!(beldim.varType, beldim.val), levels=levels, title="dwn msg $key", dims=dims)
-    existing === nothing ? nothing : union!(npl.layers, existing.layers)
-    push!(PL, npl)
-  end
-
-  existing === nothing ? nothing : push!(PL, existing)
-  pl = vstack(PL...)
-
-  folderpath = "/tmp/caesar/random/"
-  filepath = folderpath*"downmsgs_cliq$(cliq.index).pdf"
-  Base.mkpath(folderpath)
-  pl |> PDF(filepath, 20cm, length(PL)*12cm)
-  @async run(`evince $filepath`)
-  pl
-end
+#
