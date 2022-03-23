@@ -11,6 +11,18 @@
 ## Remove before v0.10
 ## =======================================================================================
 
+# function getColorsByLength(len::Int=7)
+#   len > 99 ? error("Don't have enough colors, 100 is the max.") : nothing
+#   COLORS = String["red";"green";"blue";"magenta";"yellow";"deepskyblue"]
+#   if len > 6
+#     scale = len -7 + 2 # + 2 is artificial and avoids gray100==white
+#     scale = 100/scale
+#     for i in 7:len
+#       push!(COLORS, "gray$(floor(Int,(i-7)*scale))")
+#     end
+#   end
+#   return COLORS[1:len]
+# end
 
 export togglePrtStbLines
 export stbPrtLineLayers!
@@ -33,8 +45,9 @@ global DISABLESTBPRTLINES = false
 
 function togglePrtStbLines()
   global DISABLESTBPRTLINES
-#   DISABLESTBPRTLINES = !DISABLESTBPRTLINES
-# end
+  DISABLESTBPRTLINES = !DISABLESTBPRTLINES
+end
+
 
 ## TODO -- you were here with port starboard lines
 function stbPrtLineLayers!(pl, Xpp, Ypp, Thpp; l::Real=5.0)

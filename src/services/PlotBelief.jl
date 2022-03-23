@@ -41,7 +41,7 @@ function plotBelief(fgl::AbstractDFG,
                     fill::Bool=false,
                     layers::Bool=false,
                     c=nothing,
-                    overlay=nothing  )
+                    overlay=nothing )
   #
   p = getBelief(getVariable(fgl,sym), solveKey)
   # mmarg = length(marg) > 0 ? marg : collect(1:Ndim(p))
@@ -51,14 +51,14 @@ function plotBelief(fgl::AbstractDFG,
 end
 
 function plotBelief(fgl::AbstractDFG,
-                    syms::Vector{Symbol};
+                    syms::AbstractVector{Symbol};
                     solveKey::Symbol=:default,
                     addt::Union{<:AbstractVector{<:BallTreeDensity},AbstractVector{<:ManifoldKernelDensity}}=BallTreeDensity[],
                     dims=nothing,
                     title=nothing,
                     levels=3,
                     layers::Bool=false,
-                    c=getColorsByLength(length(addt)),
+                    c=getColorsByLength(length(syms)),
                     overlay=nothing  )
   #
   # TODO -- consider automated rotisary of color
@@ -84,7 +84,7 @@ function plotBelief(fgl::AbstractDFG,
     push!(MP, p)
     push!(LEG, "add")
   end
-  plotKDE(MP, c=c, levels=levels, dims=dims, legend=LEG, title=title, layers=layers, overlay=overlay)
+  plotKDE(MP; c, levels, dims, legend=LEG, title, layers, overlay)
 end
 
 
