@@ -14,7 +14,7 @@ Related
 plotCovEllipseLayer
 """
 function covEllipseParameterized(distr::MvNormal; meanOffset::Bool=true)
-  println(round.(cov(distr), digits=3) )
+  # println(round.(cov(distr), digits=3) )
   a = cov(distr)[1,1]
   b = cov(distr)[1,2] + cov(distr)[2,1]
   b *= 0.5
