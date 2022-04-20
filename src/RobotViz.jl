@@ -282,7 +282,7 @@ DevNotes
 
 Examples:
 ```julia
-fg = generateCanonicalFG_Hexagonal()
+fg = generateGraph_Hexagonal()
 plotSLAM2D(fg)
 plotSLAM2D(fg, drawPoints=false)
 plotSLAM2D(fg, contour=false, drawEllipse=true)
