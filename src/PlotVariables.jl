@@ -34,7 +34,7 @@ Example
 ```julia
 using Images, Caesar, RoMEPlotting
 
-fg = generateCanonicalFG_Hexagonal()
+fg = generateGraph_Hexagonal()
 
 for i in 1:10
   solveTree!(fg, storeOld=true)
