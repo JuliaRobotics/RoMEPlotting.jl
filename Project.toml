@@ -26,7 +26,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 TensorCast = "02d47bb6-7ce6-556a-be16-bb1710789e2b"
 
 [compat]
-ApproxManifoldProducts = "0.4, 0.5"
+ApproxManifoldProducts = "0.4, 0.5, 0.6"
 Cairo = "0.8, 1"
 Colors = "0.11, 0.12"
 Compose = "0.8, 0.9"
