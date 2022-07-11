@@ -71,7 +71,7 @@ function plotCovEllipseLayer( dfg::AbstractDFG,
   pp__ = getPoints(bel)
   pp_ = if bel.manifold isa SpecialEuclidean
     # assume Pose2
-    (x->x.parts[1]).(pp__)
+    (x->submanifold_component(x,1)).(pp__)
   else
     # assume Point2
     pp__
