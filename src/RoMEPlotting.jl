@@ -17,6 +17,7 @@ using DocStringExtensions
 using ApproxManifoldProducts
 using TensorCast
 using Requires
+using SnoopPrecompile
 
 # import ApproxManifoldProducts: mmd! # future dependency
 
@@ -58,6 +59,18 @@ include("NeedsFixing.jl")
 function __init__()
   @require Flux="587475ba-b771-5e3f-ad9e-33799f191a9c" include("FluxSpecificFeatures.jl")
   @require ImageMagick="6218d12a-5da1-5696-b52f-db25d2ecc6d1" include("imagemagick.jl")
+end
+
+@precompile_all_calls begin
+  # In here put "toy workloads" that exercise the code you want to precompile
+  fg = generateGraph_Hexagonal()
+  initAll!(fg)
+  plotSLAM2D(fg)
+  plotSLAM2D(fg; drawEllipse=true, drawContour=true)
+  plotSLAM2D(fg; drawEllipse=true, drawContour=false)
+  plotSLAM2D(fg; drawEllipse=true, drawContour=false, drawPoints=false)
+
+  plotBelief(fg, ls(fg); dims=[1;2])
 end
 
 end
