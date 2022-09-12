@@ -41,7 +41,8 @@ fg_ = loadDFG("/tmp/rp_test.tar.gz")
 plotSLAM2D(fg, drawhist=false, drawPoints=true, drawContour=true, drawEllipse=false, levels=5)
 # plotSLAM2D(fg_, drawhist=true, drawPoints=true, drawContour=true, drawEllipse=true)
 
-Base.rm("/tmp/rp_test.tar.gz")
+# gets deleted lower down
+# Base.rm("/tmp/rp_test.tar.gz")
 
 ##
 end
