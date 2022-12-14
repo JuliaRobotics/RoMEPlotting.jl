@@ -47,9 +47,10 @@ TensorCast = "0.33, 0.4"
 julia = "1.8"
 
 [extras]
+Caesar = "62eebf14-49bc-5f46-9df9-f7b7ef379406"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Flux", "ImageMagick"]
+test = ["Caesar", "Flux", "ImageMagick", "Test"]
