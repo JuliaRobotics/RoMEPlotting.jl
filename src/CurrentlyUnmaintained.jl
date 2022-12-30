@@ -58,7 +58,7 @@ end
 
 function saveImgSeq(d::Dict{Int64,Array{Float64,2}}; from::Int=1,to::Int=10,step::Int=1)
   for i in from:step:to
-    p = plotLsrScanFeats(lsrBR(d[i]));
+    p = plotLsrScanFeats([d[i][2,:];d[i][1,:]]') #lsrBR(d[i]));
     Gadfly.draw(PNG(string("imgs/img",i,".png"),25cm,25cm),p)
   end
   nothing
