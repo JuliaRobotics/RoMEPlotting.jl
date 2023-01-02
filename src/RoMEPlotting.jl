@@ -59,6 +59,7 @@ include("NeedsFixing.jl")
 function __init__()
   @require Flux="587475ba-b771-5e3f-ad9e-33799f191a9c" include("FluxSpecificFeatures.jl")
   @require ImageMagick="6218d12a-5da1-5696-b52f-db25d2ecc6d1" include("imagemagick.jl")
+  @require Caesar="62eebf14-49bc-5f46-9df9-f7b7ef379406" include("services/ScatterAlignPlotting.jl")  
 end
 
 @precompile_all_calls begin

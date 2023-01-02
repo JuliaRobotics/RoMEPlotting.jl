@@ -310,7 +310,6 @@ function plotSLAM2D(fgl::AbstractDFG;
                     x_off::Real=0,
                     y_off::Real=0,
                     drawTriads::Bool=true,
-                    spscale::Union{Nothing, <:Real}=nothing,
                     dyadScale::Union{Nothing, <:Real}=nothing,
                     levels::Int=1,
                     drawhist=false, MM::Dict{Int,T}=Dict{Int,Int}(),
@@ -322,24 +321,15 @@ function plotSLAM2D(fgl::AbstractDFG;
                     regexLandmark=r"l\d+",
                     regexPoses=r"x\d+",
                     variableList::AbstractVector{Symbol}=union(listVariablesLabelsWithinRange(fgl, regexPoses, from=from, to=to), listVariablesLabelsWithinRange(fgl, regexLandmark, from=from, to=to)),
-                    manualColor=nothing,
-                    drawPoints::Bool=true,
+                    manualColor = nothing,
+                    drawPoints::Bool = solveKey != :parametric,
                     pointsColor::AbstractString="gray30",
-                    drawContour::Bool=true,
+                    drawContour::Bool = solveKey != :parametric,
                     drawEllipse::Bool=false,
                     ellipseColor::AbstractString="gray30",
-                    contour::Union{Nothing,Bool}=nothing,
                     title::AbstractString="",
                     aspect_ratio::Real=1  ) where T
   #
-  # deprecations
-  if meanmax != :null
-    @warn "plotSLAM2DPosesLandms meanmax keyword is deprecated, use posesPPE or landmsPPE instead."
-    posesPPE = meanmax
-    landmsPPE = meanmax
-  end
-  !(spscale isa Nothing) ? (dyadScale=spscale; @error("keyword spscale is being deprecated, use dyadScale instead")) : nothing
-  !(contour isa Nothing) ? (drawContour=contour; @error("keyword contour is being deprecated, use drawContour instead")) : nothing
 
   #
   xmin !== nothing && xmax !== nothing && xmin == xmax ? error("xmin must be less than xmax") : nothing
