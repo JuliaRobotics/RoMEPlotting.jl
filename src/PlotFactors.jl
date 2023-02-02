@@ -12,7 +12,7 @@ function plotFactorValues(asMeasured::AbstractMatrix{<:Real},
                           title="inv. solve",
                           fctsym="",
                           hdl=[],
-                          dist::Vector{Float64}=zeros(1) ) where {T <: FunctorInferenceType}
+                          dist::Vector{Float64}=zeros(1) ) where {T <: AbstractFactor}
   #
   PPg = manikde!(Point2, asMeasured[1:2,:])
   PP  = manikde!(Point2, asPredicted[1:2,:])
@@ -36,7 +36,7 @@ Calculate the "inverse" SLAM solution to compare measured and predicted noise mo
 """
 function plotFactorMeasurements(dfg::AbstractDFG,
                                 fctsym::Symbol,
-                                fct::FunctorInferenceType;
+                                fct::AbstractFactor;
                                 hdl=[],
                                 dist::Vector{Float64}=zeros(1) )
   #
