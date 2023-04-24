@@ -17,7 +17,7 @@ using DocStringExtensions
 using ApproxManifoldProducts
 using TensorCast
 using Requires
-using SnoopPrecompile
+using PrecompileTools
 
 # import ApproxManifoldProducts: mmd! # future dependency
 
@@ -62,7 +62,7 @@ function __init__()
   @require Caesar="62eebf14-49bc-5f46-9df9-f7b7ef379406" include("services/ScatterAlignPlotting.jl")  
 end
 
-@precompile_all_calls begin
+@compile_workload begin
   # In here put "toy workloads" that exercise the code you want to precompile
   fg = generateGraph_Hexagonal()
   initAll!(fg)
