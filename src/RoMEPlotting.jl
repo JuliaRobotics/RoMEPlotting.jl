@@ -17,7 +17,7 @@ using DocStringExtensions
 using ApproxManifoldProducts
 using TensorCast
 using Requires
-using SnoopPrecompile
+using PrecompileTools
 
 # import ApproxManifoldProducts: mmd! # future dependency
 
@@ -36,10 +36,10 @@ import KernelDensityEstimatePlotting: plotKDE
 include("ExportAPI.jl")
 
 # EXPERIMENTAL
-const AbstractMatrix__{T} = Union{AbstractArray{T,2}, Adjoint{T,<:AbstractArray{T,2}}}
+const AbstractMatrix__{T} = Union{<:AbstractArray{T,2}, <:Adjoint{T,<:AbstractArray{T,2}}}
 
 # will be overwritten if flux is present (dont make const)
-PlotTypesPose2 = Union{Type{Pose2Pose2}, Type{Pose2Point2BearingRange}, Type{Pose2Point2Range}, Type{Pose2Point2Bearing}}
+PlotTypesPose2 = Union{Type{<:Pose2Pose2}, Type{<:Pose2Point2BearingRange}, Type{<:Pose2Point2Range}, Type{<:Pose2Point2Bearing}}
 ExtendedPose2Pose2Types = Pose2Pose2
 
 include("services/PlotBelief.jl")
@@ -62,7 +62,7 @@ function __init__()
   @require Caesar="62eebf14-49bc-5f46-9df9-f7b7ef379406" include("services/ScatterAlignPlotting.jl")  
 end
 
-@precompile_all_calls begin
+@compile_workload begin
   # In here put "toy workloads" that exercise the code you want to precompile
   fg = generateGraph_Hexagonal()
   initAll!(fg)
