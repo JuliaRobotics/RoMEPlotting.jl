@@ -1,8 +1,8 @@
 # RoMEPlotting.jl
 
- Release v0.9 | Release v0.10 | Dev | Test Coverage | Caesar Docs
---------------|--------------|-----|---------------|--------------
-[![build-0-9]][CI-url] | [![build-0-10]][CI-url] | [![build-dev]][CI-url] | [![codecov-img]][codecov-url] | [![docs][docs-shield]][caesar-docs]
+ Release v0.10 | Dev | Test Coverage | Caesar Docs
+--------------|-----|---------------|--------------
+[![build-0-10]][CI-url] | [![build-dev]][CI-url] | [![codecov-img]][codecov-url] | [![docs][docs-shield]][caesar-docs]
 
 
 2D plotting functionality for the RoME.jl package (presently only using Gadfly).  This package is part of the [Caesar.jl](http://www.github.com/JuliaRobotics/Caesar.jl) suite of tools.  This package contains all the plotting functions relating to the [IncrementalInference.jl](http://www.github.com/JuliaRobotics/IncrementalInference.jl) and [RoME.jl](http://www.github.com/JuliaRobotics/RoME.jl) packages.
@@ -22,7 +22,6 @@ Documentation for this package will be covered in the plotting section of [Caesa
 
 [CI-url]: https://github.com/JuliaRobotics/RoMEPlotting.jl/actions/workflows/ci.yml
 [build-0-10]: https://github.com/JuliaRobotics/RoMEPlotting.jl/actions/workflows/ci.yml/badge.svg?branch=release%2Fv0.10
-[build-0-9]: https://github.com/JuliaRobotics/RoMEPlotting.jl/actions/workflows/ci.yml/badge.svg?branch=release%2Fv0.9
 [build-dev]: https://github.com/JuliaRobotics/RoMEPlotting.jl/actions/workflows/ci.yml/badge.svg?branch=master
 
 [codecov-url]: https://codecov.io/github/JuliaRobotics/RoMEPlotting.jl?branch=master
