@@ -36,10 +36,10 @@ import KernelDensityEstimatePlotting: plotKDE
 include("ExportAPI.jl")
 
 # EXPERIMENTAL
-const AbstractMatrix__{T} = Union{AbstractArray{T,2}, Adjoint{T,<:AbstractArray{T,2}}}
+const AbstractMatrix__{T} = Union{<:AbstractArray{T,2}, <:Adjoint{T,<:AbstractArray{T,2}}}
 
 # will be overwritten if flux is present (dont make const)
-PlotTypesPose2 = Union{Type{Pose2Pose2}, Type{Pose2Point2BearingRange}, Type{Pose2Point2Range}, Type{Pose2Point2Bearing}}
+PlotTypesPose2 = Union{Type{<:Pose2Pose2}, Type{<:Pose2Point2BearingRange}, Type{<:Pose2Point2Range}, Type{<:Pose2Point2Bearing}}
 ExtendedPose2Pose2Types = Pose2Pose2
 
 include("services/PlotBelief.jl")
